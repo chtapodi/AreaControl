@@ -1,0 +1,127 @@
+everything:
+  children:
+    - front
+    - back
+  devices:
+
+front:
+  children:
+    - living_room
+    - kitchen
+  devices:
+
+living_room:
+  children:
+    - couch_area
+    - dining_room
+    - sitting_area
+    - entry_way
+
+couch_area:
+  children:
+    - couch_bookshelf_side
+    - couch_back_side
+    - couch_floor
+
+dining_room:
+  children:
+  devices:
+  oconnects:
+    - kitchen
+    - couch_area
+    - entry_way
+    - sitting_area
+  tconnects:
+    hallway
+
+couch_bookshelf_side:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+couch_back_side:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+couch_floor:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+sitting_area:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+entry_way:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+kitchen:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+back:
+  children:
+    - bedroom
+    - laundry_room
+    - office
+    - fuzzy_room
+    - hallway
+  devices:
+  oconnects:
+  tconnects:
+
+
+bedroom:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+
+hallway:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+office:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+laundry_room:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+
+bathroom:
+  children:
+  devices:
+  oconnects:
+  tconnects:
+
+fuzzy_room:
+  children:
+  devices:
+  oconnects:
+  tconnects:
