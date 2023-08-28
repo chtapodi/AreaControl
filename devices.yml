@@ -1,0 +1,145 @@
+# kauf
+kauf_ball_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_ball_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bathroom_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bathroom_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bathroom_2:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bedroom_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bedroom_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hallway:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_2:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_3:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_tube:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_kitchen_ball:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_office_light:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_sconce_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_sconce_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_laundry_room_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_laundry_room_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_laundry_room_2:
+  type: light
+  filters:
+    - light
+    - kauf
+
+
+kauf_fuzzy_room:
+  type: light
+  filters:
+    - light
+    - kauf
+
+
+# Hue
+library_lamp:
+  type: light
+  filters:
+    - light
+    - hue
+
+living_room_lamp:
+  type: light
+  filters:
+    - light
+    - hue
+
+
+# Outputs
+

@@ -37,31 +37,56 @@ dining_room:
 couch_bookshelf_side:
   children:
   devices:
+    - kauf_tube
   oconnects:
+    - living_room
   tconnects:
 
 couch_back_side:
   children:
   devices:
+    - kauf_sconce_1
   oconnects:
+    - living_room
   tconnects:
 
 couch_floor:
   children:
   devices:
+    - kauf_ball_0
+    - kauf_ball_1
   oconnects:
+    - living_room
   tconnects:
 
 sitting_area:
   children:
+    - chair_0
+    - chair_1
   devices:
   oconnects:
   tconnects:
 
+chair_0:
+  children:
+  devices:
+    - library_lamp
+  oconnects:
+    - living_room
+  tconnects:
+
+chair_1:
+  children:
+  devices:
+    - living_room_lamp
+  oconnects:
+    - living_room
+  tconnects:
 
 entry_way:
   children:
   devices:
+    - kauf_sconce_0
   oconnects:
   tconnects:
 
@@ -69,7 +94,9 @@ entry_way:
 kitchen:
   children:
   devices:
+    - kauf_kitchen_ball
   oconnects:
+    - dining_room
   tconnects:
 
 
@@ -88,6 +115,9 @@ back:
 bedroom:
   children:
   devices:
+    - kauf_bedroom_0
+    - kauf_bedroom_1
+    - 
   oconnects:
   tconnects:
 
@@ -96,13 +126,19 @@ bedroom:
 hallway:
   children:
   devices:
+    - kauf_hallway
   oconnects:
+    - dining_room
+    - office
   tconnects:
+    - bathroom
 
 
 office:
   children:
   devices:
+    - kauf_office_light
+    - 
   oconnects:
   tconnects:
 
@@ -110,6 +146,9 @@ office:
 laundry_room:
   children:
   devices:
+    - kauf_laundry_room_0
+    - kauf_laundry_room_1
+    - kauf_laundry_room_2
   oconnects:
   tconnects:
 
@@ -117,11 +156,15 @@ laundry_room:
 bathroom:
   children:
   devices:
+    - kauf_bathroom_0
+    - kauf_bathroom_1
+    - kauf_bathroom_2
   oconnects:
   tconnects:
 
 fuzzy_room:
   children:
   devices:
+    - kauf_fuzzy_room
   oconnects:
   tconnects:
