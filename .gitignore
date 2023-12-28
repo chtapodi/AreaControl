@@ -1,0 +1,14 @@
+__pycache__/
+automation.py
+home-assistant.log
+k_to_rgb.py
+layout.yml
+light_config.yml
+light_interface.bak
+light_interface.py
+log.txt
+out.txt
+photon_db
+requirements.txt
+room_config.yml
+room_config.yml.bak
