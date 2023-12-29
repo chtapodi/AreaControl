@@ -34,7 +34,9 @@ class Area:
 
 
     def set_state(self,state) :
-        for child in self.children :
+        for child in self.children +self.direct_children:
+            log.warning(f"\nPYSCRIPT: Setting {child.name} {state}")
+            
             child.set_state(state)
 
 
@@ -73,27 +75,26 @@ def create_area_tree(yaml_file):
 
     # Create initial areas
     for area_name, area_data in data.items():
-        area = create_area(area_name)
+        if area_name is not None : 
+            area = create_area(area_name)
 
-        # Create child and direct child relationships
-        for child_type in ["sub_areas", "direct_sub_areas"]:
-            if child_type in area_data:
-                for child_name in area_data[child_type]:
-                    child_area = create_area(child_name)
-                    child_area.add_parent(area)
-                    direct=child_type == "sub_areas"
-                    area.add_child(child_area, direct=direct)
-        
-        # Add outputs as children
-        if "outputs" in area_data:
-            for output in area_data["outputs"]:
-                if output is not None:
-                    if "kauf" in output:
-                        new_light=KaufLight(output)
-                        new_device=Device(new_light)
-                        area.add_child(new_device, direct=True)
-
-                
+            # Create child and direct child relationships
+            for child_type in ["sub_areas", "direct_sub_areas"]:
+                if child_type in area_data:
+                    for child_name in area_data[child_type]:
+                        child_area = create_area(child_name)
+                        child_area.add_parent(area)
+                        direct=child_type == "sub_areas"
+                        area.add_child(child_area, direct=direct)
+            
+            # Add outputs as children
+            if "outputs" in area_data:
+                for output in area_data["outputs"]:
+                    if output is not None:
+                        if "kauf" in output:
+                            new_light=KaufLight(output)
+                            new_device=Device(new_light)
+                            area.add_child(new_device, direct=True)
 
     return area_tree
 
@@ -122,6 +123,7 @@ def visualize_areas(areas):
     # Print the tree structure
     print("PYSCRIPT:Area Hierarchy:")
     print_tree(root_area)
+    
 
 
 
@@ -253,9 +255,11 @@ def test_classes() :
     area_tree = create_area_tree("./pyscript/layout.yml")
     log.warning("\nPYSCRIPT: Created")
 
+    # visualize_areas(area_tree)
+
     living_room=area_tree["living_room"]
     log.warning(f"\nPYSCRIPT: living_room {living_room}")
-    living_room.set_state({"brightness":255})
+    living_room.set_state({"rgb_color":[255,0,0]})
 
 
 
