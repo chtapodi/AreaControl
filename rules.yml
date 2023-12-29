@@ -1,0 +1,10 @@
+button_single:
+  input_type: button_single
+  function: set_state
+  args:
+    rgb:
+      - 255
+      - 0
+      - 0
+
+
