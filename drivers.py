@@ -303,6 +303,10 @@ class KaufLight:
 
         return alpha
 
+    def set_state(self, state) :
+        """Attempts to set all of the values at the same time instead of rgb, brightness, etc..."""
+        self.apply_values(state)
+
     # Apply values
     def apply_values(self, **kwargs):
         """This parses the state that is passed in and sends those values to the light."""
