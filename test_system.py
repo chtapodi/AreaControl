@@ -1,99 +1,3 @@
-class ColorConverter:
-    def __init__(self):
-        pass
-
-    def rgb_to_hsl(r, g, b):
-        h, s, l = Color(rgb=[r, g, b]).hsl
-        l_range = 50 - 100
-        s_range = 100
-        s = ((l - 100) * s_range) / l_range
-        return h, s, l
-
-    def hs_to_rgb(h, s):
-        return Color(hsl=[h, s, 50]).rgb
-
-    def k_to_rgb(self, k):
-        r, g, b = convert_K_to_RGB(k)
-        return r, g, b
-
-
-
-class HueLight:  # (Light) :
-    def __init__(self, name, config, token, config_path="./pyscript/room_config.yml"):
-        self.name = name
-        self.keys = ["rgb"]
-
-        if config["type"] == "hue":
-            print(f"Init {self.name} hue light")
-        else:
-            print("Wrong light type")
-            exit()
-
-        self.config = config
-        self.color = self.config["saved_colors"]
-        self.brightnesses = self.config["saved_brightnesses"]
-        self.brightness = 255  # TODO
-        self.color_converter = ColorConverter()
-
-        self.token = token
-
-    def set_status(self, status, edit=0):
-        if status == 1 or status == "on" or status == "1":
-            self.apply_values()
-
-        else:
-            light.turn_off(entity_id=f"light.{self.name}")
-
-    def get_status(self):
-        try:
-            status = state.get(f"light.{self.name}")
-
-            return status
-        except:
-            pass
-        return 0
-
-
-    def set_rgb(self, color, apply=False):
-        """Sets the color of the bulb"""
-        self.apply_values(rgb_color=str(color))
-
-    def set_brightness(self, brightness, apply=False):
-        self.apply_values(brightness=str(brightness))
-
-    def get_rgb(self):
-        color = state.get(f"light.{self.name}.rgb_color")
-        return color
-
-    def get_brightness(self):
-        alpha = 0
-        try:
-            alpha = state.get(f"light.{self.name}.brightness")
-        except:
-            pass
-        if alpha is None:
-            alpha = 0
-        self.brightness = alpha
-
-        return alpha
-
-    def apply_values(self, **kwargs):
-        log.warning(f"\nPYSCRIPT: [????] TRYING to set {self.name} {kwargs}")
-
-        # todo:
-        del kwargs["strength"]
-        # for key, value in kwargs.items() :
-        # self.db.set_value(key, value)
-        try:
-            light.turn_on(entity_id=f"light.{self.name}")
-            # for key, value in kwargs.items() :
-            # self.db.set_value(key, value)
-        except Exception as e:
-            log.warning(
-                f"\nPYSCRIPT: [ERROR] Failed to set {self.name} {kwargs}: {str(e)}"
-            )
-            return False
-
 
 class KaufLight:
     """Light driver for kauf bulbs"""
@@ -102,7 +6,7 @@ class KaufLight:
         self.name = name
         self.last_state = None
 
-        self.color_converter = ColorConverter()
+        # self.color_converter = ColorConverter()
 
 
     # Status (on || off)
@@ -187,3 +91,18 @@ class KaufLight:
                 )
                 light.turn_on(entity_id=f"light.{self.name}")
                 self.last_state = {"on": True}
+
+@service
+def TESTIT() :
+
+    color=state.get(f"light.kauf_tube.rgb_color")
+    log.warning(f"\nPYSCRIPT: colorzz {color}")
+
+    light=KaufLight("kauf_tube")
+    log.warning(f"\nPYSCRIPT: INIT")
+
+    
+    color=light.get_brightness()
+    # color=light.get_brightness()
+    log.warning(f"\nPYSCRIPT: CIKIR?? {color}")
+
