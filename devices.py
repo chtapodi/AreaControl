@@ -7,11 +7,7 @@ STATE_VALUES={
     },
     "output": {
         "status" : 0,
-        "r" : 0,
-        "g" : 0,
-        "b" : 0,
-        "cw" : 0,
-        "ww" : 0,
+        "rgb" : [0,0,0],
         "brightness" : 0,
         "temperature" : 0
     }
@@ -38,7 +34,8 @@ class Device:
         interfaces=[]
         for m in dir(self.obj) :
             if (not m.startswith("_") and callable(getattr(self.obj, m))) :
-                m[4:] if m.startswith("get_") else m[4:] if m.startswith("set_") # strip set_and get_
+                if m.startswith("get_") or m.startswith("set_") :
+                    m=m[4:]
                 if m not in methods :
                     interfaces.append(m)
         return interfaces
@@ -61,8 +58,6 @@ class Device:
                     method = getattr(self.device, method_name)
                     result = method()
                     state[direction][key]=result
-
-
 
 
         return state
