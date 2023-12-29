@@ -1,3 +1,7 @@
+import yaml
+from collections import defaultdict
+
+
 STATE_VALUES={
     "input": {
         "status" : 0,
@@ -12,6 +16,115 @@ STATE_VALUES={
     }
 }
 
+
+class Area:
+    def __init__(self, name):
+        self.name=name
+        self.children=[]
+        self.direct_children=[]
+        self.parent=None
+
+    def add_parent(self,parent) :
+        self.parent=parent
+
+    def add_child(self, child, direct=False) :
+        self.children.append(child)
+        if direct :
+            self.direct_children.append(child)
+
+
+    def set_state(self,state) :
+        for child in self.children :
+            child.set_state(state)
+
+
+@pyscript_compile
+def load_yaml(path) :
+    with open(path, 'r') as f:
+        data = yaml.safe_load(f)
+    return data
+
+
+def create_area_tree(yaml_file):
+    """
+    Loads areas from a YAML file and creates a hierarchical structure of Area objects.
+
+    Args:
+        yaml_file: Path to the YAML file containing area definitions.
+
+    Returns:
+        A dictionary mapping area names to their corresponding Area objects.
+    """
+
+    data=load_yaml(yaml_file)
+
+    area_tree = {}
+    area_names = set()  # Track unique area names
+
+    def create_area(name):
+        """Creates an Area object, ensuring unique names."""
+        if name not in area_names:
+            area = Area(name)
+            area_tree[name] = area
+            area_names.add(name)
+            return area
+        else:
+            return area_tree[name]  # Reuse existing object
+
+    # Create initial areas
+    for area_name, area_data in data.items():
+        area = create_area(area_name)
+
+        # Create child and direct child relationships
+        for child_type in ["sub_areas", "direct_sub_areas"]:
+            if child_type in area_data:
+                for child_name in area_data[child_type]:
+                    child_area = create_area(child_name)
+                    child_area.add_parent(area)
+                    direct=child_type == "sub_areas"
+                    area.add_child(child_area, direct=direct)
+        
+        # Add outputs as children
+        if "outputs" in area_data:
+            for output in area_data["outputs"]:
+                if output is not None:
+                    if "kauf" in output:
+                        new_light=KaufLight(output)
+                        new_device=Device(new_light)
+                        area.add_child(new_device, direct=True)
+
+                
+
+    return area_tree
+
+
+def visualize_areas(areas):
+    """
+    Prints a visual representation of the area hierarchy.
+
+    Args:
+        areas: A dictionary of Area objects.
+    """
+
+    def print_tree(area, indent=0):
+        if area.name is not None :
+            print("PYSCRIPT: " * indent + area.name)
+            for child in area.children:
+                print_tree(child, indent + 2)
+
+    # Find the root area (no parent)
+    root_area = None
+    for area in areas.values():
+        if area.parent is None:
+            root_area = area
+            break  # Exit the loop once the root area is found
+
+    # Print the tree structure
+    print("PYSCRIPT:Area Hierarchy:")
+    print_tree(root_area)
+
+
+
 class Device:
     """Acts as a wrapper/driver for a device type -- interfaces between states and devices."""
 
@@ -19,69 +132,22 @@ class Device:
         self.driver = driver
         log.warning(f"\nPYSCRIPT: trying")
 
-        self.device_name = driver.name
-        log.warning(f"\nPYSCRIPT: {self.device_name=}")
+        self.name = driver.name
+        log.warning(f"\nPYSCRIPT: {self.name=}")
 
-
-        self.method_names = self.parse_methods()
-
-
-        
-        
-
-    def parse_methods(self):
-        """
-        Parses the devices's interfaces and returns a list of their names.
-        """
-        interfaces=[]
-        log.warning(f"\nPYSCRIPT: Parsing")
-        
-        for m in dir(self.driver) :
-            log.warning(f"\nPYSCRIPT: {m}")
-
-            if (not m.startswith("_") and callable(getattr(self.obj, m))) :
-                if m.startswith("get_") or m.startswith("set_") :
-                    m=m[4:]
-                if m not in methods :
-                    interfaces.append(m)
-        return interfaces
+        self.last_state=None
 
     def get_state(self):
-        "Gets the state of the device"
-        state = {}
-        
-        for name in self.method_names:
-            method_name = "get_" + name
-            method = getattr(self.device, method_name)
-            result = method()
-            state[name]=result
-
-
-        for direction, states in STATE_VALUES :
-            for key, value in states :
-                if key in self.method_names : # if this part of the state is something this device has
-                    method_name = "get_" + key
-                    method = getattr(self.device, method_name)
-                    result = method()
-                    state[direction][key]=result
-
-
+        state=self.driver.get_state()
+        self.last_state=state
         return state
 
     def set_state(self, state):
-        """Sets the state of the device (if applicable)"""
+        self.driver.set_state(state)
+        self.last_state=state
 
-        #Filters the states for which methods exist
-        applicable_state={}
-        for key in state :
-            if key in self.method_names :
-                applicable_state[key]=state[key]
-
-        self.device.set_state(applicable_state)
-    
-
-
-
+    def get(self,value) :
+        return self.last_state[value]
 
 class KaufLight:
     """Light driver for kauf bulbs"""
@@ -89,8 +155,6 @@ class KaufLight:
     def __init__(self, name):
         self.name = name
         self.last_state = None
-
-        # self.color_converter = ColorConverter()
 
 
     # Status (on || off)
@@ -113,6 +177,13 @@ class KaufLight:
         except:
             pass
         return "unknown"
+
+    def is_on(self) :
+        status=self.get_status()
+        if status is None or "off" in status or "unknown" in status:
+            return False
+        return True
+
 
     # RGB (color)
     def set_rgb(self, color, apply=False):
@@ -143,7 +214,7 @@ class KaufLight:
 
     def set_state(self, state) :
         """Attempts to set all of the values at the same time instead of rgb, brightness, etc..."""
-        self.apply_values(state)
+        self.apply_values(**state)
 
     # Apply values
     def apply_values(self, **kwargs):
@@ -178,19 +249,13 @@ class KaufLight:
 
 @service
 def test_classes() :
+    log.warning("\nPYSCRIPT: Starting")
+    area_tree = create_area_tree("./pyscript/layout.yml")
+    log.warning("\nPYSCRIPT: Created")
 
-    driver=KaufLight("kauf_tube")
-    log.warning(f"\nPYSCRIPT: Init driver")
-
-    device=Device(driver)
-    log.warning(f"\nPYSCRIPT: Init device")
-
-    state=device.get_state()
-    log.warning(f"\nPYSCRIPT: {state=}")
+    living_room=area_tree["living_room"]
+    log.warning(f"\nPYSCRIPT: living_room {living_room}")
+    living_room.set_state({"brightness":255})
 
 
 
-
-    
-
-# test_classes()
