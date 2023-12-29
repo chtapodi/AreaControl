@@ -1,98 +1,86 @@
-class ColorConverter:
-    def __init__(self):
-        pass
+STATE_VALUES={
+    "input": {
+        "status" : 0,
+        "baud_duration" : 0,
+        "elapsed_time" : 0,
+    },
+    "output": {
+        "status" : 0,
+        "rgb" : [0,0,0],
+        "brightness" : 0,
+        "temperature" : 0
+    }
+}
 
-    def rgb_to_hsl(r, g, b):
-        h, s, l = Color(rgb=[r, g, b]).hsl
-        l_range = 50 - 100
-        s_range = 100
-        s = ((l - 100) * s_range) / l_range
-        return h, s, l
+class Device:
+    """Acts as a wrapper/driver for a device type -- interfaces between states and devices."""
 
-    def hs_to_rgb(h, s):
-        return Color(hsl=[h, s, 50]).rgb
+    def __init__(self, driver):
+        self.driver = driver
+        log.warning(f"\nPYSCRIPT: trying")
 
-    def k_to_rgb(self, k):
-        r, g, b = convert_K_to_RGB(k)
-        return r, g, b
-
-
-
-class HueLight:  # (Light) :
-    def __init__(self, name, config, token, config_path="./pyscript/room_config.yml"):
-        self.name = name
-        self.keys = ["rgb"]
-
-        if config["type"] == "hue":
-            print(f"Init {self.name} hue light")
-        else:
-            print("Wrong light type")
-            exit()
-
-        self.config = config
-        self.color = self.config["saved_colors"]
-        self.brightnesses = self.config["saved_brightnesses"]
-        self.brightness = 255  # TODO
-        self.color_converter = ColorConverter()
-
-        self.token = token
-
-    def set_status(self, status, edit=0):
-        if status == 1 or status == "on" or status == "1":
-            self.apply_values()
-
-        else:
-            light.turn_off(entity_id=f"light.{self.name}")
-
-    def get_status(self):
-        try:
-            status = state.get(f"light.{self.name}")
-
-            return status
-        except:
-            pass
-        return 0
+        self.device_name = driver.name
+        log.warning(f"\nPYSCRIPT: {self.device_name=}")
 
 
-    def set_rgb(self, color, apply=False):
-        """Sets the color of the bulb"""
-        self.apply_values(rgb_color=str(color))
+        self.method_names = self.parse_methods()
 
-    def set_brightness(self, brightness, apply=False):
-        self.apply_values(brightness=str(brightness))
 
-    def get_rgb(self):
-        color = state.get(f"light.{self.name}.rgb_color")
-        return color
+        
+        
 
-    def get_brightness(self):
-        alpha = 0
-        try:
-            alpha = state.get(f"light.{self.name}.brightness")
-        except:
-            pass
-        if alpha is None:
-            alpha = 0
-        self.brightness = alpha
+    def parse_methods(self):
+        """
+        Parses the devices's interfaces and returns a list of their names.
+        """
+        interfaces=[]
+        log.warning(f"\nPYSCRIPT: Parsing")
+        
+        for m in dir(self.driver) :
+            log.warning(f"\nPYSCRIPT: {m}")
 
-        return alpha
+            if (not m.startswith("_") and callable(getattr(self.obj, m))) :
+                if m.startswith("get_") or m.startswith("set_") :
+                    m=m[4:]
+                if m not in methods :
+                    interfaces.append(m)
+        return interfaces
 
-    def apply_values(self, **kwargs):
-        log.warning(f"\nPYSCRIPT: [????] TRYING to set {self.name} {kwargs}")
+    def get_state(self):
+        "Gets the state of the device"
+        state = {}
+        
+        for name in self.method_names:
+            method_name = "get_" + name
+            method = getattr(self.device, method_name)
+            result = method()
+            state[name]=result
 
-        # todo:
-        del kwargs["strength"]
-        # for key, value in kwargs.items() :
-        # self.db.set_value(key, value)
-        try:
-            light.turn_on(entity_id=f"light.{self.name}")
-            # for key, value in kwargs.items() :
-            # self.db.set_value(key, value)
-        except Exception as e:
-            log.warning(
-                f"\nPYSCRIPT: [ERROR] Failed to set {self.name} {kwargs}: {str(e)}"
-            )
-            return False
+
+        for direction, states in STATE_VALUES :
+            for key, value in states :
+                if key in self.method_names : # if this part of the state is something this device has
+                    method_name = "get_" + key
+                    method = getattr(self.device, method_name)
+                    result = method()
+                    state[direction][key]=result
+
+
+        return state
+
+    def set_state(self, state):
+        """Sets the state of the device (if applicable)"""
+
+        #Filters the states for which methods exist
+        applicable_state={}
+        for key in state :
+            if key in self.method_names :
+                applicable_state[key]=state[key]
+
+        self.device.set_state(applicable_state)
+    
+
+
 
 
 class KaufLight:
@@ -102,7 +90,7 @@ class KaufLight:
         self.name = name
         self.last_state = None
 
-        self.color_converter = ColorConverter()
+        # self.color_converter = ColorConverter()
 
 
     # Status (on || off)
@@ -187,3 +175,22 @@ class KaufLight:
                 )
                 light.turn_on(entity_id=f"light.{self.name}")
                 self.last_state = {"on": True}
+
+@service
+def test_classes() :
+
+    driver=KaufLight("kauf_tube")
+    log.warning(f"\nPYSCRIPT: Init driver")
+
+    device=Device(driver)
+    log.warning(f"\nPYSCRIPT: Init device")
+
+    state=device.get_state()
+    log.warning(f"\nPYSCRIPT: {state=}")
+
+
+
+
+    
+
+# test_classes()
