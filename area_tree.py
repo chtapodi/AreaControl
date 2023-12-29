@@ -4,67 +4,64 @@ import copy
 import time
 
 
-STATE_VALUES={
+STATE_VALUES = {
     "input": {
-        "status" : 0,
-        "baud_duration" : 0,
-        "elapsed_time" : 0,
+        "status": 0,
+        "baud_duration": 0,
+        "elapsed_time": 0,
     },
-    "output": {
-        "status" : 0,
-        "rgb" : [0,0,0],
-        "brightness" : 0,
-        "temperature" : 0
-    }
+    "output": {"status": 0, "rgb": [0, 0, 0], "brightness": 0, "temperature": 0},
 }
 
 
 class Area:
     def __init__(self, name):
-        self.name=name
-        self.children=[]
-        self.direct_children=[]
-        self.parent=None
+        self.name = name
+        self.children = []
+        self.direct_children = []
+        self.parent = None
 
-    def add_parent(self,parent) :
-        self.parent=parent
+    def add_parent(self, parent):
+        self.parent = parent
 
-    def add_child(self, child, direct=False) :
+    def add_child(self, child, direct=False):
         if child is not None and child.name is not None:
             self.children.append(child)
-            if direct :
+            if direct:
                 self.direct_children.append(child)
 
-    def get_children(self) :
-        return self.children +self.direct_children
+    def get_children(self):
+        return list(set(self.children + self.direct_children))
 
-    def set_state(self,state) :
-        for child in self.get_children() :
-            
+    def set_state(self, state):
+        for child in self.get_children():
             child.set_state(copy.deepcopy(state))
 
     def get_state(self):
         combined_state = {}
         for child in self.get_children():
-            child_state = child.get_state()  # Recursive call for both Area and Device children
-            for key, val in child_state :
-                if key in combined_state :
-                    if val!=combined_state[key] : # If the state does not match
-                        combined_state[child.name]=child_state
+            child_state = child.get_state()
+            
+            for key, val in child_state.items():
+                if key in combined_state:
+                    if key!="name" and val != combined_state[key]:  # If the state does not match
+                        if "substates" not in combined_state.keys() :
+                            combined_state["substates"]={}
+                        combined_state["substates"][child_state["name"]] = child_state
                         break
                     # Else "merges" states
-                else : # if a new key is present, could be child state
-                    combined_state[key]=value
-                    
+                else:  # if a new key is present, could be child state
+                    combined_state[key] = val
+        combined_state["name"]=self.name
         return combined_state
 
 
-
 @pyscript_compile
-def load_yaml(path) :
-    with open(path, 'r') as f:
+def load_yaml(path):
+    with open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
+
 
 class RuleManager:
     def __init__(self, rules_file):
@@ -84,8 +81,8 @@ class RuleManager:
     def create_event(self, event_string):
         for rule_name, rule in self.rules.items():
             if event_string in rule_name:
-                    print(f"Rule '{rule_name}' {self.rules[rule_name]}")
-                    return
+                print(f"Rule '{rule_name}' {self.rules[rule_name]}")
+                return
 
 
 def create_area_tree(yaml_file):
@@ -99,7 +96,7 @@ def create_area_tree(yaml_file):
         A dictionary mapping area names to their corresponding Area objects.
     """
 
-    data=load_yaml(yaml_file)
+    data = load_yaml(yaml_file)
 
     area_tree = {}
     area_names = set()  # Track unique area names
@@ -116,7 +113,7 @@ def create_area_tree(yaml_file):
 
     # Create initial areas
     for area_name, area_data in data.items():
-        if area_name is not None : 
+        if area_name is not None:
             area = create_area(area_name)
 
             # Create child and direct child relationships
@@ -125,16 +122,16 @@ def create_area_tree(yaml_file):
                     for child_name in area_data[child_type]:
                         child_area = create_area(child_name)
                         child_area.add_parent(area)
-                        direct=child_type == "sub_areas"
+                        direct = child_type == "sub_areas"
                         area.add_child(child_area, direct=direct)
-            
+
             # Add outputs as children
             if "outputs" in area_data:
                 for output in area_data["outputs"]:
                     if output is not None:
                         if "kauf" in output:
-                            new_light=KaufLight(output)
-                            new_device=Device(new_light)
+                            new_light = KaufLight(output)
+                            new_device = Device(new_light)
                             area.add_child(new_device, direct=True)
 
     return area_tree
@@ -149,7 +146,7 @@ def visualize_areas(areas):
     """
 
     def print_tree(area, indent=0):
-        if area.name is not None :
+        if area.name is not None:
             print("PYSCRIPT: " * indent + area.name)
             for child in area.children:
                 print_tree(child, indent + 2)
@@ -164,8 +161,6 @@ def visualize_areas(areas):
     # Print the tree structure
     print("PYSCRIPT:Area Hierarchy:")
     print_tree(root_area)
-    
-
 
 
 class Device:
@@ -177,38 +172,39 @@ class Device:
         self.name = driver.name
         log.info(f"\nPYSCRIPT: {self.name=}")
 
-        self.last_state=None
+        self.last_state = None
 
-        self.cached_state=None
+        self.cached_state = None
 
     def get_state(self):
-        state=self.driver.get_state()
-        self.last_state=state
+        state = self.driver.get_state()
+        state["name"]=self.name
+        self.last_state = state
         return state
 
     def set_state(self, state):
-        if "status" not in state.keys() :
+        if "status" not in state.keys():
             log.info(f"{self.name}: State does not contain status {state}. Caching")
 
-            self.cached_state=state
+            self.cached_state = state
 
-        else :
+        else:
             log.info(f"{self.name}: State contains status {state}")
 
-            for key,val in self.cached_state.items() :
-                if key not in state.keys() :
+            for key, val in self.cached_state.items():
+                if key not in state.keys():
                     # print(f"filling out state with {key}:{val}")
                     log.info(f"filling out state with {key}:{val}")
 
-                    
-                    state[key]=val
+                    state[key] = val
             log.info(f"Setting state {state}")
-            
-            self.driver.set_state(state)
-            self.last_state=state
 
-    def get(self,value) :
+            self.driver.set_state(state)
+            self.last_state = state
+
+    def get(self, value):
         return self.last_state[value]
+
 
 class KaufLight:
     """Light driver for kauf bulbs"""
@@ -216,7 +212,8 @@ class KaufLight:
     def __init__(self, name):
         self.name = name
         self.last_state = None
-
+        self.color = None
+        self.temperature = None
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -239,52 +236,80 @@ class KaufLight:
             pass
         return "unknown"
 
-    def is_on(self) :
-        status=self.get_status()
+    def is_on(self):
+        status = self.get_status()
         if status is None or "off" in status or "unknown" in status:
             return False
         return True
 
-
     # RGB (color)
     def set_rgb(self, color, apply=False):
         self.color = color
-        if (apply or self.is_on()):
+        if apply or self.is_on():
             self.apply_values(rgb_color=self.color)
 
     def get_rgb(self):
         color = state.get(f"light.{self.name}.rgb_color")
 
-        return color
+        return color if color != "null" else None
+
 
     # Brightness
     def set_brightness(self, brightness, apply=False):
         self.apply_values(brightness=str(brightness))
 
     def get_brightness(self):
-        alpha = 0
+        brightness = 0
         try:
-            alpha = state.get(f"light.{self.name}.brightness")
+            brightness = state.get(f"light.{self.name}.brightness")
         except:
             pass
-        if alpha is None:
-            alpha = 0
-        self.brightness = alpha
+        if brightness is None:
+            brightness = 0
+        self.brightness = brightness
 
-        return alpha
+        return brightness
 
-    def set_state(self, state) :
+
+    def set_temperature(self, temperature, apply=False):
+        self.temperature = temperature
+        self.apply_values(color_temp=self.temperature)
+
+    def get_temperature(self):
+        temperature = state.get(f"light.{self.name}.color_temp")
+
+        return temperature if temperature != "null" else None
+
+
+    def set_state(self, state):
         """
-            Converts state to kauf specific values. 
-            Only does anything if state value is present, including changing brightness.
+        Converts state to kauf specific values.
+        Only does anything if state value is present, including changing brightness.
         """
-        if "status" in state.keys() :
-            if not state["status"] : #if being set to off
-                state["off"]=1
+        if "status" in state.keys():
+            if not state["status"]:  # if being set to off
+                state["off"] = 1
 
-            del state["status"] 
+            del state["status"]
 
             self.apply_values(**state)
+
+    def get_state(self):
+        state = {}
+        state["status"] = self.is_on()
+        state["brightness"] = self.get_brightness()
+        rgb = self.get_rgb()
+        if rgb is not None:
+            state["rgb"] = rgb
+
+        temperature = self.get_temperature()
+        if temperature is not None:
+            state["temperature"] = temperature
+
+
+        log.info(f"get {self.name} state {state}")
+
+        return state
 
     # Apply values
     def apply_values(self, **kwargs):
@@ -294,14 +319,12 @@ class KaufLight:
             light.turn_off(entity_id=f"light.{self.name}")
 
         else:
-
-            
             new_args = {}
             for k, v in kwargs.items():
                 if v is not None:
                     new_args[k] = v
 
-            # If being turned on and no rgb present, rgb color is set to value. 
+            # If being turned on and no rgb present, rgb color is set to value.
             if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
                 if not self.is_on():  # if it is off set it to the saved color
                     new_args["rgb_color"] = self.default_color
@@ -317,11 +340,10 @@ class KaufLight:
                 light.turn_on(entity_id=f"light.{self.name}")
                 self.last_state = {"on": True}
 
+
 @service
-def test_classes() :
-
+def test_classes():
     rules_manager = RuleManager("./pyscript/rules.yml")
-
 
     log.info("\nPYSCRIPT: Starting")
     area_tree = create_area_tree("./pyscript/layout.yml")
@@ -329,18 +351,12 @@ def test_classes() :
 
     # visualize_areas(area_tree)
 
-    living_room=area_tree["living_room"]
-    log.info(f"APPLYING RED\n")
-    living_room.set_state({"rgb_color":[255,0,0]})
-    time.sleep(10)
-    log.info(f"APPLYING ON\n")
+    living_room = area_tree["living_room"]
+    # log.info(f"APPLYING RED\n")
+    # living_room.set_state({"rgb_color": [255, 0, 0]})
+    # # time.sleep(10)
+    # log.info(f"APPLYING ON\n")
 
-    living_room.set_state({"status":1})
-    lv_state=living_room.get_state()
+    # living_room.set_state({"status": 1})
+    lv_state = living_room.get_state()
     log.info(f"lv_state {lv_state}\n")
-
-
-
-
-
-
