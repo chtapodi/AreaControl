@@ -1,5 +1,7 @@
 import yaml
 from collections import defaultdict
+import copy
+import time
 
 
 STATE_VALUES={
@@ -28,16 +30,20 @@ class Area:
         self.parent=parent
 
     def add_child(self, child, direct=False) :
-        self.children.append(child)
-        if direct :
-            self.direct_children.append(child)
+        if child is not None and child.name is not None:
+            self.children.append(child)
+            if direct :
+                self.direct_children.append(child)
 
 
     def set_state(self,state) :
         for child in self.children +self.direct_children:
-            log.warning(f"\nPYSCRIPT: Setting {child.name} {state}")
+            log.info(f"setting child {child.name}: to  {state}")
             
-            child.set_state(state)
+            child.set_state(copy.deepcopy(state))
+            log.info(f"After setting state is  {state}\n")
+
+            
 
 
 @pyscript_compile
@@ -45,6 +51,27 @@ def load_yaml(path) :
     with open(path, 'r') as f:
         data = yaml.safe_load(f)
     return data
+
+class RuleManager:
+    def __init__(self, rules_file):
+        self.rules = self.load_rules(rules_file)
+
+    def load_rules(self, rules_file):
+        data = load_yaml(rules_file)
+        rules = {}
+        for rule_name, rule_data in data.items():
+            rules[rule_name] = {
+                "input_type": rule_data["input_type"],
+                "function": rule_data["function"],
+                "args": rule_data["args"],
+            }
+        return rules
+
+    def create_event(self, event_string):
+        for rule_name, rule in self.rules.items():
+            if event_string in rule_name:
+                    print(f"Rule '{rule_name}' {self.rules[rule_name]}")
+                    return
 
 
 def create_area_tree(yaml_file):
@@ -132,12 +159,13 @@ class Device:
 
     def __init__(self, driver):
         self.driver = driver
-        log.warning(f"\nPYSCRIPT: trying")
 
         self.name = driver.name
-        log.warning(f"\nPYSCRIPT: {self.name=}")
+        log.info(f"\nPYSCRIPT: {self.name=}")
 
         self.last_state=None
+
+        self.cached_state=None
 
     def get_state(self):
         state=self.driver.get_state()
@@ -145,8 +173,25 @@ class Device:
         return state
 
     def set_state(self, state):
-        self.driver.set_state(state)
-        self.last_state=state
+        if "status" not in state.keys() :
+            log.info(f"{self.name}: State does not contain status {state}. Caching")
+
+            self.cached_state=state
+
+        else :
+            log.info(f"{self.name}: State contains status {state}")
+
+            for key,val in self.cached_state.items() :
+                if key not in state.keys() :
+                    # print(f"filling out state with {key}:{val}")
+                    log.info(f"filling out state with {key}:{val}")
+
+                    
+                    state[key]=val
+            log.info(f"Setting state {state}")
+            
+            self.driver.set_state(state)
+            self.last_state=state
 
     def get(self,value) :
         return self.last_state[value]
@@ -215,8 +260,17 @@ class KaufLight:
         return alpha
 
     def set_state(self, state) :
-        """Attempts to set all of the values at the same time instead of rgb, brightness, etc..."""
-        self.apply_values(**state)
+        """
+            Converts state to kauf specific values. 
+            Only does anything if state value is present, including changing brightness.
+        """
+        if "status" in state.keys() :
+            if not state["status"] : #if being set to off
+                state["off"]=1
+
+            del state["status"] 
+
+            self.apply_values(**state)
 
     # Apply values
     def apply_values(self, **kwargs):
@@ -243,7 +297,7 @@ class KaufLight:
                 self.last_state = new_args
 
             except Exception as e:
-                log.warning(
+                log.info(
                     f"\nPYSCRIPT: [ERROR 0/1] Failed to set {self.name} {new_args}: {e}"
                 )
                 light.turn_on(entity_id=f"light.{self.name}")
@@ -251,15 +305,23 @@ class KaufLight:
 
 @service
 def test_classes() :
-    log.warning("\nPYSCRIPT: Starting")
+
+    rules_manager = RuleManager("./pyscript/rules.yml")
+
+
+    log.info("\nPYSCRIPT: Starting")
     area_tree = create_area_tree("./pyscript/layout.yml")
-    log.warning("\nPYSCRIPT: Created")
+    log.info("\nPYSCRIPT: Created")
 
     # visualize_areas(area_tree)
 
     living_room=area_tree["living_room"]
-    log.warning(f"\nPYSCRIPT: living_room {living_room}")
+    log.info(f"APPLYING RED\n")
     living_room.set_state({"rgb_color":[255,0,0]})
+    time.sleep(10)
+    log.info(f"APPLYING ON\n")
+
+    living_room.set_state({"status":1})
 
 
 
