@@ -103,52 +103,101 @@ def load_yaml(path):
 
 class RuleManager:
     def __init__(self, rules_file):
-        self.rules = self.load_rules(rules_file)
+        with open(rules_file, "r") as f:
+            self.rules = yaml.safe_load(f)
 
-    def load_rules(self, rules_file):
-        data = load_yaml(rules_file)
-        rules = {}
-        for rule_name, rule_data in data.items():
-            rules[rule_name] = {
-                "input_type": rule_data["input_type"],
-                "function": rule_data["function"],
-                "args": rule_data["args"],
-            }
-        return rules
+    def check_event(self, event):
+        log.info(f"checking event {event}")
 
-    def create_event(self, event_string):
-        for rule_name, rule in self.rules.items():
-            if event_string in rule_name:
-                print(f"Rule '{rule_name}' {self.rules[rule_name]}")
-                return
+        matching_rules = []
+        for rule_name in self.rules.keys():
+            log.info(f"rule name: {rule_name}")
+            if event["device_name"].startswith(rule_name):
+                matching_rules.append(rule_name)
+
+        log.info(f"matching rules: {matching_rules}")
+
+        for rule_name in matching_rules:
+            rule = self.rules[rule_name]
+            return self.execute_rule(event, rule)
+
+        return False  # No matching rule
+
+    def execute_rule(self, event_data, rule):
+        log.info(f"executing rule {rule}")
+        event_tags = event_data.get("tags", [])
+
+        if not self._check_tags(event_tags, rule):
+            return False
+
+        functions = rule.get("functions", [])
+        if not self._check_functions(functions, event_data, 1, rule):
+            return False
+
+        return True
+
+    def _check_tags(self, tags, rule):
+        """This checks tags"""
+        required_tags = rule.get("required_tags", [])
+        prohibited_tags = rule.get("prohibited_tags", [])
+
+        for tag in required_tags:
+            if tag not in tags:
+                return False
+
+        for tag in prohibited_tags:
+            if tag in tags:
+                return False
+
+        return True
+
+    def _check_functions(self, functions, event_data, area_state, rule):
+        for function_data in functions:
+            # split dict key and value to get functoin name and args
+            function_name = list(function_data.keys())[0]
+            args = function_data.get(function_name, [])
+
+            log.info(f"checking function {function_name} with args {args}")
+
+            if function_name in globals().keys():
+                func = globals()[function_name]
+                if not func(event, 1, *args):
+                    return False
+            else:
+                log.info(f"Function '{function_name}' not implemented.")
+                return True
+
+        return True
+
 
 class AreaTree:
     """Acts as an interface to the area tree"""
 
     def __init__(self, config_path):
-        self.config_path=config_path
+        self.config_path = config_path
         self.area_tree = self._create_area_tree(self.config_path)
 
         self.root = self._find_root()
-        
-    def get_state(self, area=None) :
-        if area is None : area = self.root
+
+    def get_state(self, area=None):
+        if area is None:
+            area = self.root
         return self.area_tree[area].get_state()
 
-    def get_area(self, area=None) :
-        if area is None : area = self.root
+    def get_area(self, area=None):
+        if area is None:
+            area = self.root
         return self.area_tree[area]
 
-
-    def get_area_tree(self) :
+    def get_area_tree(self):
         return self.area_tree
 
-    def _find_root(self) :
-        root_area=None
+    def _find_root(self):
+        root_area = None
         for name, area in self.area_tree.items():
             if area.parent is None:
                 root_area = name
-                break 
+                break
         return root_area
 
     def _create_area_tree(self, yaml_file):
@@ -232,7 +281,7 @@ class Device:
 
             for key, val in self.cached_state.items():
                 if key not in state.keys():
-                    # print(f"filling out state with {key}:{val}")
+                    # log.info(f"filling out state with {key}:{val}")
                     log.info(f"filling out state with {key}:{val}")
 
                     state[key] = val
@@ -289,9 +338,9 @@ class KaufLight:
             self.apply_values(rgb_color=self.color)
 
     def get_rgb(self):
-        try :
+        try:
             color = state.get(f"light.{self.name}.rgb_color")
-        except :
+        except:
             log.warning(f"Unable to get rgb_color from {self.name}")
             return None
 
@@ -311,7 +360,7 @@ class KaufLight:
         if brightness is None:
             brightness = 0
 
-        if self.is_on() : #brightness reports as 0 when off
+        if self.is_on():  # brightness reports as 0 when off
             self.brightness = brightness
 
         return brightness
@@ -321,9 +370,9 @@ class KaufLight:
         self.apply_values(color_temp=self.temperature)
 
     def get_temperature(self):
-        try :
+        try:
             temperature = state.get(f"light.{self.name}.color_temp")
-        except :
+        except:
             log.warning(f"Unable to get color_temp from {self.name}")
             return None
         return temperature if temperature != "null" else None
@@ -345,12 +394,13 @@ class KaufLight:
         state = {}
         state["status"] = self.is_on()
 
-        if state["status"] : # if status is on, get current brightness
+        if state["status"]:  # if status is on, get current brightness
             brightness = self.get_brightness()
             if brightness is not None:
                 state["brightness"] = brightness
-        else :
-            if self.brightness is not None : state["brightness"]=self.brightness
+        else:
+            if self.brightness is not None:
+                state["brightness"] = self.brightness
 
         rgb = self.get_rgb()
         if rgb is not None:
@@ -399,7 +449,6 @@ def test_classes():
     log.info("\nPYSCRIPT: Starting")
     area_tree = AreaTree("./pyscript/layout.yml")
     log.info("\nPYSCRIPT: ####Created#####\n\n")
-
 
     log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
 

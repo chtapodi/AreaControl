@@ -1,10 +1,14 @@
-button_single:
-  input_type: button_single
-  function: set_state
-  args:
-    rgb:
-      - 255
-      - 0
-      - 0
+button_* :  # Wildcard for matching events with type starting with "door_opened"
+  required_tags: ["tag1"]
+  prohibited_tags: ["locked"]
+  functions:
+    - check_time_of_day: ["morning"]
+    - check_user_presence: []
 
+
+mock_input :  # Wildcard for matching events with type starting with "door_opened"
+  required_tags: ["required1"]
+  prohibited_tags: ["proh"]
+  functions:
+    - test_func: ["ay",1]
 
