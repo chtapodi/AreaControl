@@ -38,7 +38,7 @@ class Device:
         interfaces=[]
         for m in dir(self.obj) :
             if (not m.startswith("_") and callable(getattr(self.obj, m))) :
-                m[4:] if m.startswith("get_") else m[4:] if m.startswith("set_") else m # strip set_and get_
+                m[4:] if m.startswith("get_") else m[4:] if m.startswith("set_") # strip set_and get_
                 if m not in methods :
                     interfaces.append(m)
         return interfaces
@@ -46,14 +46,24 @@ class Device:
     def get_state(self):
         "Gets the state of the device"
         state = {}
-
+        
         for name in self.method_names:
             method_name = "get_" + name
             method = getattr(self.device, method_name)
             result = method()
             state[name]=result
 
-        #TODO: This definitely needs more parsing
+
+        for direction, states in STATE_VALUES :
+            for key, value in states :
+                if key in self.method_names : # if this part of the state is something this device has
+                    method_name = "get_" + key
+                    method = getattr(self.device, method_name)
+                    result = method()
+                    state[direction][key]=result
+
+
+
 
         return state
 
