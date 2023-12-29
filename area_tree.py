@@ -122,57 +122,85 @@ class RuleManager:
                 print(f"Rule '{rule_name}' {self.rules[rule_name]}")
                 return
 
+class AreaTree:
+    """Acts as an interface to the area tree"""
 
-def create_area_tree(yaml_file):
-    """
-    Loads areas from a YAML file and creates a hierarchical structure of Area objects.
+    def __init__(self, config_path):
+        self.config_path=config_path
+        self.area_tree = self._create_area_tree(self.config_path)
 
-    Args:
-        yaml_file: Path to the YAML file containing area definitions.
+        self.root = self._find_root()
+        
+    def get_state(self, area=None) :
+        if area is None : area = self.root
+        return self.area_tree[area].get_state()
 
-    Returns:
-        A dictionary mapping area names to their corresponding Area objects.
-    """
+    def get_area(self, area=None) :
+        if area is None : area = self.root
+        return self.area_tree[area]
 
-    data = load_yaml(yaml_file)
 
-    area_tree = {}
-    area_names = set()  # Track unique area names
+    def get_area_tree(self) :
+        return self.area_tree
 
-    def create_area(name):
-        """Creates an Area object, ensuring unique names."""
-        if name not in area_names:
-            area = Area(name)
-            area_tree[name] = area
-            area_names.add(name)
-            return area
-        else:
-            return area_tree[name]  # Reuse existing object
+    def _find_root(self) :
+        root_area=None
+        for name, area in self.area_tree.items():
+            if area.parent is None:
+                root_area = name
+                break 
+        return root_area
 
-    # Create initial areas
-    for area_name, area_data in data.items():
-        if area_name is not None:
-            area = create_area(area_name)
+    def _create_area_tree(self, yaml_file):
+        """
+        Loads areas from a YAML file and creates a hierarchical structure of Area objects.
 
-            # Create child and direct child relationships
-            for child_type in ["sub_areas", "direct_sub_areas"]:
-                if child_type in area_data:
-                    for child_name in area_data[child_type]:
-                        child_area = create_area(child_name)
-                        child_area.add_parent(area)
-                        direct = child_type == "sub_areas"
-                        area.add_child(child_area, direct=direct)
+        Args:
+            yaml_file: Path to the YAML file containing area definitions.
 
-            # Add outputs as children
-            if "outputs" in area_data:
-                for output in area_data["outputs"]:
-                    if output is not None:
-                        if "kauf" in output:
-                            new_light = KaufLight(output)
-                            new_device = Device(new_light)
-                            area.add_child(new_device, direct=True)
+        Returns:
+            A dictionary mapping area names to their corresponding Area objects.
+        """
 
-    return area_tree
+        data = load_yaml(yaml_file)
+
+        area_tree = {}
+        area_names = set()  # Track unique area names
+
+        def create_area(name):
+            """Creates an Area object, ensuring unique names."""
+            if name not in area_names:
+                area = Area(name)
+                area_tree[name] = area
+                area_names.add(name)
+                return area
+            else:
+                return area_tree[name]  # Reuse existing object
+
+        # Create initial areas
+        for area_name, area_data in data.items():
+            if area_name is not None:
+                area = create_area(area_name)
+
+                # Create child and direct child relationships
+                for child_type in ["sub_areas", "direct_sub_areas"]:
+                    if child_type in area_data:
+                        for child_name in area_data[child_type]:
+                            child_area = create_area(child_name)
+                            child_area.add_parent(area)
+                            direct = child_type == "sub_areas"
+                            area.add_child(child_area, direct=direct)
+
+                # Add outputs as children
+                if "outputs" in area_data:
+                    for output in area_data["outputs"]:
+                        if output is not None:
+                            if "kauf" in output:
+                                new_light = KaufLight(output)
+                                new_device = Device(new_light)
+                                area.add_child(new_device, direct=True)
+
+        return area_tree
 
 
 class Device:
@@ -191,8 +219,6 @@ class Device:
         state = self.driver.get_state()
         state["name"] = self.name
         self.last_state = state
-        log.info(f"{self.name}: gotten state {state}")
-
         return state
 
     def set_state(self, state):
@@ -226,6 +252,7 @@ class KaufLight:
         self.name = name
         self.last_state = None
         self.color = None
+        self.brightness = None
         self.temperature = None
 
     # Status (on || off)
@@ -262,7 +289,11 @@ class KaufLight:
             self.apply_values(rgb_color=self.color)
 
     def get_rgb(self):
-        color = state.get(f"light.{self.name}.rgb_color")
+        try :
+            color = state.get(f"light.{self.name}.rgb_color")
+        except :
+            log.warning(f"Unable to get rgb_color from {self.name}")
+            return None
 
         return color if color != "null" else None
 
@@ -276,9 +307,12 @@ class KaufLight:
             brightness = state.get(f"light.{self.name}.brightness")
         except:
             pass
+
         if brightness is None:
             brightness = 0
-        self.brightness = brightness
+
+        if self.is_on() : #brightness reports as 0 when off
+            self.brightness = brightness
 
         return brightness
 
@@ -287,8 +321,11 @@ class KaufLight:
         self.apply_values(color_temp=self.temperature)
 
     def get_temperature(self):
-        temperature = state.get(f"light.{self.name}.color_temp")
-
+        try :
+            temperature = state.get(f"light.{self.name}.color_temp")
+        except :
+            log.warning(f"Unable to get color_temp from {self.name}")
+            return None
         return temperature if temperature != "null" else None
 
     def set_state(self, state):
@@ -307,7 +344,14 @@ class KaufLight:
     def get_state(self):
         state = {}
         state["status"] = self.is_on()
-        state["brightness"] = self.get_brightness()
+
+        if state["status"] : # if status is on, get current brightness
+            brightness = self.get_brightness()
+            if brightness is not None:
+                state["brightness"] = brightness
+        else :
+            if self.brightness is not None : state["brightness"]=self.brightness
+
         rgb = self.get_rgb()
         if rgb is not None:
             state["rgb"] = rgb
@@ -353,17 +397,20 @@ def test_classes():
     rules_manager = RuleManager("./pyscript/rules.yml")
 
     log.info("\nPYSCRIPT: Starting")
-    area_tree = create_area_tree("./pyscript/layout.yml")
+    area_tree = AreaTree("./pyscript/layout.yml")
     log.info("\nPYSCRIPT: ####Created#####\n\n")
 
-    # visualize_areas(area_tree)
 
-    living_room = area_tree["living_room"]
-    # log.info(f"APPLYING RED\n")
-    # living_room.set_state({"rgb_color": [255, 0, 0]})
-    # # time.sleep(10)
-    # log.info(f"APPLYING ON\n")
+    log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
 
-    # living_room.set_state({"status": 1})
-    lv_state = living_room.get_state()
-    log.info(f"lv_state {lv_state}\n")
+    # # visualize_areas(area_tree)
+
+    # living_room = area_tree["living_room"]
+    # # log.info(f"APPLYING RED\n")
+    # # living_room.set_state({"rgb_color": [255, 0, 0]})
+    # # # time.sleep(10)
+    # # log.info(f"APPLYING ON\n")
+
+    # # living_room.set_state({"status": 1})
+    # lv_state = living_room.get_state()
+    # log.info(f"lv_state {lv_state}\n")
