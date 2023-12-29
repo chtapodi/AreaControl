@@ -14,6 +14,54 @@ STATE_VALUES = {
 }
 
 
+def merge_states(state_list, name=None):
+
+    if len(state_list)==1 : #Case where merge does not need to happen
+        return state_list[0]
+
+    log.info(f"\nMERGING {state_list}")
+
+    all_keys = set()
+    for d in state_list:
+        state_keys = []
+        for key, value in d.items():
+            if not type(value) == dict:  # Don't use nested state keys
+                state_keys.append(key)
+
+        all_keys.update(state_keys)  # Gather all unique keys
+
+    if len(all_keys) == 0:
+        return {}
+
+    merged_state = {}
+
+    # Find shared values
+    for key in all_keys:
+        values = set()
+        for dict_ in state_list:
+            if key in dict_:
+                log.info(f"key {key}")
+
+                values.add(dict_[key])  # Gather values for present keys
+        if len(values) == 1:  # Shared if all present values are identical
+            merged_state[key] = values.pop()
+
+    # Find individual values
+    for dict_ in state_list:
+        log.info(f"dict {dict_}")
+
+        individual_state = {}
+        for key, value in dict_.items():
+            if key!="name" and key not in merged_state:  # Filter for non-shared keys
+                individual_state[key] = value
+        if len(individual_state.keys())>0 :
+            merged_state[dict_["name"]] = individual_state
+
+    if name is not None :
+        merged_state["name"]=name
+    return merged_state
+
+
 class Area:
     def __init__(self, name):
         self.name = name
@@ -38,22 +86,18 @@ class Area:
             child.set_state(copy.deepcopy(state))
 
     def get_state(self):
-        combined_state = {}
+        child_states = []
+
         for child in self.get_children():
             child_state = child.get_state()
-            
-            for key, val in child_state.items():
-                if key in combined_state:
-                    if key!="name" and val != combined_state[key]:  # If the state does not match
-                        if "substates" not in combined_state.keys() :
-                            combined_state["substates"]={}
-                        combined_state["substates"][child_state["name"]] = child_state
-                        break
-                    # Else "merges" states
-                else:  # if a new key is present, could be child state
-                    combined_state[key] = val
-        combined_state["name"]=self.name
-        return combined_state
+            child_states.append(child_state)
+
+        merged = merge_states(child_states, self.name)
+        if len(child_states) > 1:
+            log.info(f"{self.name}: Merged {len(child_states)} states {merged}")
+        log.info(f"\n")
+
+        return merged
 
 
 @pyscript_compile
@@ -137,32 +181,6 @@ def create_area_tree(yaml_file):
     return area_tree
 
 
-def visualize_areas(areas):
-    """
-    Prints a visual representation of the area hierarchy.
-
-    Args:
-        areas: A dictionary of Area objects.
-    """
-
-    def print_tree(area, indent=0):
-        if area.name is not None:
-            print("PYSCRIPT: " * indent + area.name)
-            for child in area.children:
-                print_tree(child, indent + 2)
-
-    # Find the root area (no parent)
-    root_area = None
-    for area in areas.values():
-        if area.parent is None:
-            root_area = area
-            break  # Exit the loop once the root area is found
-
-    # Print the tree structure
-    print("PYSCRIPT:Area Hierarchy:")
-    print_tree(root_area)
-
-
 class Device:
     """Acts as a wrapper/driver for a device type -- interfaces between states and devices."""
 
@@ -170,7 +188,6 @@ class Device:
         self.driver = driver
 
         self.name = driver.name
-        log.info(f"\nPYSCRIPT: {self.name=}")
 
         self.last_state = None
 
@@ -178,8 +195,10 @@ class Device:
 
     def get_state(self):
         state = self.driver.get_state()
-        state["name"]=self.name
+        state["name"] = self.name
         self.last_state = state
+        log.info(f"{self.name}: gotten state {state}")
+
         return state
 
     def set_state(self, state):
@@ -253,7 +272,6 @@ class KaufLight:
 
         return color if color != "null" else None
 
-
     # Brightness
     def set_brightness(self, brightness, apply=False):
         self.apply_values(brightness=str(brightness))
@@ -270,7 +288,6 @@ class KaufLight:
 
         return brightness
 
-
     def set_temperature(self, temperature, apply=False):
         self.temperature = temperature
         self.apply_values(color_temp=self.temperature)
@@ -279,7 +296,6 @@ class KaufLight:
         temperature = state.get(f"light.{self.name}.color_temp")
 
         return temperature if temperature != "null" else None
-
 
     def set_state(self, state):
         """
@@ -306,9 +322,6 @@ class KaufLight:
         if temperature is not None:
             state["temperature"] = temperature
 
-
-        log.info(f"get {self.name} state {state}")
-
         return state
 
     # Apply values
@@ -334,7 +347,7 @@ class KaufLight:
                 self.last_state = new_args
 
             except Exception as e:
-                log.info(
+                log.warning(
                     f"\nPYSCRIPT: [ERROR 0/1] Failed to set {self.name} {new_args}: {e}"
                 )
                 light.turn_on(entity_id=f"light.{self.name}")
@@ -347,7 +360,7 @@ def test_classes():
 
     log.info("\nPYSCRIPT: Starting")
     area_tree = create_area_tree("./pyscript/layout.yml")
-    log.info("\nPYSCRIPT: Created")
+    log.info("\nPYSCRIPT: ####Created#####\n\n")
 
     # visualize_areas(area_tree)
 
