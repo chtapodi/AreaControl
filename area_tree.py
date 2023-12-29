@@ -35,15 +35,29 @@ class Area:
             if direct :
                 self.direct_children.append(child)
 
+    def get_children(self) :
+        return self.children +self.direct_children
 
     def set_state(self,state) :
-        for child in self.children +self.direct_children:
-            log.info(f"setting child {child.name}: to  {state}")
+        for child in self.get_children() :
             
             child.set_state(copy.deepcopy(state))
-            log.info(f"After setting state is  {state}\n")
 
-            
+    def get_state(self):
+        combined_state = {}
+        for child in self.get_children():
+            child_state = child.get_state()  # Recursive call for both Area and Device children
+            for key, val in child_state :
+                if key in combined_state :
+                    if val!=combined_state[key] : # If the state does not match
+                        combined_state[child.name]=child_state
+                        break
+                    # Else "merges" states
+                else : # if a new key is present, could be child state
+                    combined_state[key]=value
+                    
+        return combined_state
+
 
 
 @pyscript_compile
@@ -322,6 +336,11 @@ def test_classes() :
     log.info(f"APPLYING ON\n")
 
     living_room.set_state({"status":1})
+    lv_state=living_room.get_state()
+    log.info(f"lv_state {lv_state}\n")
+
+
+
 
 
 
