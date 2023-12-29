@@ -15,11 +15,8 @@ STATE_VALUES = {
 
 
 def merge_states(state_list, name=None):
-
-    if len(state_list)==1 : #Case where merge does not need to happen
+    if len(state_list) == 1:  # Case where merge does not need to happen
         return state_list[0]
-
-    log.info(f"\nMERGING {state_list}")
 
     all_keys = set()
     for d in state_list:
@@ -40,25 +37,25 @@ def merge_states(state_list, name=None):
         values = set()
         for dict_ in state_list:
             if key in dict_:
-                log.info(f"key {key}")
-
                 values.add(dict_[key])  # Gather values for present keys
+
         if len(values) == 1:  # Shared if all present values are identical
             merged_state[key] = values.pop()
 
     # Find individual values
     for dict_ in state_list:
-        log.info(f"dict {dict_}")
-
         individual_state = {}
+
         for key, value in dict_.items():
-            if key!="name" and key not in merged_state:  # Filter for non-shared keys
+            if key != "name" and key not in merged_state:  # Filter for non-shared keys
                 individual_state[key] = value
-        if len(individual_state.keys())>0 :
+
+        if len(individual_state.keys()) > 0:
             merged_state[dict_["name"]] = individual_state
 
-    if name is not None :
-        merged_state["name"]=name
+    if name is not None:
+        merged_state["name"] = name
+
     return merged_state
 
 
@@ -93,9 +90,6 @@ class Area:
             child_states.append(child_state)
 
         merged = merge_states(child_states, self.name)
-        if len(child_states) > 1:
-            log.info(f"{self.name}: Merged {len(child_states)} states {merged}")
-        log.info(f"\n")
 
         return merged
 
