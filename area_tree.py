@@ -64,6 +64,7 @@ class Area:
         self.name = name
         self.children = []
         self.direct_children = []
+        self.devices = []
         self.parent = None
 
     def add_parent(self, parent):
@@ -75,11 +76,25 @@ class Area:
             if direct:
                 self.direct_children.append(child)
 
-    def get_children(self):
-        return list(set(self.children + self.direct_children))
+    def add_device(self, device):
+        if device is not None and device.name is not None:
+            self.devices.append(device)
+
+    def get_devices(self):
+        return self.devices
+
+    def get_children(self, exclude_devices=False):
+        if exclude_devices:
+            return list(set(self.children + self.direct_children))
+
+        return list(set(self.children + self.direct_children + self.devices))
 
     def get_parent(self):
         return self.parent
+
+    def has_children(self, exclude_devices=False):
+        return len(self.get_children(exclude_devices)) > 0
+
 
     def set_state(self, state):
         for child in self.get_children():
@@ -107,9 +122,11 @@ class Area:
         if show_state:
             string_rep += "  " * indent + f"  Last State: {self.last_state}\n"
 
-        if self.children:
+
+        if self.has_children():
+
             string_rep += "  " * indent + "│\n"
-            for child in self.children:
+            for child in self.get_children() :
                 direct = False
                 if child in self.direct_children:
                     direct = True
@@ -263,11 +280,8 @@ class AreaTree:
         lowest_areas=[]
 
         def traverse(area):
-            if include_devices :
-                if len(area.get_children())==0:
-                    lowest_areas.append(area)
-            else :
-                
+            if len(area.get_children(exclude_devices=(not include_devices)))==0:
+                lowest_areas.append(area)
             else:
                 for child in node.children:
                     traverse(child)
@@ -336,7 +350,7 @@ class AreaTree:
                                 new_light = KaufLight(output)
                                 new_device = Device(new_light)
 
-                                area.add_child(new_device, direct=True)
+                                area.add_device(new_device)
                                 area_tree[output] = area
                 #TODO: inputs
 
@@ -548,7 +562,7 @@ def test_classes():
     log.info("\nPYSCRIPT: ####Created#####\n\n")
     log.info(f"\narea tree {area_tree}\n\n")
 
-    living_room = area_tree.get_area("everything")
+    living_room = area_tree.get_area("living_room")
     log.info(f"\nlivingroom {living_room.pretty_print()}\n\n")
 
     log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
@@ -556,12 +570,3 @@ def test_classes():
     greatest_area=area_tree.get_greatest_area("living_room")
     log.info(f"\narea tree state {greatest_area.name}\n\n")
 
-    # living_room = area_tree["living_room"]
-    # # log.info(f"APPLYING RED\n")
-    # # living_room.set_state({"rgb_color": [255, 0, 0]})
-    # # # time.sleep(10)
-    # # log.info(f"APPLYING ON\n")
-
-    # # living_room.set_state({"status": 1})
-    # lv_state = living_room.get_state()
-    # log.info(f"lv_state {lv_state}\n")
