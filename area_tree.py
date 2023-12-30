@@ -78,6 +78,9 @@ class Area:
     def get_children(self):
         return list(set(self.children + self.direct_children))
 
+    def get_parent(self):
+        return self.parent
+
     def set_state(self, state):
         for child in self.get_children():
             child.set_state(copy.deepcopy(state))
@@ -93,6 +96,30 @@ class Area:
 
         return merged
 
+    def pretty_print(self, indent=1, is_direct_child=False,):
+        """Prints a tree representation with accurate direct child highlighting."""
+        log.info(f"pretty print {self.name}")
+        log.info(f"{is_direct_child=}")
+        log.info(f"{self.direct_children}")
+        string_rep = (
+            "\n"
+            + " " * indent
+            + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
+        )
+
+
+        if self.children:
+            string_rep += "  " * indent + "│\n"
+            for child in self.children:
+                direct = False
+                if child in self.direct_children:
+                    direct = True
+                string_rep += child.pretty_print(indent + 2, direct)
+        else:
+            string_rep += "  " * indent + "└── (No children)\n"
+
+        return string_rep
+
 
 @pyscript_compile
 def load_yaml(path):
@@ -103,8 +130,7 @@ def load_yaml(path):
 
 class RuleManager:
     def __init__(self, rules_file):
-        with open(rules_file, "r") as f:
-            self.rules = yaml.safe_load(f)
+        self.rules = load_yaml(rules_file)
 
     def check_event(self, event):
         log.info(f"checking event {event}")
@@ -131,8 +157,11 @@ class RuleManager:
             return False
 
         functions = rule.get("functions", [])
-        if not self._check_functions(functions, event_data, 1, rule):
-            return False
+        if len(functions) > 0:
+            # TODO: Add get_state() for greater_area
+
+            if not self._check_functions(functions, event_data, 1, rule):
+                return False
 
         return True
 
@@ -200,6 +229,25 @@ class AreaTree:
                 break
         return root_area
 
+    def get_greatest_area(self, area_name):
+        # Gets the highest area which still has the input area as a direct child
+        starting_area = self.area_tree[area_name]
+
+        parent = starting_area.get_parent()
+        highest_area = parent
+
+        log.info("starting area: " + area_name)
+        log.info("parent: " + parent.name)
+
+        while parent is not None:
+            if starting_area in parent.get_children():
+                highest_area = parent
+                parent = parent.get_parent()
+                log.info("new parent: " + parent.name)
+            else:
+                return highest_area
+                # TODO: test
+
     def _create_area_tree(self, yaml_file):
         """
         Loads areas from a YAML file and creates a hierarchical structure of Area objects.
@@ -231,14 +279,21 @@ class AreaTree:
             if area_name is not None:
                 area = create_area(area_name)
 
-                # Create child and direct child relationships
-                for child_type in ["sub_areas", "direct_sub_areas"]:
-                    if child_type in area_data:
-                        for child_name in area_data[child_type]:
-                            child_area = create_area(child_name)
-                            child_area.add_parent(area)
-                            direct = child_type == "sub_areas"
-                            area.add_child(child_area, direct=direct)
+                # Create direct child relationships
+                log.info(area_data)
+                if "direct_sub_areas" in area_data and area_data["direct_sub_areas"] is not None:
+                    for direct_child in area_data["direct_sub_areas"]:
+                        child = create_area(direct_child)
+                        child.add_parent(area)
+                        area.add_child(child, direct=True)
+
+                # Create child relationships
+                if "sub_areas" in area_data and area_data["sub_areas"] is not None:
+                    for child in area_data["sub_areas"]:
+                        if child is not None:
+                            new_area = create_area(child)
+                            new_area.add_parent(area)
+                            area.add_child(new_area, direct=False)
 
                 # Add outputs as children
                 if "outputs" in area_data:
@@ -248,6 +303,7 @@ class AreaTree:
                                 new_light = KaufLight(output)
                                 new_device = Device(new_light)
                                 area.add_child(new_device, direct=True)
+                #TODO: inputs
 
         return area_tree
 
@@ -292,6 +348,16 @@ class Device:
 
     def get(self, value):
         return self.last_state[value]
+
+    def pretty_print(self, indent=1, is_direct_child=False):
+
+        string_rep = (
+            " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
+        )
+
+        string_rep += " " * (indent + 2) + f"State: {self.get_state()}\n"
+
+        return string_rep
 
 
 class KaufLight:
@@ -449,8 +515,15 @@ def test_classes():
     log.info("\nPYSCRIPT: Starting")
     area_tree = AreaTree("./pyscript/layout.yml")
     log.info("\nPYSCRIPT: ####Created#####\n\n")
+    log.info(f"\narea tree {area_tree}\n\n")
 
-    log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
+    living_room = area_tree.get_area("everything")
+    log.info(f"\nlivingroom {living_room.pretty_print()}\n\n")
+
+    # log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
+
+    # greatest_area=area_tree.get_greatest_area("kauf_tube")
+    # log.info(f"\narea tree state {greatest_area}\n\n")
 
     # # visualize_areas(area_tree)
 
