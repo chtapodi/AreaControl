@@ -215,21 +215,15 @@ class EventManager:
     def execute_rule(self, event_data, rule):
         log.info(f"executing rule {rule} with event {event_data}")
 
-        devices = self.get_relevent_devices(event_data, rule)
-
-        passed_devices=[]
-        # check tags and functions for each device
-        for device in devices:
-            if self.check_device(device, event_data, rule):
-                passed_devices.append(device)
-                log.info(f"passed device: {device.name}")
-
+        device=event_data["device_name"]
+        device_area=self.area_tree.get_device(device).get_area()
+        
+        greatest_parent = self.area_tree.get_greatest_area(device_area.name)
+        log.info(f"greatest_parent: {greatest_parent.name}")
         event_state=rule.get("state",{})
-        log.info(f"event_state: {event_state}")
+        log.info(f"setting {greatest_parent.name}: {event_state}")
 
-        for device in passed_devices:
-            log.info(f"setting state {event_state} for device: {device.name}")
-            device.set_state(event_state)
+        greatest_parent.set_state(event_state)
 
 
     def get_relevent_devices(self, event_data, rule):
