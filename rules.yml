@@ -1,13 +1,14 @@
 
-motion_sensor_ :  # Wildcard for matching events with type starting with "door_opened"
+motion_binary_sensor_ :  # Wildcard for matching events with type starting with "door_opened"
   prohibited_tags: ["anna_asleep","bedroom_sensor"]
   functions:
-    - checK_time: []
+    - check_time: []
     - are_people_asleep: []
   scope:
     - lesser_siblings: []
   state:
     status: 1
+    rgb_color: [255, 0, 0]
 
 
 

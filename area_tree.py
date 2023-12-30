@@ -14,28 +14,35 @@ STATE_VALUES = {
 }
 
 ## RULES ##
-#These must have an interface that mathes the following and returns boolean
+# These must have an interface that mathes the following and returns boolean
+
 
 def check_time(event, area_state, **kwargs):
     # returns tags based on time
-    tags=[]
+    tags = []
 
-    if now<5 :
+    now = time.localtime().tm_hour
+
+    if now < 5:
         tags.append("late_night")
 
-    if now>18:
+    if now > 18:
         if now < 20:
             tags.append("evening")
-        else :
+        else:
             tags.append("night")
     else:
         tags.append("day")
     return tags
 
 
-def check_sleep(event, area_state,) :
-    is_theo_alseep=state.get('binary_sensor.xavier_is_sleeping')
+def check_sleep(
+    event,
+    area_state,
+):
+    is_theo_alseep = state.get("binary_sensor.xavier_is_sleeping")
     log.info(f"theo sleep {is_theo_alseep}")
+
 
 def merge_states(state_list, name=None):
     if len(state_list) == 1:  # Case where merge does not need to happen
@@ -113,15 +120,13 @@ class Area:
         return list(set(self.children + self.direct_children + self.devices))
 
     def get_direct_children(self):
-        return list(set(self.direct_children ))
-
+        return list(set(self.direct_children))
 
     def get_parent(self):
         return self.parent
 
     def has_children(self, exclude_devices=False):
         return len(self.get_children(exclude_devices)) > 0
-
 
     def set_state(self, state):
         for child in self.get_children():
@@ -149,11 +154,9 @@ class Area:
         if show_state:
             string_rep += "  " * indent + f"  Last State: {self.last_state}\n"
 
-
         if self.has_children():
-
             string_rep += "  " * indent + "│\n"
-            for child in self.get_children() :
+            for child in self.get_children():
                 direct = False
                 if child in self.direct_children:
                     direct = True
@@ -174,15 +177,15 @@ def load_yaml(path):
 class EventManager:
     def __init__(self, rules_file, area_tree):
         self.rules = load_yaml(rules_file)
-        self.area_tree=area_tree
+        self.area_tree = area_tree
 
     def create_event(self, event):
         log.info(f"New event: {event}")
 
-        result=self.check_event(event)
+        result = self.check_event(event)
 
     def check_event(self, event):
-        log.info(f"checking event {event}")
+        # log.info(f"checking event {event}")
 
         matching_rules = []
         for rule_name in self.rules.keys():
@@ -192,49 +195,57 @@ class EventManager:
 
         log.info(f"matching rules: {matching_rules}")
 
-        
-
-
         for rule_name in matching_rules:
             rule = self.rules[rule_name]
             return self.execute_rule(event, rule)
 
         return False  # No matching rule
 
-    def check_device(self, device, rule):
-        log.info(f"checking device {device}")
-
-        if not self._check_tags(event_tags, rule):
+    def check_device(self, device, event_data, rule):
+        # log.info(f"checking device {device}")
+        device_tags = device.get_tags()
+        if not self._check_tags(device_tags, rule):
             return False
 
+        if not self._check_functions(device_tags, event_data, rule):
+            return False
 
-        functions = rule.get("functions", [])
-        if len(functions) > 0:
-            if not self._check_functions(functions, event_data, 1, rule):
-                return False
-
-
+        return True
 
     def execute_rule(self, event_data, rule):
         log.info(f"executing rule {rule} with event {event_data}")
 
-        self.get_relevent_devices( event_data, rule)
-        return True
+        devices = self.get_relevent_devices(event_data, rule)
+
+        passed_devices=[]
+        # check tags and functions for each device
+        for device in devices:
+            if self.check_device(device, event_data, rule):
+                passed_devices.append(device)
+                log.info(f"passed device: {device.name}")
+
+        event_state=rule.get("state",{})
+        log.info(f"event_state: {event_state}")
+
+        for device in passed_devices:
+            log.info(f"setting state {event_state} for device: {device.name}")
+            device.set_state(event_state)
+
 
     def get_relevent_devices(self, event_data, rule):
         # Get area input device is in
-        device_name=event_data["device_name"]
-        device_area=self.area_tree.get_device_area(device_name)
+        device_name = event_data["device_name"]
+        device = self.area_tree.get_device(device_name)
+        device_area = device.get_area()
 
-        log.info(f"device_area: {device_area}")
+        log.info(f"device_area: {device_area.name}")
 
         # get areas in scope of device_area
-        scope=rule.get("scope",[])[0]
+        scope = rule.get("scope", [])[0]
         log.info(f"scope: {scope}")
-        
-        function_name = "get_"+str(list(scope.keys())[0])
+
+        function_name = "get_" + str(list(scope.keys())[0])
         args = scope.get(function_name, [])
-        log.info(f"checking function {function_name} with args {args}")
 
         # checks if function exists
         if hasattr(self.area_tree, function_name):
@@ -243,9 +254,13 @@ class EventManager:
             log.warning(f"Function '{function_name}' not implemented.")
             return None
 
-        res=func(device_area.name, **args)
-        log.info(f"res: {res}")
+        areas_in_scope = func(device_area.name, **args)
+        areas_in_scope.append(device_area)
+        devices = []
+        for area in areas_in_scope:
+            devices += area.get_devices()
 
+        return devices
 
     def _check_tags(self, tags, rule):
         """This checks tags"""
@@ -262,25 +277,23 @@ class EventManager:
 
         return True
 
-    def _check_functions(self, functions, event_data, area_state, rule):
-        for function_data in functions:
-            # split dict key and value to get functoin name and args
-            function_name = list(function_data.keys())[0]
-            args = function_data.get(function_name, [])
+    def _check_functions(self, device_tags, event_data, rule):
+        functions = rule.get("functions", [])
+        if len(functions) > 0:
+            for function_data in functions:
+                # split dict key and value to get functoin name and args
+                function_name = list(function_data.keys())[0]
+                args = function_data.get(function_name, [])
 
-            log.info(f"checking function {function_name} with args {args}")
 
-            if function_name in globals().keys():
-                func = globals()[function_name]
-                if not func(event_data, area_state, **args):
-                    return False
-                else :
-                    log.info(f"{function_name} passed!")
-            else:
-                log.info(f"Function '{function_name}' not implemented.")
-                return True
+                if function_name in globals().keys():
+                    func = globals()[function_name]
+                    if not func(device_tags, event_data, **args):
+                        return False
+                else:
+                    return True # as to not stop passing
 
-        return True
+            return True
 
 
 class AreaTree:
@@ -288,26 +301,32 @@ class AreaTree:
 
     def __init__(self, config_path):
         self.config_path = config_path
-        self.area_tree = self._create_area_tree(self.config_path)
+        self.area_tree_lookup = self._create_area_tree(self.config_path)
 
         self.root_name = self._find_root()
 
     def get_state(self, area=None):
         if area is None:
             area = self.root_name
-        return self.area_tree[area].get_state()
+        return self.area_tree_lookup[area].get_state()
 
     def get_area(self, area_name=None):
         if area_name is None:
             area_name = self.root_name
-        return self.area_tree[area_name]
+        return self.area_tree_lookup[area_name]
+
+    def get_device(self, device_name):
+        if device_name not in self.area_tree_lookup:
+            log.warning(f"Device {device_name} not found in area tree")
+            return None
+        return self.area_tree_lookup[device_name]
 
     def get_area_tree(self):
-        return self.area_tree
+        return self.area_tree_lookup
 
     def _find_root(self):
         root_area = None
-        for name, area in self.area_tree.items():
+        for name, area in self.area_tree_lookup.items():
             if area.parent is None:
                 root_area = name
                 break
@@ -315,33 +334,31 @@ class AreaTree:
 
     def get_greatest_area(self, area_name):
         # Gets the highest area which still has the input area as a direct child
-        if area_name not in self.area_tree:
+        if area_name not in self.area_tree_lookup:
             log.warning(f"Area {area_name} not found in area tree")
             return None
 
-        starting_area = self.area_tree[area_name]
+        starting_area = self.area_tree_lookup[area_name]
 
         highest_area = starting_area
         parent = starting_area.get_parent()
 
         while parent is not None:
             if highest_area in parent.direct_children:
-
                 highest_area = parent
                 parent = parent.get_parent()
             else:
                 return highest_area
 
-        return self.get_area() #return root if runs out of parents
+        return self.get_area()  # return root if runs out of parents
 
+    def get_lowest_children(self, area_name, include_devices=False):
+        area = self.get_area(area_name)
 
-    def get_lowest_children(self, area_name, include_devices=False) :
-        area=self.get_area(area_name)
-
-        lowest_areas=[]
+        lowest_areas = []
 
         def traverse(area):
-            if len(area.get_children(exclude_devices=(not include_devices)))==0:
+            if len(area.get_children(exclude_devices=(not include_devices))) == 0:
                 lowest_areas.append(area)
             else:
                 for child in area.get_children(exclude_devices=True):
@@ -351,28 +368,20 @@ class AreaTree:
         return lowest_areas
 
     def get_greater_siblings(self, area_name, **args):
-        area=self.get_area(area_name)
-        greatest_parent=self.get_greatest_area(area_name)
-        siblings=greatest_parent.get_direct_children()
+        area = self.get_area(area_name)
+        greatest_parent = self.get_greatest_area(area_name)
+        siblings = greatest_parent.get_direct_children()
         if area in siblings:
             siblings.remove(area)
         return siblings
-
 
     def get_lesser_siblings(self, area_name):
-        area=self.get_area(area_name)
-        greatest_parent=self.get_greatest_area(area_name)
-        siblings=self.get_lowest_children(greatest_parent.name)
+        area = self.get_area(area_name)
+        greatest_parent = self.get_greatest_area(area_name)
+        siblings = self.get_lowest_children(greatest_parent.name)
         if area in siblings:
             siblings.remove(area)
         return siblings
-
-    def get_device_area(self, device):
-        for area_name, area in self.area_tree.items():
-            log.info(f"Checking device {device} in area {area_name}")
-            if device in area.get_devices():
-                return area_name
-        return None
 
     def _create_area_tree(self, yaml_file):
         """
@@ -406,7 +415,10 @@ class AreaTree:
                 area = create_area(area_name)
 
                 # Create direct child relationships
-                if "direct_sub_areas" in area_data and area_data["direct_sub_areas"] is not None:
+                if (
+                    "direct_sub_areas" in area_data
+                    and area_data["direct_sub_areas"] is not None
+                ):
                     for direct_child in area_data["direct_sub_areas"]:
                         child = create_area(direct_child)
                         child.add_parent(area)
@@ -429,8 +441,33 @@ class AreaTree:
                                 new_device = Device(new_light)
 
                                 area.add_device(new_device)
-                                area_tree[output] = area
-                #TODO: inputs
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
+
+                # Add outputs as children
+                if "inputs" in area_data:
+                    inputs = area_data["inputs"]
+                    log.info(f"Inputs: {inputs}")
+
+                    if type(inputs) == list:
+                        if inputs[0] is not None:
+                            log.warning(f"Inputs are a list: {inputs}. Not processing")
+
+                    elif type(inputs) == dict:
+                        for input_type, device_id_list in area_data["inputs"].items():
+                            if input_type is not None:
+                                for device_id in device_id_list:
+                                    if device_id is not None:
+                                        new_light = MotionSensorDriver(
+                                            input_type, device_id
+                                        )
+                                        new_device = Device(new_light)
+
+                                        area.add_device(new_device)
+                                        new_device.set_area(area)
+
+                                        area_tree[new_device.name] = new_device
 
         return area_tree
 
@@ -440,12 +477,11 @@ class Device:
 
     def __init__(self, driver):
         self.driver = driver
-
         self.name = driver.name
-
         self.last_state = None
-
         self.cached_state = None
+        self.area = None
+        self.tags=[]
 
     def get_state(self):
         state = self.driver.get_state()
@@ -453,26 +489,47 @@ class Device:
         self.last_state = state
         return state
 
-    def set_state(self, state):
-        if "status" not in state.keys():
-            log.info(f"{self.name}: State does not contain status {state}. Caching")
-
-            self.cached_state = state
-
-        else:
+    def fillout_state_from_cache(self,state ) :
+        if self.cached_state is not  None :
             for key, val in self.cached_state.items():
                 if key not in state.keys():
-
                     state[key] = val
+        return state
 
-            self.driver.set_state(state)
-            self.last_state = state
+    def add_to_cache(self, state) :
+        self.cached_state = copy.deepcopy(state) 
+
+    def set_state(self, state):
+        self.add_to_cache(state)
+        state=copy.deepcopy(state)
+        if hasattr(self.driver, "set_state"):
+
+            if "status" not in state.keys():
+                log.info(f"{self.name}: State does not contain status {state}. Caching")
+
+            else:
+                state=self.fillout_state_from_cache(state)
+
+                self.driver.set_state(state)
+                self.last_state = state
+                
 
     def get(self, value):
         return self.last_state[value]
 
-    def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
+    def set_area(self, area):
+        self.area = area
 
+    def get_area(self):
+        return self.area
+
+    def add_tag(self, tag):
+        self.tags.append(tag)
+
+    def get_tags(self):
+        return self.tags
+
+    def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
         string_rep = (
             " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
         )
@@ -481,6 +538,25 @@ class Device:
             string_rep += " " * (indent + 2) + f"State: {self.get_state}\n"
 
         return string_rep
+
+
+class MotionSensorDriver:
+    def __init__(self, input_type, device_id):
+        self.name = self.create_name(input_type, device_id)
+        log.info(f"Creating Motion Sensor: {self.name}")
+
+        self.last_state = None
+
+    def create_name(self, input_type, device_id):
+        if "." in device_id:
+            device_id = device_id.replace(".", "_")
+        name = f"{input_type}_{device_id}"
+        return name
+
+    def get_state(self):
+        state = self.last_state
+        state["name"] = self.name
+        return state
 
 
 class KaufLight:
@@ -633,18 +709,20 @@ class KaufLight:
 
 @service
 def test_classes():
-
     log.info("\nPYSCRIPT: Starting")
     area_tree = AreaTree("./pyscript/layout.yml")
 
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
 
-
     log.info("\nPYSCRIPT: ####Created#####\n\n")
     log.info(f"\narea tree {area_tree}\n\n")
 
-    living_room = area_tree.get_area("living_room")
+    living_room = area_tree.get_area("front_room")
     log.info(f"\nlivingroom {living_room.pretty_print()}\n\n")
 
-    event={"device_name": "motion_sensor_dining_room", "trigger": "on", "tags": []}
+    event = {
+        "device_name": "motion_binary_sensor_dining_room_presence",
+        "trigger": "on",
+        "tags": [],
+    }
     event_manager.create_event(event)
