@@ -98,9 +98,6 @@ class Area:
 
     def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
         """Prints a tree representation with accurate direct child highlighting."""
-        log.info(f"pretty print {self.name}")
-        log.info(f"{is_direct_child=}")
-        log.info(f"{self.direct_children}")
         string_rep = (
             "\n"
             + " " * indent
@@ -235,20 +232,28 @@ class AreaTree:
         # Gets the highest area which still has the input area as a direct child
         starting_area = self.area_tree[area_name]
 
+        highest_area = starting_area
         parent = starting_area.get_parent()
-        highest_area = parent
 
         log.info("starting area: " + area_name)
         log.info("parent: " + parent.name)
 
         while parent is not None:
-            if starting_area in parent.get_children():
+            if highest_area in parent.direct_children:
+                log.info(f"{starting_area.name} is in {parent.name}")
+
                 highest_area = parent
                 parent = parent.get_parent()
-                log.info("new parent: " + parent.name)
             else:
+                log.info(f"{starting_area.name} is NOT in {parent.name}")
+                for child in parent.direct_children:
+                    log.info(f"directchild: {child.name}")
+
+                log.info(f"Highest area is: {highest_area.name}")
                 return highest_area
                 # TODO: test
+
+        return self.get_area() #return root if runs out of parents
 
     def _create_area_tree(self, yaml_file):
         """
@@ -282,7 +287,6 @@ class AreaTree:
                 area = create_area(area_name)
 
                 # Create direct child relationships
-                log.info(area_data)
                 if "direct_sub_areas" in area_data and area_data["direct_sub_areas"] is not None:
                     for direct_child in area_data["direct_sub_areas"]:
                         child = create_area(direct_child)
@@ -304,7 +308,9 @@ class AreaTree:
                             if "kauf" in output:
                                 new_light = KaufLight(output)
                                 new_device = Device(new_light)
+
                                 area.add_child(new_device, direct=True)
+                                area_tree[output] = area
                 #TODO: inputs
 
         return area_tree
@@ -335,15 +341,10 @@ class Device:
             self.cached_state = state
 
         else:
-            log.info(f"{self.name}: State contains status {state}")
-
             for key, val in self.cached_state.items():
                 if key not in state.keys():
-                    # log.info(f"filling out state with {key}:{val}")
-                    log.info(f"filling out state with {key}:{val}")
 
                     state[key] = val
-            log.info(f"Setting state {state}")
 
             self.driver.set_state(state)
             self.last_state = state
@@ -523,10 +524,10 @@ def test_classes():
     living_room = area_tree.get_area("everything")
     log.info(f"\nlivingroom {living_room.pretty_print()}\n\n")
 
-    # log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
+    log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
 
-    # greatest_area=area_tree.get_greatest_area("kauf_tube")
-    # log.info(f"\narea tree state {greatest_area}\n\n")
+    greatest_area=area_tree.get_greatest_area("living_room")
+    log.info(f"\narea tree state {greatest_area.name}\n\n")
 
     # # visualize_areas(area_tree)
 
