@@ -257,6 +257,24 @@ class AreaTree:
 
 
 
+    def get_lowest_children(self, area_name, include_devices=False) :
+        area=self.get_area(area_name)
+
+        lowest_areas=[]
+
+        def traverse(area):
+            if include_devices :
+                if len(area.get_children())==0:
+                    lowest_areas.append(area)
+            else :
+                
+            else:
+                for child in node.children:
+                    traverse(child)
+
+
+            return leaf_nodes
+
     def get_siblings(self, area_name):
         area=self.get_area(area_name)
 
