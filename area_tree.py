@@ -245,16 +245,27 @@ class EventManager:
 
         matching_rules = []
         for rule_name in self.rules.keys():
-            log.info(f"rule name: {rule_name}")
-            if event["device_name"].startswith(rule_name):
+            trigger_prefix=self.rules[rule_name]["trigger_prefix"]
+            log.info(f"trigger_prefix: {trigger_prefix}")
+            if event["device_name"].startswith(trigger_prefix):
+                for prohibited_tag in self.rules[rule_name]["prohibited_tags"]:
+                    if prohibited_tag in event["tags"]:
+                        break
+
+                for required_tag in self.rules[rule_name]["required_tags"]:
+                    if required_tag not in event["tags"]:
+                        break
+                
                 matching_rules.append(rule_name)
+        event_tags=event.get("tags", [])
+        log.info(f"matching_rules: {matching_rules}")
 
-        log.info(f"matching rules: {matching_rules}")
-
+        results=[]
         for rule_name in matching_rules:
             rule = self.rules[rule_name]
-            return self.execute_rule(event, rule)
-
+            results.append(self.execute_rule(event, rule))
+        return results
+        
         return False  # No matching rule
 
     def check_device(self, device, event_data, rule):
@@ -313,8 +324,9 @@ class EventManager:
 
     def _check_tags(self, tags, rule):
         """This checks tags"""
-        required_tags = rule.get("required_tags", [])
-        prohibited_tags = rule.get("prohibited_tags", [])
+        log.info(f"rule: {rule}")
+        required_tags = rule["required_tags"]
+        prohibited_tags = rule["prohibited_tags"]
 
         for tag in required_tags:
             if tag not in tags:
@@ -548,15 +560,15 @@ class Device:
     def add_to_cache(self, state):
         self.cached_state = copy.deepcopy(state)
 
-    def input_trigger(self, **kwargs):
+    def input_trigger(self, value):
         global event_manager
 
         event = {
             "device_name": self.name,
-            "trigger": "on",
-            "tags": [],
+            "value": value,
+            "tags": [str(value)],
         }
-        log.info(f"Input Trigger: {self.area.name} {kwargs} Event: {event}")
+        log.info(f"Input Trigger: {self.area.name} {value} Event: {event}")
 
         event_manager.create_event(event)
 
@@ -626,11 +638,18 @@ class MotionSensorDriver:
     def trigger_state(self, **kwargs):
         log.info(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
         if self.callback is not None:
-            self.callback(**kwargs)
+            if "value" in kwargs:
+                value=kwargs["value"]
+                log.info(f"value is {value}")
+                value = kwargs["value"]
+                self.callback(value)
+            else :
+                log.info(f"No value in kwargs {kwargs}")
 
     def setup_service_triggers(self, device_id):
         log.info(f"Generating trigger for: {device_id}")
-        return generate_state_trigger(device_id, self.trigger_state, [])
+        trigger= [generate_state_trigger(f"{device_id} == 'on'", self.trigger_state, {"value":"on"}),
+        generate_state_trigger(f"{device_id} == 'off'", self.trigger_state, {"value":"off"})]
 
 
 class KaufLight:

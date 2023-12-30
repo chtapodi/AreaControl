@@ -1,6 +1,9 @@
 
-motion_binary_sensor_ :  # Wildcard for matching events with type starting with "door_opened"
+motion_binary_sensor_0 :  # Wildcard for matching events with type starting with "door_opened"
   prohibited_tags: ["anna_asleep","bedroom_sensor"]
+  trigger_prefix: "motion_binary_sensor_"
+
+  required_tags: ["on"]
   functions:
     - check_time: []
     - are_people_asleep: []
@@ -9,12 +12,14 @@ motion_binary_sensor_ :  # Wildcard for matching events with type starting with 
   state:
     status: 1
 
-
-
-mock_input :  # Wildcard for matching events with type starting with "door_opened"
-  required_tags: ["required1"]
-  prohibited_tags: ["proh"]
+motion_binary_sensor_1 :  
+  trigger_prefix: "motion_binary_sensor_"
+  prohibited_tags: ["anna_asleep","bedroom_sensor"]
+  required_tags: ["off"]
   functions:
-    - test_func: ["ay",1]
-  
-
+    - check_time: []
+    - are_people_asleep: []
+  scope:
+    - lesser_siblings: []
+  state:
+    status: 0
