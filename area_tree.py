@@ -18,8 +18,9 @@ area_tree = None
 event_manager = None
 global_triggers = None
 
+
 @service
-def reset() :
+def reset():
     global area_tree
     global event_manager
     global global_triggers
@@ -28,27 +29,30 @@ def reset() :
     global_triggers = None
     init()
 
+
 @service
 def init():
     global area_tree
     global event_manager
     global global_triggers
-    global_triggers=[]
+    global_triggers = []
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
 
 
-def get_global_triggers() :
+def get_global_triggers():
     global global_triggers
-    if global_triggers is None :
+    if global_triggers is None:
         init()
     return global_triggers
 
-def get_event_manager() :
+
+def get_event_manager():
     global event_manager
-    if event_manager is None :
+    if event_manager is None:
         init()
     return event_manager
+
 
 ## RULES ##
 # These must have an interface that mathes the following and returns boolean
@@ -96,6 +100,7 @@ def generate_state_trigger(trigger, functions, kwarg_list):
                 function(**kwargs)
         else:
             functions(**kwarg_list)
+
     get_global_triggers().append(["trigger", trigger, func_trig])
     return func_trig
 
@@ -245,27 +250,30 @@ class EventManager:
 
         matching_rules = []
         for rule_name in self.rules.keys():
-            trigger_prefix=self.rules[rule_name]["trigger_prefix"]
+            trigger_prefix = self.rules[rule_name]["trigger_prefix"]
             log.info(f"trigger_prefix: {trigger_prefix}")
             if event["device_name"].startswith(trigger_prefix):
+                good = True
                 for prohibited_tag in self.rules[rule_name]["prohibited_tags"]:
                     if prohibited_tag in event["tags"]:
-                        break
+                        good = False
 
                 for required_tag in self.rules[rule_name]["required_tags"]:
                     if required_tag not in event["tags"]:
-                        break
-                
-                matching_rules.append(rule_name)
-        event_tags=event.get("tags", [])
+                        good = False
+
+                if good:
+                    matching_rules.append(rule_name)
+
+        event_tags = event.get("tags", [])
         log.info(f"matching_rules: {matching_rules}")
 
-        results=[]
+        results = []
         for rule_name in matching_rules:
             rule = self.rules[rule_name]
             results.append(self.execute_rule(event, rule))
         return results
-        
+
         return False  # No matching rule
 
     def check_device(self, device, event_data, rule):
@@ -639,17 +647,23 @@ class MotionSensorDriver:
         log.info(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
         if self.callback is not None:
             if "value" in kwargs:
-                value=kwargs["value"]
+                value = kwargs["value"]
                 log.info(f"value is {value}")
                 value = kwargs["value"]
                 self.callback(value)
-            else :
+            else:
                 log.info(f"No value in kwargs {kwargs}")
 
     def setup_service_triggers(self, device_id):
         log.info(f"Generating trigger for: {device_id}")
-        trigger= [generate_state_trigger(f"{device_id} == 'on'", self.trigger_state, {"value":"on"}),
-        generate_state_trigger(f"{device_id} == 'off'", self.trigger_state, {"value":"off"})]
+        trigger = [
+            generate_state_trigger(
+                f"{device_id} == 'on'", self.trigger_state, {"value": "on"}
+            ),
+            generate_state_trigger(
+                f"{device_id} == 'off'", self.trigger_state, {"value": "off"}
+            ),
+        ]
 
 
 class KaufLight:
@@ -661,6 +675,8 @@ class KaufLight:
         self.color = None
         self.brightness = None
         self.temperature = None
+        self.default_color= None
+
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -762,7 +778,7 @@ class KaufLight:
 
         rgb = self.get_rgb()
         if rgb is not None:
-            state["rgb"] = rgb
+            state["rgb_color"] = rgb
 
         temperature = self.get_temperature()
         if temperature is not None:
@@ -786,7 +802,8 @@ class KaufLight:
             # If being turned on and no rgb present, rgb color is set to value.
             if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
                 if not self.is_on():  # if it is off set it to the saved color
-                    new_args["rgb_color"] = self.default_color
+                    if self.default_color is not None :
+                        new_args["rgb_color"] = self.default_color
 
             try:
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)

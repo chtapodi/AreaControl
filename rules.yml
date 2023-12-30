@@ -14,7 +14,7 @@ motion_binary_sensor_0 :  # Wildcard for matching events with type starting with
 
 motion_binary_sensor_1 :  
   trigger_prefix: "motion_binary_sensor_"
-  prohibited_tags: ["anna_asleep","bedroom_sensor"]
+  prohibited_tags: ["anna_asleep","bedroom_sensor", "on"]
   required_tags: ["off"]
   functions:
     - check_time: []
