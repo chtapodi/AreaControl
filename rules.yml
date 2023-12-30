@@ -1,9 +1,14 @@
-button_* :  # Wildcard for matching events with type starting with "door_opened"
-  required_tags: ["tag1"]
-  prohibited_tags: ["locked"]
+
+motion_sensor_ :  # Wildcard for matching events with type starting with "door_opened"
+  prohibited_tags: ["anna_asleep","bedroom_sensor"]
   functions:
-    - check_time_of_day: ["morning"]
-    - check_user_presence: []
+    - checK_time: []
+    - are_people_asleep: []
+  scope:
+    - lesser_siblings: []
+  state:
+    status: 1
+
 
 
 mock_input :  # Wildcard for matching events with type starting with "door_opened"
@@ -11,4 +16,5 @@ mock_input :  # Wildcard for matching events with type starting with "door_opene
   prohibited_tags: ["proh"]
   functions:
     - test_func: ["ay",1]
+  
 

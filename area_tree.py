@@ -13,6 +13,29 @@ STATE_VALUES = {
     "output": {"status": 0, "rgb": [0, 0, 0], "brightness": 0, "temperature": 0},
 }
 
+## RULES ##
+#These must have an interface that mathes the following and returns boolean
+
+def check_time(event, area_state, **kwargs):
+    # returns tags based on time
+    tags=[]
+
+    if now<5 :
+        tags.append("late_night")
+
+    if now>18:
+        if now < 20:
+            tags.append("evening")
+        else :
+            tags.append("night")
+    else:
+        tags.append("day")
+    return tags
+
+
+def check_sleep(event, area_state,) :
+    is_theo_alseep=state.get('binary_sensor.xavier_is_sleeping')
+    log.info(f"theo sleep {is_theo_alseep}")
 
 def merge_states(state_list, name=None):
     if len(state_list) == 1:  # Case where merge does not need to happen
@@ -148,9 +171,15 @@ def load_yaml(path):
     return data
 
 
-class RuleManager:
-    def __init__(self, rules_file):
+class EventManager:
+    def __init__(self, rules_file, area_tree):
         self.rules = load_yaml(rules_file)
+        self.area_tree=area_tree
+
+    def create_event(self, event):
+        log.info(f"New event: {event}")
+
+        result=self.check_event(event)
 
     def check_event(self, event):
         log.info(f"checking event {event}")
@@ -163,27 +192,60 @@ class RuleManager:
 
         log.info(f"matching rules: {matching_rules}")
 
+        
+
+
         for rule_name in matching_rules:
             rule = self.rules[rule_name]
             return self.execute_rule(event, rule)
 
         return False  # No matching rule
 
-    def execute_rule(self, event_data, rule):
-        log.info(f"executing rule {rule}")
-        event_tags = event_data.get("tags", [])
+    def check_device(self, device, rule):
+        log.info(f"checking device {device}")
 
         if not self._check_tags(event_tags, rule):
             return False
 
+
         functions = rule.get("functions", [])
         if len(functions) > 0:
-            # TODO: Add get_state() for greater_area
-
             if not self._check_functions(functions, event_data, 1, rule):
                 return False
 
+
+
+    def execute_rule(self, event_data, rule):
+        log.info(f"executing rule {rule} with event {event_data}")
+
+        self.get_relevent_devices( event_data, rule)
         return True
+
+    def get_relevent_devices(self, event_data, rule):
+        # Get area input device is in
+        device_name=event_data["device_name"]
+        device_area=self.area_tree.get_device_area(device_name)
+
+        log.info(f"device_area: {device_area}")
+
+        # get areas in scope of device_area
+        scope=rule.get("scope",[])[0]
+        log.info(f"scope: {scope}")
+        
+        function_name = "get_"+str(list(scope.keys())[0])
+        args = scope.get(function_name, [])
+        log.info(f"checking function {function_name} with args {args}")
+
+        # checks if function exists
+        if hasattr(self.area_tree, function_name):
+            func = getattr(self.area_tree, function_name)
+        else:
+            log.warning(f"Function '{function_name}' not implemented.")
+            return None
+
+        res=func(device_area.name, **args)
+        log.info(f"res: {res}")
+
 
     def _check_tags(self, tags, rule):
         """This checks tags"""
@@ -210,8 +272,10 @@ class RuleManager:
 
             if function_name in globals().keys():
                 func = globals()[function_name]
-                if not func(event, 1, *args):
+                if not func(event_data, area_state, **args):
                     return False
+                else :
+                    log.info(f"{function_name} passed!")
             else:
                 log.info(f"Function '{function_name}' not implemented.")
                 return True
@@ -286,7 +350,7 @@ class AreaTree:
         traverse(area)
         return lowest_areas
 
-    def get_greater_siblings(self, area_name):
+    def get_greater_siblings(self, area_name, **args):
         area=self.get_area(area_name)
         greatest_parent=self.get_greatest_area(area_name)
         siblings=greatest_parent.get_direct_children()
@@ -303,6 +367,12 @@ class AreaTree:
             siblings.remove(area)
         return siblings
 
+    def get_device_area(self, device):
+        for area_name, area in self.area_tree.items():
+            log.info(f"Checking device {device} in area {area_name}")
+            if device in area.get_devices():
+                return area_name
+        return None
 
     def _create_area_tree(self, yaml_file):
         """
@@ -563,28 +633,18 @@ class KaufLight:
 
 @service
 def test_classes():
-    rules_manager = RuleManager("./pyscript/rules.yml")
 
     log.info("\nPYSCRIPT: Starting")
     area_tree = AreaTree("./pyscript/layout.yml")
+
+    event_manager = EventManager("./pyscript/rules.yml", area_tree)
+
+
     log.info("\nPYSCRIPT: ####Created#####\n\n")
     log.info(f"\narea tree {area_tree}\n\n")
 
     living_room = area_tree.get_area("living_room")
     log.info(f"\nlivingroom {living_room.pretty_print()}\n\n")
 
-    log.info(f"\narea tree state {area_tree.get_state('living_room')}\n\n")
-
-    greatest_area=area_tree.get_greatest_area("living_room")
-    log.info(f"\narea tree state {greatest_area.name}\n\n")
-
-
-    living_room=area_tree.get_area("living_room")
-
-    siblings=area_tree.get_greater_siblings("living_room_couch")
-    for child in siblings :
-        log.info(f"greatersib : {child.name}")
-
-        siblings=area_tree.get_lesser_siblings("living_room_couch")
-    for child in siblings :
-        log.info(f"lessersib : {child.name}")
+    event={"device_name": "motion_sensor_dining_room", "trigger": "on", "tags": []}
+    event_manager.create_event(event)
