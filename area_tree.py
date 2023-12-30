@@ -96,7 +96,7 @@ class Area:
 
         return merged
 
-    def pretty_print(self, indent=1, is_direct_child=False,):
+    def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
         """Prints a tree representation with accurate direct child highlighting."""
         log.info(f"pretty print {self.name}")
         log.info(f"{is_direct_child=}")
@@ -107,6 +107,8 @@ class Area:
             + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
         )
 
+        if show_state:
+            string_rep += "  " * indent + f"  Last State: {self.last_state}\n"
 
         if self.children:
             string_rep += "  " * indent + "│\n"
@@ -114,7 +116,7 @@ class Area:
                 direct = False
                 if child in self.direct_children:
                     direct = True
-                string_rep += child.pretty_print(indent + 2, direct)
+                string_rep += child.pretty_print(indent + 2, direct, show_state)
         else:
             string_rep += "  " * indent + "└── (No children)\n"
 
@@ -349,13 +351,14 @@ class Device:
     def get(self, value):
         return self.last_state[value]
 
-    def pretty_print(self, indent=1, is_direct_child=False):
+    def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
 
         string_rep = (
             " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
         )
 
-        string_rep += " " * (indent + 2) + f"State: {self.get_state()}\n"
+        if show_state:
+            string_rep += " " * (indent + 2) + f"State: {self.get_state}\n"
 
         return string_rep
 
