@@ -255,6 +255,15 @@ class AreaTree:
 
         return self.get_area() #return root if runs out of parents
 
+
+
+    def get_siblings(self, area_name):
+        area=self.get_area(area_name)
+
+
+        greatest_parent=self.get_greatest_area(area)
+
+
     def _create_area_tree(self, yaml_file):
         """
         Loads areas from a YAML file and creates a hierarchical structure of Area objects.
@@ -528,8 +537,6 @@ def test_classes():
 
     greatest_area=area_tree.get_greatest_area("living_room")
     log.info(f"\narea tree state {greatest_area.name}\n\n")
-
-    # # visualize_areas(area_tree)
 
     # living_room = area_tree["living_room"]
     # # log.info(f"APPLYING RED\n")
