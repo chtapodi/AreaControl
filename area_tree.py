@@ -18,7 +18,15 @@ area_tree = None
 event_manager = None
 global_triggers = None
 
-
+@service
+def reset() :
+    global area_tree
+    global event_manager
+    global global_triggers
+    area_tree = None
+    event_manager = None
+    global_triggers = None
+    init()
 
 @service
 def init():
@@ -35,6 +43,12 @@ def get_global_triggers() :
     if global_triggers is None :
         init()
     return global_triggers
+
+def get_event_manager() :
+    global event_manager
+    if event_manager is None :
+        init()
+    return event_manager
 
 ## RULES ##
 # These must have an interface that mathes the following and returns boolean
