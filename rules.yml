@@ -8,7 +8,6 @@ motion_binary_sensor_ :  # Wildcard for matching events with type starting with 
     - lesser_siblings: []
   state:
     status: 1
-    rgb_color: [255, 0, 0]
 
 
 

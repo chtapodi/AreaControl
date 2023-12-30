@@ -13,6 +13,19 @@ STATE_VALUES = {
     "output": {"status": 0, "rgb": [0, 0, 0], "brightness": 0, "temperature": 0},
 }
 
+
+area_tree = None
+event_manager = None
+
+
+@service
+def init():
+    global area_tree
+    global event_manager
+    area_tree = AreaTree("./pyscript/layout.yml")
+    event_manager = EventManager("./pyscript/rules.yml", area_tree)
+
+
 ## RULES ##
 # These must have an interface that mathes the following and returns boolean
 
@@ -44,19 +57,20 @@ def check_sleep(
     log.info(f"theo sleep {is_theo_alseep}")
 
 
-
-def generate_state_trigger(trigger, functions, kwarg_list) :
+def generate_state_trigger(trigger, functions, kwarg_list):
+    log.info(f"generating state trigger @{trigger} {functions}( {kwarg_list} )")
 
     @service
     @state_trigger(trigger)
-    def func_trig():
-        log.warning(f'\nPYSCRIPT:[CRON] Triggered {functions}({set_state}) at {cronstring}')
-
-        #This assumes that if the functions are lists the kwargs are as well.
-        if isinstance(functions, list) :
-            for function, kwargs in zip(functions, kwarg_list) : 
+    def func_trig(**kwargs):
+        log.info(
+            f"TRIGGER: generating state trigger @{trigger} {functions}( {kwarg_list} )"
+        )
+        # This assumes that if the functions are lists the kwargs are as well.
+        if isinstance(functions, list):
+            for function, kwargs in zip(functions, kwarg_list):
                 function(**kwargs)
-        else :
+        else:
             functions(**kwarg_list)
 
     return func_trig
@@ -233,16 +247,15 @@ class EventManager:
     def execute_rule(self, event_data, rule):
         log.info(f"executing rule {rule} with event {event_data}")
 
-        device=event_data["device_name"]
-        device_area=self.area_tree.get_device(device).get_area()
-        
+        device = event_data["device_name"]
+        device_area = self.area_tree.get_device(device).get_area()
+
         greatest_parent = self.area_tree.get_greatest_area(device_area.name)
         log.info(f"greatest_parent: {greatest_parent.name}")
-        event_state=rule.get("state",{})
+        event_state = rule.get("state", {})
         log.info(f"setting {greatest_parent.name}: {event_state}")
 
         greatest_parent.set_state(event_state)
-
 
     def get_relevent_devices(self, event_data, rule):
         # Get area input device is in
@@ -297,13 +310,12 @@ class EventManager:
                 function_name = list(function_data.keys())[0]
                 args = function_data.get(function_name, [])
 
-
                 if function_name in globals().keys():
                     func = globals()[function_name]
                     if not func(device_tags, event_data, **args):
                         return False
                 else:
-                    return True # as to not stop passing
+                    return True  # as to not stop passing
 
             return True
 
@@ -475,6 +487,7 @@ class AreaTree:
                                             input_type, device_id
                                         )
                                         new_device = Device(new_light)
+                                        new_light.add_callback(new_device.input_trigger)
 
                                         area.add_device(new_device)
                                         new_device.set_area(area)
@@ -493,7 +506,7 @@ class Device:
         self.last_state = None
         self.cached_state = None
         self.area = None
-        self.tags=[]
+        self.tags = []
 
     def get_state(self):
         state = self.driver.get_state()
@@ -501,30 +514,40 @@ class Device:
         self.last_state = state
         return state
 
-    def fillout_state_from_cache(self,state ) :
-        if self.cached_state is not  None :
+    def fillout_state_from_cache(self, state):
+        if self.cached_state is not None:
             for key, val in self.cached_state.items():
                 if key not in state.keys():
                     state[key] = val
         return state
 
-    def add_to_cache(self, state) :
-        self.cached_state = copy.deepcopy(state) 
+    def add_to_cache(self, state):
+        self.cached_state = copy.deepcopy(state)
+
+    def input_trigger(self, **kwargs):
+        global event_manager
+        
+        event = {
+            "device_name": self.name,
+            "trigger": "on",
+            "tags": [],
+        }
+        log.info(f"Input Trigger: {self.area.name} {kwargs} Event: {event}")
+
+        event_manager.create_event(event)
 
     def set_state(self, state):
         self.add_to_cache(state)
-        state=copy.deepcopy(state)
+        state = copy.deepcopy(state)
         if hasattr(self.driver, "set_state"):
-
             if "status" not in state.keys():
                 log.info(f"{self.name}: State does not contain status {state}. Caching")
 
             else:
-                state=self.fillout_state_from_cache(state)
+                state = self.fillout_state_from_cache(state)
 
                 self.driver.set_state(state)
                 self.last_state = state
-                
 
     def get(self, value):
         return self.last_state[value]
@@ -558,7 +581,9 @@ class MotionSensorDriver:
         log.info(f"Creating Motion Sensor: {self.name}")
 
         self.last_state = None
-        self.trigger=None
+        self.trigger = self.setup_service_triggers(device_id)
+
+        self.callback = None
 
     def create_name(self, input_type, device_id):
         if "." in device_id:
@@ -566,19 +591,22 @@ class MotionSensorDriver:
         name = f"{input_type}_{device_id}"
         return name
 
+    def add_callback(self, callback):
+        self.callback = callback
+
     def get_state(self):
         state = self.last_state
         state["name"] = self.name
         return state
 
-    def trigger_state(self, trigger_value) :
-        log.info(f"Triggering Motion Sensor: {self.name} with value: {trigger_value}")
+    def trigger_state(self, **kwargs):
+        log.info(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
+        if self.callback is not None:
+            self.callback(**kwargs)
 
-    def setup_service_triggers(self):
-        trigger="binary_sensor.living_room_presence"
-        self.trigger=generate_state_trigger(trigger, self.trigger_state)
-
-
+    def setup_service_triggers(self, device_id):
+        log.info(f"Generating trigger for: {device_id}")
+        return generate_state_trigger(device_id, self.trigger_state, [])
 
 
 class KaufLight:
@@ -748,3 +776,6 @@ def test_classes():
         "tags": [],
     }
     event_manager.create_event(event)
+
+
+init()
