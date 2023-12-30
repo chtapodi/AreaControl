@@ -44,6 +44,24 @@ def check_sleep(
     log.info(f"theo sleep {is_theo_alseep}")
 
 
+
+def generate_state_trigger(trigger, functions, kwarg_list) :
+
+    @service
+    @state_trigger(trigger)
+    def func_trig():
+        log.warning(f'\nPYSCRIPT:[CRON] Triggered {functions}({set_state}) at {cronstring}')
+
+        #This assumes that if the functions are lists the kwargs are as well.
+        if isinstance(functions, list) :
+            for function, kwargs in zip(functions, kwarg_list) : 
+                function(**kwargs)
+        else :
+            functions(**kwarg_list)
+
+    return func_trig
+
+
 def merge_states(state_list, name=None):
     if len(state_list) == 1:  # Case where merge does not need to happen
         return state_list[0]
@@ -540,6 +558,7 @@ class MotionSensorDriver:
         log.info(f"Creating Motion Sensor: {self.name}")
 
         self.last_state = None
+        self.trigger=None
 
     def create_name(self, input_type, device_id):
         if "." in device_id:
@@ -551,6 +570,15 @@ class MotionSensorDriver:
         state = self.last_state
         state["name"] = self.name
         return state
+
+    def trigger_state(self, trigger_value) :
+        log.info(f"Triggering Motion Sensor: {self.name} with value: {trigger_value}")
+
+    def setup_service_triggers(self):
+        trigger="binary_sensor.living_room_presence"
+        self.trigger=generate_state_trigger(trigger, self.trigger_state)
+
+
 
 
 class KaufLight:
