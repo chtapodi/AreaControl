@@ -16,15 +16,25 @@ STATE_VALUES = {
 
 area_tree = None
 event_manager = None
+global_triggers = None
+
 
 
 @service
 def init():
     global area_tree
     global event_manager
+    global global_triggers
+    global_triggers=[]
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
 
+
+def get_global_triggers() :
+    global global_triggers
+    if global_triggers is None :
+        init()
+    return global_triggers
 
 ## RULES ##
 # These must have an interface that mathes the following and returns boolean
@@ -72,7 +82,7 @@ def generate_state_trigger(trigger, functions, kwarg_list):
                 function(**kwargs)
         else:
             functions(**kwarg_list)
-
+    get_global_triggers().append(["trigger", trigger, func_trig])
     return func_trig
 
 
@@ -526,7 +536,7 @@ class Device:
 
     def input_trigger(self, **kwargs):
         global event_manager
-        
+
         event = {
             "device_name": self.name,
             "trigger": "on",
