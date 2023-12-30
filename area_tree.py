@@ -283,11 +283,11 @@ class AreaTree:
             if len(area.get_children(exclude_devices=(not include_devices)))==0:
                 lowest_areas.append(area)
             else:
-                for child in node.children:
+                for child in area.get_children(exclude_devices=True):
                     traverse(child)
 
-
-            return leaf_nodes
+        traverse(area)
+        return lowest_areas
 
     def get_siblings(self, area_name):
         area=self.get_area(area_name)
@@ -570,3 +570,9 @@ def test_classes():
     greatest_area=area_tree.get_greatest_area("living_room")
     log.info(f"\narea tree state {greatest_area.name}\n\n")
 
+
+    living_room=area_tree.get_area("living_room")
+
+    children=area_tree.get_lowest_children("home")
+    for child in children :
+        log.info(f"low child : {child.name}")
