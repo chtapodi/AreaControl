@@ -89,6 +89,10 @@ class Area:
 
         return list(set(self.children + self.direct_children + self.devices))
 
+    def get_direct_children(self):
+        return list(set(self.direct_children ))
+
+
     def get_parent(self):
         return self.parent
 
@@ -222,17 +226,17 @@ class AreaTree:
         self.config_path = config_path
         self.area_tree = self._create_area_tree(self.config_path)
 
-        self.root = self._find_root()
+        self.root_name = self._find_root()
 
     def get_state(self, area=None):
         if area is None:
-            area = self.root
+            area = self.root_name
         return self.area_tree[area].get_state()
 
-    def get_area(self, area=None):
-        if area is None:
-            area = self.root
-        return self.area_tree[area]
+    def get_area(self, area_name=None):
+        if area_name is None:
+            area_name = self.root_name
+        return self.area_tree[area_name]
 
     def get_area_tree(self):
         return self.area_tree
@@ -247,31 +251,24 @@ class AreaTree:
 
     def get_greatest_area(self, area_name):
         # Gets the highest area which still has the input area as a direct child
+        if area_name not in self.area_tree:
+            log.warning(f"Area {area_name} not found in area tree")
+            return None
+
         starting_area = self.area_tree[area_name]
 
         highest_area = starting_area
         parent = starting_area.get_parent()
 
-        log.info("starting area: " + area_name)
-        log.info("parent: " + parent.name)
-
         while parent is not None:
             if highest_area in parent.direct_children:
-                log.info(f"{starting_area.name} is in {parent.name}")
 
                 highest_area = parent
                 parent = parent.get_parent()
             else:
-                log.info(f"{starting_area.name} is NOT in {parent.name}")
-                for child in parent.direct_children:
-                    log.info(f"directchild: {child.name}")
-
-                log.info(f"Highest area is: {highest_area.name}")
                 return highest_area
-                # TODO: test
 
         return self.get_area() #return root if runs out of parents
-
 
 
     def get_lowest_children(self, area_name, include_devices=False) :
@@ -289,11 +286,22 @@ class AreaTree:
         traverse(area)
         return lowest_areas
 
-    def get_siblings(self, area_name):
+    def get_greater_siblings(self, area_name):
         area=self.get_area(area_name)
+        greatest_parent=self.get_greatest_area(area_name)
+        siblings=greatest_parent.get_direct_children()
+        if area in siblings:
+            siblings.remove(area)
+        return siblings
 
 
-        greatest_parent=self.get_greatest_area(area)
+    def get_lesser_siblings(self, area_name):
+        area=self.get_area(area_name)
+        greatest_parent=self.get_greatest_area(area_name)
+        siblings=self.get_lowest_children(greatest_parent.name)
+        if area in siblings:
+            siblings.remove(area)
+        return siblings
 
 
     def _create_area_tree(self, yaml_file):
@@ -573,6 +581,10 @@ def test_classes():
 
     living_room=area_tree.get_area("living_room")
 
-    children=area_tree.get_lowest_children("home")
-    for child in children :
-        log.info(f"low child : {child.name}")
+    siblings=area_tree.get_greater_siblings("living_room_couch")
+    for child in siblings :
+        log.info(f"greatersib : {child.name}")
+
+        siblings=area_tree.get_lesser_siblings("living_room_couch")
+    for child in siblings :
+        log.info(f"lessersib : {child.name}")
