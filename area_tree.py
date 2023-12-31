@@ -241,32 +241,21 @@ class EventManager:
         self.area_tree = area_tree
 
     def create_event(self, event):
-        log.info(f"New event: {event}")
+        log.info(f"EventManager: New event: {event}")
 
         result = self.check_event(event)
 
     def check_event(self, event):
-        # log.info(f"checking event {event}")
-
         matching_rules = []
         for rule_name in self.rules.keys():
+            # Get devices that names match trigger_prefix
             trigger_prefix = self.rules[rule_name]["trigger_prefix"]
-            log.info(f"trigger_prefix: {trigger_prefix}")
             if event["device_name"].startswith(trigger_prefix):
-                good = True
-                for prohibited_tag in self.rules[rule_name]["prohibited_tags"]:
-                    if prohibited_tag in event["tags"]:
-                        good = False
-
-                for required_tag in self.rules[rule_name]["required_tags"]:
-                    if required_tag not in event["tags"]:
-                        good = False
-
-                if good:
+                if self._check_tags(event, self.rules[rule_name]):
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
-        log.info(f"matching_rules: {matching_rules}")
+        log.info(f"EventManager:Applying : {len(matching_rules)} Rules")
 
         results = []
         for rule_name in matching_rules:
@@ -288,15 +277,11 @@ class EventManager:
         return True
 
     def execute_rule(self, event_data, rule):
-        log.info(f"executing rule {rule} with event {event_data}")
-
         device = event_data["device_name"]
         device_area = self.area_tree.get_device(device).get_area()
 
         greatest_parent = self.area_tree.get_greatest_area(device_area.name)
-        log.info(f"greatest_parent: {greatest_parent.name}")
         event_state = rule.get("state", {})
-        log.info(f"setting {greatest_parent.name}: {event_state}")
 
         greatest_parent.set_state(event_state)
 
@@ -306,11 +291,8 @@ class EventManager:
         device = self.area_tree.get_device(device_name)
         device_area = device.get_area()
 
-        log.info(f"device_area: {device_area.name}")
-
         # get areas in scope of device_area
         scope = rule.get("scope", [])[0]
-        log.info(f"scope: {scope}")
 
         function_name = "get_" + str(list(scope.keys())[0])
         args = scope.get(function_name, [])
@@ -331,19 +313,16 @@ class EventManager:
         return devices
 
     def _check_tags(self, tags, rule):
-        """This checks tags"""
-        log.info(f"rule: {rule}")
-        required_tags = rule["required_tags"]
-        prohibited_tags = rule["prohibited_tags"]
-
-        for tag in required_tags:
-            if tag not in tags:
-                return False
-
-        for tag in prohibited_tags:
-            if tag in tags:
-                return False
-
+        """Checks if the tags passed the rules tags"""
+        tags = event.get("tags", [])
+        if "required_tags" in rule:
+            for tag in rule["required_tags"]:
+                if tag not in tags:
+                    return False
+        if "prohibited_tags" in rule:
+            for tag in rule["prohibited_tags"]:
+                if tag in tags:
+                    return False
         return True
 
     def _check_functions(self, device_tags, event_data, rule):
@@ -675,8 +654,7 @@ class KaufLight:
         self.color = None
         self.brightness = None
         self.temperature = None
-        self.default_color= None
-
+        self.default_color = None
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -802,7 +780,7 @@ class KaufLight:
             # If being turned on and no rgb present, rgb color is set to value.
             if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
                 if not self.is_on():  # if it is off set it to the saved color
-                    if self.default_color is not None :
+                    if self.default_color is not None:
                         new_args["rgb_color"] = self.default_color
 
             try:
