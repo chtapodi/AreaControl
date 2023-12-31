@@ -19,3 +19,19 @@ motion_binary_sensor_1:
     - lesser_siblings: []
   state:
     status: 0
+
+presense_sensor_0:
+  trigger_prefix: "binary_sensor_presence_sensor_living_room_"
+  required_tags: ["on", "presense"]
+  scope:
+    - lesser_siblings: []
+  state:
+    status: 0
+
+presense_sensor_1:
+  trigger_prefix: "binary_sensor_presence_sensor_living_room_"
+  required_tags: ["off", "presense"]
+  scope:
+    - lesser_siblings: []
+  state:
+    status: 0

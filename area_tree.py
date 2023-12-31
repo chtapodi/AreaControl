@@ -130,8 +130,12 @@ def check_sleep(
 
 ### State functions
 # Functions that return a state based on some value
-def get_time_based_state(device):
+def get_time_based_state(device, area):
     now = time.localtime().tm_hour
+    
+    scope_state=area.get_state()
+
+    log.info(f"scope state is {scope_state}")
 
     state = {}
 
@@ -140,8 +144,10 @@ def get_time_based_state(device):
     if now < 5:
         # tags.append("late_night")
         log.info("it is late_night")
-        state["brightness"] = 50
-        state["rgb_color"] = [255, 0, 0]  # Set red
+
+        if scope_state["status"] == 0: # if the light is off, go to dark first
+            state["brightness"] = 100
+            state["rgb_color"] = [255, 0, 0]  # Set red
 
     elif now > 18:
         if now < 20:
@@ -358,6 +364,7 @@ class EventManager:
             greatest_parent = self.area_tree.get_greatest_area(device_area.name)
             event_state = rule.get("state", {})
 
+
             function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
@@ -366,14 +373,14 @@ class EventManager:
                         function = get_function_by_name(function_name)
                         # If function exitst, run it
                         if function is not None:
-                            function_state = function(event_state)
+                            function_state = function(device,greatest_parent)
                             function_states.append(function_state)
 
             state_list = [event_state]
             state_list.extend(function_states)
             final_state = combine_states(state_list)
 
-            greatest_parent.set_state(final_state)
+            greatest_parent.set_state(final_state) #TODO: Combine states higher up for all rules before applying
             return True
         else:
             log.warning(f"Device {device_name} not found")
@@ -689,7 +696,7 @@ class MotionSensorDriver:
         self.name = self.create_name(input_type, device_id)
         log.info(f"Creating Motion Sensor: {self.name}")
 
-        self.last_state = None
+        self.last_state = {}
         self.trigger = self.setup_service_triggers(device_id)
 
         self.callback = None
@@ -797,7 +804,7 @@ class KaufLight:
 
     def __init__(self, name):
         self.name = name
-        self.last_state = None
+        self.last_state = {}
         self.color = None
         self.brightness = None
         self.temperature = None
