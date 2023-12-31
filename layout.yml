@@ -1,0 +1,218 @@
+everything:
+  sub_areas:
+    - home
+    - outside
+
+home:
+  sub_areas:
+    - front
+    - back
+  inputs:
+    -
+  outputs:
+    -
+
+front:
+  sub_areas:
+    - front_room
+    - kitchen
+  inputs:
+    -
+  outputs:
+    -
+
+front_room:
+  direct_sub_areas:
+    - living_room
+    - dining_room
+  inputs:
+    motion:
+      - "binary_sensor.front_room_presence"
+  outputs:
+    -
+
+living_room:
+  direct_sub_areas:
+    - living_room_chairs
+    - living_room_front
+    - living_room_middle
+    - living_room_back
+  inputs:
+    motion:
+      - "binary_sensor.living_room_presence"
+  outputs:
+    -
+
+living_room_chairs:
+  direct_sub_areas:
+    - living_room_chair_0
+    - living_room_chair_1
+  inputs:
+    -
+  outputs:
+    -
+
+living_room_chair_0:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.living_room_chair_0_presence"
+  outputs:
+    - library_lamp
+
+living_room_chair_1:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.living_room_chair_1_presence"
+  outputs:
+    - living_room_lamp
+
+living_room_front:
+  direct_sub_areas:
+    - living_room_hallway
+  inputs:
+    -
+  outputs:
+    -
+
+living_room_hallway:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.living_room_hallway_presence"
+  outputs:
+    - kauf_sconce_0
+    - kauf_sconce_1
+
+living_room_middle:
+  direct_sub_areas:
+    - living_room_couch
+  inputs:
+    motion:
+      - "binary_sensor.living_room_middle_presence"
+  outputs:
+    -
+
+living_room_couch:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.living_room_couch_presence"
+  outputs:
+    - kauf_tube
+
+living_room_back:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.living_room_couch_presence"
+  outputs:
+    - kauf_ball_0
+    - kauf_ball_1
+
+dining_room:
+  direct_sub_areas:
+    - dining_room_hallway
+  inputs:
+    motion:
+      - "binary_sensor.dining_room_presence"
+  outputs:
+    - kauf_hanging_0
+    - kauf_hanging_1
+    - kauf_hanging_2
+    - kauf_hanging_3
+
+dining_room_hallway:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.dining_room_hallway_presence"
+  outputs:
+    -
+
+kitchen:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.lumi_lumi_sensor_motion_aq2"
+  outputs:
+    - kauf_kitchen_ball
+
+back:
+  sub_areas:
+    - laundry_room
+    - office
+    - hallway
+    - bathroom_1
+    - bedroom
+
+  inputs:
+    -
+  outputs:
+    -
+
+laundry_room:
+  sub_areas:
+    -
+  inputs:
+    - binary_sensor.lumi_lumi_sensor_motion_aq2_iaszone
+  outputs:
+    - kauf_laundry_room_0
+    - kauf_laundry_room_1
+    - kauf_laundry_room_2
+
+office:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.lumi_lumi_sensor_motion_aq2_9c978308"
+  outputs:
+    - kauf_office_light
+
+hallway:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.lumi_lumi_sensor_motion_aq2_53fe8208"
+  outputs:
+    - kauf_hallway
+
+bathroom_1:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.lumi_lumi_sensor_motion_aq2_b09d8308"
+  outputs:
+    - kauf_bathroom_1
+    - kauf_bathroom_center
+
+bedroom:
+  sub_areas:
+    -
+  inputs:
+    -
+  outputs:
+    - kauf_bedroom_0
+    - kauf_bedroom_1
+
+outside:
+  sub_areas:
+    - yard
+    - saildrone
+    - twelve
+    - other
+  inputs:
+    -
+  outputs:
+    -
