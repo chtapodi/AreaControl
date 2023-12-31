@@ -26,8 +26,8 @@ front_room:
     - living_room
     - dining_room
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_front_room"
+    presence:
+      - "presence_sensor_living_room_front_room"
 
   outputs:
     -
@@ -39,8 +39,8 @@ living_room:
     - living_room_middle
     - living_room_back
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room"
+    presence:
+      - "presence_sensor_living_room"
 
   outputs:
     -
@@ -58,8 +58,8 @@ living_room_chair_0:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_chair_0"
+    presence:
+      - "presence_sensor_living_room_chair_0"
   outputs:
     - library_lamp
 
@@ -67,8 +67,8 @@ living_room_chair_1:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_chair_0"
+    presence:
+      - "presence_sensor_living_room_chair_0"
 
   outputs:
     - living_room_lamp
@@ -85,8 +85,8 @@ living_room_hallway:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_hallway"
+    presence:
+      - "presence_sensor_living_room_hallway"
 
   outputs:
     - kauf_sconce_0
@@ -96,8 +96,8 @@ living_room_middle:
   direct_sub_areas:
     - living_room_couch
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_middle"
+    presence:
+      - "presence_sensor_living_room_middle"
 
   outputs:
     -
@@ -115,32 +115,32 @@ living_room_couch_0:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_couch_0"
+    presence:
+      - "presence_sensor_living_room_couch_0"
   outputs:
 
 living_room_couch_1:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_couch_1"
+    presence:
+      - "presence_sensor_living_room_couch_1"
   outputs:
 
 living_room_couch_2:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_couch_2"
+    presence:
+      - "presence_sensor_living_room_couch_2"
   outputs:
 
 living_room_back:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_back"
+    presence:
+      - "presence_sensor_living_room_back"
 
   outputs:
     - kauf_ball_0
@@ -166,43 +166,43 @@ dining_room_0:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_dining_room_0"
+    presence:
+      - "presence_sensor_living_room_dining_room_0"
 
 dining_room_1:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_dining_room_1"
+    presence:
+      - "presence_sensor_living_room_dining_room_1"
 
 dining_room_2:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_dining_room_2"
+    presence:
+      - "presence_sensor_living_room_dining_room_2"
 
 dining_room_3:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_dining_room_3"
+    presence:
+      - "presence_sensor_living_room_dining_room_3"
 
 dining_room_hallway:
   sub_areas:
     -
   inputs:
-    motion:
-      - "binary_sensor.presence_sensor_living_room_dining_room_hallway"
+    presence:
+      - "presence_sensor_living_room_dining_room_hallway"
 
 kitchen:
   sub_areas:
     -
   inputs:
     motion:
-      - "binary_sensor.lumi_lumi_sensor_motion_aq2"
+      - "lumi_lumi_sensor_motion_aq2"
   outputs:
     - kauf_kitchen_ball
 
@@ -218,7 +218,8 @@ laundry_room:
   sub_areas:
     -
   inputs:
-    - binary_sensor.lumi_lumi_sensor_motion_aq2_iaszone
+    motion:
+      - lumi_lumi_sensor_motion_aq2
   outputs:
     - kauf_laundry_room_0
     - kauf_laundry_room_1
@@ -229,7 +230,7 @@ office:
     -
   inputs:
     motion:
-      - "binary_sensor.lumi_lumi_sensor_motion_aq2_9c978308"
+      - "lumi_lumi_sensor_motion_aq2_9c978308"
   outputs:
     - kauf_office_light
 
@@ -238,7 +239,7 @@ hallway:
     -
   inputs:
     motion:
-      - "binary_sensor.lumi_lumi_sensor_motion_aq2_53fe8208"
+      - "lumi_lumi_sensor_motion_aq2_53fe8208"
   outputs:
     - kauf_hallway
 
@@ -247,7 +248,7 @@ bathroom_1:
     -
   inputs:
     motion:
-      - "binary_sensor.lumi_lumi_sensor_motion_aq2_b09d8308"
+      - "lumi_lumi_sensor_motion_aq2_b09d8308"
   outputs:
     - kauf_bathroom_1
     - kauf_bathroom_center

@@ -81,20 +81,43 @@ def combine_states(state_list, strategy="last"):
 
     if strategy == "last" or strategy == "first":
         for state in state_list:
-            final_state.update(state) #Update overwrites previous value
+            final_state.update(state)  # Update overwrites previous value
 
-    elif strategy=="average" :
+    elif strategy == "average":
         for state in state_list:
             for key, value in state.items():
                 if key in final_state.keys():
-                    final_state[key] = (value+final_state[key])/2
+                    final_state[key] = (value + final_state[key]) / 2
                 else:
                     final_state[key] = value
-    else :
+    else:
         log.warning(f"Strategy {strategy} not found")
 
     log.info(f"final state {final_state}")
     return final_state
+
+
+def combine_colors(color_one, color_two, strategy="add"):
+    color = [0, 0, 0]
+    if strategy == "average":
+        color[0] = (color_one[0] + color_two[0]) / 2
+        color[1] = (color_one[1] + color_two[1]) / 2
+        color[2] = (color_one[2] + color_two[2]) / 2
+    elif strategy == "add":
+        color[1] = color_one[1] + color_two[1]
+        color[2] = color_one[2] + color_two[2]
+        color[0] = color_one[0] + color_two[0]
+    else:
+        log.warning(f"Strategy {strategy} not found")
+
+    for val in color:
+        if val > 255:
+            val = 255
+        if val < 0:
+            val = 0
+
+    log.info(f"combined: {color_one} + {color_two} = {color}")
+    return color_one
 
 
 ## RULES ##
@@ -132,37 +155,55 @@ def check_sleep(
 # Functions that return a state based on some value
 def get_time_based_state(device, area):
     now = time.localtime().tm_hour
-    
-    scope_state=area.get_state()
+
+    scope_state = area.get_state()
 
     log.info(f"scope state is {scope_state}")
+
+    step_increment = 50
 
     state = {}
 
     state["status"] = 1  # want to turn on for all of them
 
-    if now < 5:
-        # tags.append("late_night")
+    # using now, have if statements for times of day: early morning, morning, midday, afternoon, evening, night, late night
+
+    if scope_state["status"] == 0:  # if the light is off, go to dark first
+        if "rgb_color" in scope_state:
+
+            redder_state = combine_colors(
+                scope_state["rgb_color"],
+                [step_increment, -step_increment, -step_increment],
+                "add",
+            )
+        state["rgb_color"] = redder_state
+
+    if now > 0 and now < 5:
         log.info("it is late_night")
 
-        if scope_state["status"] == 0: # if the light is off, go to dark first
-            state["brightness"] = 100
-            state["rgb_color"] = [255, 0, 0]  # Set red
+    elif now >= 5 and now < 7:
+        log.info("it is dawn")
 
-    elif now > 18:
-        if now < 20:
-            # tags.append("evening")
-            log.info("it is evening")
+    elif now >= 7 and now < 8:
+        log.info("it is early morning")
 
-            ...
-        else:
-            # tags.append("night"
-            log.info("it is night")
-            ...
-    else:
-        state["brightness"] = 255
-        log.info("it is day")
-        # tags.append("day")
+    elif now >= 8 and now < 11:
+        log.info("it is morning")
+
+    elif now >= 11 and now < 14:  # 11-2
+        log.info("it is midday")
+
+    elif now >= 14 and now < 18:  # 2-6
+        log.info("it is afternoon")
+
+    elif now >= 18 and now < 20:  # 6-8
+        log.info("it is evening")
+
+    elif now >= 20:  # 8-12
+        log.info("it is night")
+        if scope_state["status"] == 0:  # if the light is off, go to dark first
+            state["brightness"] = 50
+            state["rgb_color"] = [255, 0, 0]
 
     log.info(f"Time based state is {state}")
     return state
@@ -175,7 +216,7 @@ def generate_state_trigger(trigger, functions, kwarg_list):
     @state_trigger(trigger)
     def func_trig(**kwargs):
         log.info(
-            f"TRIGGER: generating state trigger @{trigger} {functions}( {kwarg_list} )"
+            f"TRIGGER: state trigger @{trigger} {functions}( {kwarg_list} )"
         )
         # This assumes that if the functions are lists the kwargs are as well.
         if isinstance(functions, list):
@@ -183,6 +224,8 @@ def generate_state_trigger(trigger, functions, kwarg_list):
                 function(**kwargs)
         else:
             functions(**kwarg_list)
+
+    func_trig.__name__ = "state_trigger_" + trigger
 
     get_global_triggers().append(["trigger", trigger, func_trig])
     return func_trig
@@ -364,7 +407,6 @@ class EventManager:
             greatest_parent = self.area_tree.get_greatest_area(device_area.name)
             event_state = rule.get("state", {})
 
-
             function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
@@ -373,14 +415,16 @@ class EventManager:
                         function = get_function_by_name(function_name)
                         # If function exitst, run it
                         if function is not None:
-                            function_state = function(device,greatest_parent)
+                            function_state = function(device, greatest_parent)
                             function_states.append(function_state)
 
             state_list = [event_state]
             state_list.extend(function_states)
             final_state = combine_states(state_list)
 
-            greatest_parent.set_state(final_state) #TODO: Combine states higher up for all rules before applying
+            greatest_parent.set_state(
+                final_state
+            )  # TODO: Combine states higher up for all rules before applying
             return True
         else:
             log.warning(f"Device {device_name} not found")
@@ -703,7 +747,8 @@ class MotionSensorDriver:
 
     def create_name(self, input_type, device_id):
         if "." in device_id:
-            device_id = device_id.replace(".", "_")
+            # get value after .
+            device_id = device_id.split(".", 1)[1]
         name = f"{input_type}_{device_id}"
         return name
 
@@ -738,10 +783,15 @@ class MotionSensorDriver:
             else:
                 tag = "motion_occupancy"
 
+            if f"binary_sensor.{device_id}{trigger_type}" in locals() :
+                log.info(f"IN LOCALS: {device_id}")
+            if f"binary_sensor.{device_id}{trigger_type}" in globals() :
+                log.info(f"IN GLOBALS: {device_id}")
+
             for value in values:
                 triggers.append(
                     generate_state_trigger(
-                        f"{device_id}{trigger_type} == '{value}'",
+                        f"binary_sensor.{device_id}{trigger_type} == '{value}'",
                         self.trigger_state,
                         {"tags": [value, tag]},
                     )
@@ -761,8 +811,13 @@ class PresenceSensorDriver:
         self.value = None
 
     def create_name(self, input_type, device_id):
-        log.info(f"Creating Presence Sensor: {device_id}")
-        return device_id
+        if input_type in device_id:
+            name = device_id
+        else:
+            name = f"{input_type}_{device_id}"
+
+        log.info(f"Creating Presence Sensor: {name}")
+        return name
 
     def add_callback(self, callback):
         self.callback = callback
@@ -789,10 +844,17 @@ class PresenceSensorDriver:
 
         triggers = []
 
+        if f"binary_sensor.{device_id}" in locals() :
+            log.info(f"IN LOCALS: {device_id}")
+        if f"binary_sensor.{device_id}"  in globals() :
+            log.info(f"IN GLOBALS: {device_id}")
+
         for value in values:
             triggers.append(
+
+
                 generate_state_trigger(
-                    f"{device_id} == '{value}'",
+                    f"binary_sensor.{device_id} == '{value}'",
                     self.trigger_state,
                     {"tags": [value, "presence"]},
                 )
@@ -805,7 +867,7 @@ class KaufLight:
     def __init__(self, name):
         self.name = name
         self.last_state = {}
-        self.color = None
+        self.rgb_color = None
         self.brightness = None
         self.temperature = None
         self.default_color = None
@@ -815,7 +877,7 @@ class KaufLight:
         """Sets the status of the light (on or off)"""
 
         if status == 1 or status == "on" or status == "1":
-            self.apply_values(rgb_color=str(self.color))
+            self.apply_values(rgb_color=self.get_rgb())
 
         else:
             light.turn_off(entity_id=f"light.{self.name}")
@@ -844,11 +906,16 @@ class KaufLight:
             self.apply_values(rgb_color=self.color)
 
     def get_rgb(self):
+        color=None
         try:
             color = state.get(f"light.{self.name}.rgb_color")
         except:
             log.warning(f"Unable to get rgb_color from {self.name}")
-            return None
+        
+        if color is None or color == "null":
+            if self.rgb_color is not None:
+                log.info("Getting cached rgb_color")
+                color = self.rgb_color
 
         return color if color != "null" else None
 
@@ -933,9 +1000,12 @@ class KaufLight:
 
             # If being turned on and no rgb present, rgb color is set to value.
             if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
-                if not self.is_on():  # if it is off set it to the saved color
+                if not self.is_on():  # if it is off set it to the default color
                     if self.default_color is not None:
                         new_args["rgb_color"] = self.default_color
+            else :
+                self.rgb_color = new_args["rgb_color"]
+                log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
 
             try:
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
@@ -952,12 +1022,12 @@ class KaufLight:
 @service
 def test_event():
     reset()
-    log.info(get_event_manager().area_tree.pretty_print())
+    # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "motion_binary_sensor_lumi_lumi_sensor_motion_aq2_53fe8208"
+    name = "presence_sensor_living_room_chair_0"
     event = {
         "device_name": name,
-        "tags": ["on", "ias_zone"],
+        "tags": ["on", "presence"],
     }
     log.info(f"\nCreating Event: {event}")
 

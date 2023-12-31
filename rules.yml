@@ -1,5 +1,5 @@
 motion_binary_sensor_0: # Wildcard for matching events with type starting with "door_opened"
-  trigger_prefix: "motion_binary_sensor_"
+  trigger_prefix: "motion_"
   prohibited_tags: ["anna_asleep", "bedroom_sensor"]
   required_tags: ["on"]
   functions:
@@ -13,24 +13,24 @@ motion_binary_sensor_0: # Wildcard for matching events with type starting with "
     - get_time_based_state: []
 
 motion_binary_sensor_1:
-  trigger_prefix: "motion_binary_sensor_"
+  trigger_prefix: "motion_"
   required_tags: ["off", "motion_occupancy"]
   scope:
     - lesser_siblings: []
   state:
     status: 0
 
-presense_sensor_0:
-  trigger_prefix: "binary_sensor_presence_sensor_living_room_"
-  required_tags: ["on", "presense"]
+presence_sensor_0:
+  trigger_prefix: "presence_sensor_living_room_"
+  required_tags: ["on", "presence"]
   scope:
     - lesser_siblings: []
   state:
     status: 0
 
-presense_sensor_1:
-  trigger_prefix: "binary_sensor_presence_sensor_living_room_"
-  required_tags: ["off", "presense"]
+presence_sensor_1:
+  trigger_prefix: "presence_sensor_living_room_"
+  required_tags: ["off", "presence"]
   scope:
     - lesser_siblings: []
   state:
