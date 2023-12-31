@@ -402,12 +402,10 @@ class EventManager:
             for function_data in functions:
                 # split dict key and value to get functoin name and args
                 function_name = list(function_data.keys())[0]
-                args = function_data.get(function_name, [])
 
-                if function_name in globals().keys():
-                    func = globals()[function_name]
-                    if not func(device_tags, event_data, **args):
-                        return False
+                function = get_function_by_name(function_name)
+                if function is not None:
+                    return function(device_tags, event_data, **args)
                 else:
                     return True  # as to not stop passing
 
