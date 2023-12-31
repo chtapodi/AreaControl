@@ -241,7 +241,7 @@ class EventManager:
         self.area_tree = area_tree
 
     def create_event(self, event):
-        log.info(f"EventManager: New event: {event}")
+        log.info(f"\nEventManager: New event: {event}")
 
         result = self.check_event(event)
 
@@ -251,11 +251,18 @@ class EventManager:
             # Get devices that names match trigger_prefix
             trigger_prefix = self.rules[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
+                log.info(f"EventManager: Rule matched name: {rule_name}")
                 if self._check_tags(event, self.rules[rule_name]):
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
         log.info(f"EventManager:Applying : {len(matching_rules)} Rules")
+        for rule in matching_rules :
+            log.info(f"Applying Rule: {rule}")
+            if "prohibited_tags" in self.rules[rule] :
+                log.info(f"Prohibited tags: {self.rules[rule]['prohibited_tags']}")
+            if "required_tags" in self.rules[rule] :
+                log.info(f"required tags: {self.rules[rule]['required_tags']}")
 
         results = []
         for rule_name in matching_rules:
@@ -265,25 +272,20 @@ class EventManager:
 
         return False  # No matching rule
 
-    def check_device(self, device, event_data, rule):
-        # log.info(f"checking device {device}")
-        device_tags = device.get_tags()
-        if not self._check_tags(device_tags, rule):
-            return False
-
-        if not self._check_functions(device_tags, event_data, rule):
-            return False
-
-        return True
-
     def execute_rule(self, event_data, rule):
-        device = event_data["device_name"]
-        device_area = self.area_tree.get_device(device).get_area()
+        device_name = event_data["device_name"]
+        device= self.area_tree.get_device(device_name)
+        if device is not None :
+            device_area = device.get_area()
 
-        greatest_parent = self.area_tree.get_greatest_area(device_area.name)
-        event_state = rule.get("state", {})
+            greatest_parent = self.area_tree.get_greatest_area(device_area.name)
+            event_state = rule.get("state", {})
 
-        greatest_parent.set_state(event_state)
+            greatest_parent.set_state(event_state)
+            return True
+        else :
+            log.warning(f"Device {device_name} not found")
+            return False
 
     def get_relevent_devices(self, event_data, rule):
         # Get area input device is in
@@ -312,14 +314,20 @@ class EventManager:
 
         return devices
 
-    def _check_tags(self, tags, rule):
+    def _check_tags(self, event, rule):
         """Checks if the tags passed the rules tags"""
         tags = event.get("tags", [])
+        log.info(
+            f"Checking tags: {tags} against:"
+        )
         if "required_tags" in rule:
+            log.info(f"\tRequired tags: {rule['required_tags']}")
             for tag in rule["required_tags"]:
                 if tag not in tags:
                     return False
         if "prohibited_tags" in rule:
+            log.info(f"\Prohibited tags: {rule['required_tags']}")
+
             for tag in rule["prohibited_tags"]:
                 if tag in tags:
                     return False
@@ -796,23 +804,28 @@ class KaufLight:
 
 
 @service
-def test_classes():
-    log.info("\nPYSCRIPT: Starting")
-    area_tree = AreaTree("./pyscript/layout.yml")
+def test_event():
+    reset()
+    log.info("STARTING TEST EVENT")
+    name="motion_binary_sensor_hallway_presence"
+    event = {
+        "device_name": name,
+        "value": "on",
+        "tags": ["on"],
+    }
+    log.info(f"\nCreating Event: {event}")
 
-    event_manager = EventManager("./pyscript/rules.yml", area_tree)
+    event_manager.create_event(event)
 
-    log.info("\nPYSCRIPT: ####Created#####\n\n")
-    log.info(f"\narea tree {area_tree}\n\n")
-
-    living_room = area_tree.get_area("front_room")
-    log.info(f"\nlivingroom {living_room.pretty_print()}\n\n")
+    time.sleep(1)
 
     event = {
-        "device_name": "motion_binary_sensor_dining_room_presence",
-        "trigger": "on",
-        "tags": [],
+        "device_name": name,
+        "value": "off",
+        "tags": ["off"],
     }
+    log.info(f"\nCreating Event: {event}")
+
     event_manager.create_event(event)
 
 
