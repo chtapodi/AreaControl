@@ -257,11 +257,11 @@ class EventManager:
 
         event_tags = event.get("tags", [])
         log.info(f"EventManager:Applying : {len(matching_rules)} Rules")
-        for rule in matching_rules :
+        for rule in matching_rules:
             log.info(f"Applying Rule: {rule}")
-            if "prohibited_tags" in self.rules[rule] :
+            if "prohibited_tags" in self.rules[rule]:
                 log.info(f"Prohibited tags: {self.rules[rule]['prohibited_tags']}")
-            if "required_tags" in self.rules[rule] :
+            if "required_tags" in self.rules[rule]:
                 log.info(f"required tags: {self.rules[rule]['required_tags']}")
 
         results = []
@@ -274,8 +274,8 @@ class EventManager:
 
     def execute_rule(self, event_data, rule):
         device_name = event_data["device_name"]
-        device= self.area_tree.get_device(device_name)
-        if device is not None :
+        device = self.area_tree.get_device(device_name)
+        if device is not None:
             device_area = device.get_area()
 
             greatest_parent = self.area_tree.get_greatest_area(device_area.name)
@@ -283,16 +283,14 @@ class EventManager:
 
             greatest_parent.set_state(event_state)
             return True
-        else :
+        else:
             log.warning(f"Device {device_name} not found")
             return False
 
     def _check_tags(self, event, rule):
         """Checks if the tags passed the rules tags"""
         tags = event.get("tags", [])
-        log.info(
-            f"Checking tags: {tags} against:"
-        )
+        log.info(f"Checking tags: {tags} against:")
         if "required_tags" in rule:
             log.info(f"\tRequired tags: {rule['required_tags']}")
             for tag in rule["required_tags"]:
@@ -500,7 +498,7 @@ class AreaTree:
 
         return area_tree
 
-    def pretty_print(self) :
+    def pretty_print(self):
         return self.get_area(self.root_name).pretty_print()
 
 
@@ -531,15 +529,11 @@ class Device:
     def add_to_cache(self, state):
         self.cached_state = copy.deepcopy(state)
 
-    def input_trigger(self, value):
+    def input_trigger(self, tags):
         global event_manager
 
-        event = {
-            "device_name": self.name,
-            "value": value,
-            "tags": [str(value)],
-        }
-        log.info(f"Input Trigger: {self.area.name} {value} Event: {event}")
+        event = {"device_name": self.name, "tags": tags}
+        log.info(f"Device{self.area.name} Triggered. Event: {event}")
 
         event_manager.create_event(event)
 
@@ -609,24 +603,34 @@ class MotionSensorDriver:
     def trigger_state(self, **kwargs):
         log.info(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
         if self.callback is not None:
-            if "value" in kwargs:
-                value = kwargs["value"]
-                log.info(f"value is {value}")
-                value = kwargs["value"]
-                self.callback(value)
+            if "tags" in kwargs:
+                tags = kwargs["tags"]
+                log.info(f"tags are {tags}")
+
+                self.callback(tags)
             else:
-                log.info(f"No value in kwargs {kwargs}")
+                log.info(f"No tags in kwargs {kwargs}")
 
     def setup_service_triggers(self, device_id):
         log.info(f"Generating trigger for: {device_id}")
-        trigger = [
-            generate_state_trigger(
-                f"{device_id} == 'on'", self.trigger_state, {"value": "on"}
-            ),
-            generate_state_trigger(
-                f"{device_id} == 'off'", self.trigger_state, {"value": "off"}
-            ),
-        ]
+        trigger_types = ["_ias_zone", "_occupancy"]
+        values = ["on", "off"]
+
+        triggers = []
+        for trigger_type in trigger_types:
+            if trigger_type == "_ias_zone":
+                tag="detected"
+            else:
+                tag="occupancy"
+
+            for value in values:
+                triggers.append(
+                    generate_state_trigger(
+                        f"{device_id}{trigger_type} == '{value}'",
+                        self.trigger_state,
+                        {"tags": [value, tag,"woo"]},
+                    )
+                )
 
 
 class KaufLight:
@@ -784,11 +788,10 @@ def test_event():
     reset()
     log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name="motion_binary_sensor_lumi_lumi_sensor_motion_aq2_53fe8208_ias_zone"
+    name = "motion_binary_sensor_lumi_lumi_sensor_motion_aq2_53fe8208"
     event = {
         "device_name": name,
-        "value": "on",
-        "tags": ["on"],
+        "tags": ["on", "ias_zone"],
     }
     log.info(f"\nCreating Event: {event}")
 
@@ -798,9 +801,15 @@ def test_event():
 
     event = {
         "device_name": name,
-        "value": "off",
-        "tags": ["off"],
+        "tags": ["off", "ias_zone"],
     }
+    log.info(f"\nCreating Event: {event}")
+
+    event_manager.create_event(event)
+
+    time.sleep(1)
+
+    event = {"device_name": name, "tags": ["off", "occupancy"]}
     log.info(f"\nCreating Event: {event}")
 
     event_manager.create_event(event)
