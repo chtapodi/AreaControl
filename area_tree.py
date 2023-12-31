@@ -54,23 +54,47 @@ def get_event_manager():
     return event_manager
 
 
-def get_function_by_name(function_name, func_object=None) :
-    func=None
-    if func_object is None :
+def get_function_by_name(function_name, func_object=None):
+    func = None
+    if func_object is None:
         if function_name in globals().keys():
             func = globals()[function_name]
-        else :
+        else:
             log.warning(f"Function {function_name} not found")
-    else :
+    else:
         if hasattr(func_object, function_name):
             func = getattr(func_object, function_name)
 
-    if func is None :    
+    if func is None:
         log.warning(f"Function {function_name} not found")
-    else :
+    else:
         log.info(f"Function {function_name} found")
     return func
 
+
+def combine_states(state_list, strategy="last"):
+    final_state = {}
+    log.info(f"combining states {state_list}")
+
+    if strategy == "first":
+        state_list.reverse()
+
+    if strategy == "last" or strategy == "first":
+        for state in state_list:
+            final_state.update(state) #Update overwrites previous value
+
+    elif strategy=="average" :
+        for state in state_list:
+            for key, value in state.items():
+                if key in final_state.keys():
+                    final_state[key] = (value+final_state[key])/2
+                else:
+                    final_state[key] = value
+    else :
+        log.warning(f"Strategy {strategy} not found")
+
+    log.info(f"final state {final_state}")
+    return final_state
 
 
 ## RULES ##
@@ -102,6 +126,40 @@ def check_sleep(
 ):
     is_theo_alseep = state.get("binary_sensor.xavier_is_sleeping")
     log.info(f"theo sleep {is_theo_alseep}")
+
+
+### State functions
+# Functions that return a state based on some value
+def get_time_based_state(device):
+    now = time.localtime().tm_hour
+
+    state = {}
+
+    state["status"] = 1  # want to turn on for all of them
+
+    if now < 5:
+        # tags.append("late_night")
+        log.info("it is late_night")
+        state["brightness"] = 50
+        state["rgb_color"] = [255, 0, 0]  # Set red
+
+    elif now > 18:
+        if now < 20:
+            # tags.append("evening")
+            log.info("it is evening")
+
+            ...
+        else:
+            # tags.append("night"
+            log.info("it is night")
+            ...
+    else:
+        state["brightness"] = 255
+        log.info("it is day")
+        # tags.append("day")
+
+    log.info(f"Time based state is {state}")
+    return state
 
 
 def generate_state_trigger(trigger, functions, kwarg_list):
@@ -300,19 +358,22 @@ class EventManager:
             greatest_parent = self.area_tree.get_greatest_area(device_area.name)
             event_state = rule.get("state", {})
 
-            function_states=[]
+            function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
-                log.info(f"GETTING state functions: {rule['state_functions']}")
-                for function_pair in rule["state_functions"] : # function_name:args
+                for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
-                        function=get_function_by_name(function_name)
+                        function = get_function_by_name(function_name)
+                        # If function exitst, run it
                         if function is not None:
                             function_state = function(event_state)
                             function_states.append(function_state)
 
+            state_list = [event_state]
+            state_list.extend(function_states)
+            final_state = combine_states(state_list)
 
-            greatest_parent.set_state(event_state)
+            greatest_parent.set_state(final_state)
             return True
         else:
             log.warning(f"Device {device_name} not found")
@@ -523,7 +584,9 @@ class AreaTree:
                                                 input_type, device_id
                                             )
                                         elif "presence" in device_id:
-                                            log.info(f"Creating presence device: {device_id}")
+                                            log.info(
+                                                f"Creating presence device: {device_id}"
+                                            )
                                             new_input = PresenceSensorDriver(
                                                 input_type, device_id
                                             )
@@ -690,7 +753,7 @@ class PresenceSensorDriver:
 
         self.callback = None
 
-        self.value=None
+        self.value = None
 
     def create_name(self, input_type, device_id):
         log.info(f"Creating Presence Sensor: {device_id}")
@@ -894,7 +957,6 @@ def test_event():
     log.info(f"\nCreating Event: {event}")
 
     event_manager.create_event(event)
-
 
 
 init()
