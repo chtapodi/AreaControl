@@ -27,7 +27,8 @@ front_room:
     - dining_room
   inputs:
     motion:
-      - "binary_sensor.front_room_presence"
+      - "binary_sensor.presence_sensor_living_room_front_room"
+
   outputs:
     -
 
@@ -39,7 +40,8 @@ living_room:
     - living_room_back
   inputs:
     motion:
-      - "binary_sensor.living_room_presence"
+      - "binary_sensor.presence_sensor_living_room"
+
   outputs:
     -
 
@@ -57,7 +59,7 @@ living_room_chair_0:
     -
   inputs:
     motion:
-      - "binary_sensor.living_room_chair_0_presence"
+      - "binary_sensor.presence_sensor_living_room_chair_0"
   outputs:
     - library_lamp
 
@@ -66,7 +68,8 @@ living_room_chair_1:
     -
   inputs:
     motion:
-      - "binary_sensor.living_room_chair_1_presence"
+      - "binary_sensor.presence_sensor_living_room_chair_0"
+
   outputs:
     - living_room_lamp
 
@@ -83,7 +86,8 @@ living_room_hallway:
     -
   inputs:
     motion:
-      - "binary_sensor.living_room_hallway_presence"
+      - "binary_sensor.presence_sensor_living_room_hallway"
+
   outputs:
     - kauf_sconce_0
     - kauf_sconce_1
@@ -93,25 +97,51 @@ living_room_middle:
     - living_room_couch
   inputs:
     motion:
-      - "binary_sensor.living_room_middle_presence"
+      - "binary_sensor.presence_sensor_living_room_middle"
+
   outputs:
     -
 
 living_room_couch:
   sub_areas:
+    - living_room_couch_0
+    - living_room_couch_1
+    - living_room_couch_2
+
+  outputs:
+    - kauf_tube
+
+living_room_couch_0:
+  sub_areas:
     -
   inputs:
     motion:
-      - "binary_sensor.living_room_couch_presence"
+      - "binary_sensor.presence_sensor_living_room_couch_0"
   outputs:
-    - kauf_tube
+
+living_room_couch_1:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.presence_sensor_living_room_couch_1"
+  outputs:
+
+living_room_couch_2:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.presence_sensor_living_room_couch_2"
+  outputs:
 
 living_room_back:
   sub_areas:
     -
   inputs:
     motion:
-      - "binary_sensor.living_room_couch_presence"
+      - "binary_sensor.presence_sensor_living_room_back"
+
   outputs:
     - kauf_ball_0
     - kauf_ball_1
@@ -119,23 +149,53 @@ living_room_back:
 dining_room:
   direct_sub_areas:
     - dining_room_hallway
+    - dining_room_0
+    - dining_room_1
+    - dining_room_2
+    - dining_room_3
   inputs:
     motion:
-      - "binary_sensor.dining_room_presence"
+
   outputs:
     - kauf_hanging_0
     - kauf_hanging_1
     - kauf_hanging_2
     - kauf_hanging_3
 
+dining_room_0:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.presence_sensor_living_room_dining_room_0"
+
+dining_room_1:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.presence_sensor_living_room_dining_room_1"
+
+dining_room_2:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.presence_sensor_living_room_dining_room_2"
+
+dining_room_3:
+  sub_areas:
+    -
+  inputs:
+    motion:
+      - "binary_sensor.presence_sensor_living_room_dining_room_3"
+
 dining_room_hallway:
   sub_areas:
     -
   inputs:
     motion:
-      - "binary_sensor.dining_room_hallway_presence"
-  outputs:
-    -
+      - "binary_sensor.presence_sensor_living_room_dining_room_hallway"
 
 kitchen:
   sub_areas:
@@ -153,11 +213,6 @@ back:
     - hallway
     - bathroom_1
     - bedroom
-
-  inputs:
-    -
-  outputs:
-    -
 
 laundry_room:
   sub_areas:
@@ -213,6 +268,4 @@ outside:
     - twelve
     - other
   inputs:
-    -
-  outputs:
     -

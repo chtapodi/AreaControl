@@ -459,8 +459,8 @@ class AreaTree:
                             area.add_child(new_area, direct=False)
 
                 # Add outputs as children
-                if "outputs" in area_data:
-                    for output in area_data["outputs"]:
+                if "outputs" in area_data and area_data["outputs"] is not None:
+                    for output in area_data.get("outputs", []):
                         if output is not None:
                             if "kauf" in output:
                                 new_light = KaufLight(output)
@@ -482,19 +482,35 @@ class AreaTree:
 
                     elif type(inputs) == dict:
                         for input_type, device_id_list in area_data["inputs"].items():
-                            if input_type is not None:
+                            if input_type is not None and device_id_list is not None:
                                 for device_id in device_id_list:
                                     if device_id is not None:
-                                        new_light = MotionSensorDriver(
-                                            input_type, device_id
-                                        )
-                                        new_device = Device(new_light)
-                                        new_light.add_callback(new_device.input_trigger)
+                                        new_input = None
+                                        if "lumi" in device_id:
+                                            log.info(f"lumi: {device_id}")
+                                            new_input = MotionSensorDriver(
+                                                input_type, device_id
+                                            )
+                                        elif "presence" in device_id:
+                                            log.info(f"Creating presence device: {device_id}")
+                                            new_input = PresenceSensorDriver(
+                                                input_type, device_id
+                                            )
+                                        else:
+                                            log.warning(
+                                                f"Input has no driver: {device_id}"
+                                            )
 
-                                        area.add_device(new_device)
-                                        new_device.set_area(area)
+                                        if new_input is not None:
+                                            new_device = Device(new_input)
+                                            new_input.add_callback(
+                                                new_device.input_trigger
+                                            )
 
-                                        area_tree[new_device.name] = new_device
+                                            area.add_device(new_device)
+                                            new_device.set_area(area)
+
+                                            area_tree[new_device.name] = new_device
 
         return area_tree
 
@@ -619,18 +635,69 @@ class MotionSensorDriver:
         triggers = []
         for trigger_type in trigger_types:
             if trigger_type == "_ias_zone":
-                tag="detected"
+                tag = "motion_detected"
             else:
-                tag="occupancy"
+                tag = "motion_occupancy"
 
             for value in values:
                 triggers.append(
                     generate_state_trigger(
                         f"{device_id}{trigger_type} == '{value}'",
                         self.trigger_state,
-                        {"tags": [value, tag,"woo"]},
+                        {"tags": [value, tag]},
                     )
                 )
+
+
+class PresenceSensorDriver:
+    def __init__(self, input_type, device_id):
+        self.name = self.create_name(input_type, device_id)
+        log.info(f"Creating Presence Sensor: {self.name}")
+
+        self.last_state = None
+        self.trigger = self.setup_service_triggers(device_id)
+
+        self.callback = None
+
+        self.value=None
+
+    def create_name(self, input_type, device_id):
+        log.info(f"Creating Presence Sensor: {device_id}")
+        return device_id
+
+    def add_callback(self, callback):
+        self.callback = callback
+
+    def get_state(self):
+        state = self.last_state
+        state["name"] = self.name
+        return state
+
+    def trigger_state(self, **kwargs):
+        log.info(f"Triggering Presence Sensor: {self.name} with value: {kwargs}")
+        if self.callback is not None:
+            if "tags" in kwargs:
+                tags = kwargs["tags"]
+                log.info(f"tags are {tags}")
+
+                self.callback(tags)
+            else:
+                log.info(f"No tags in kwargs {kwargs}")
+
+    def setup_service_triggers(self, device_id):
+        log.info(f"Generating trigger for: {device_id}")
+        values = ["on", "off"]
+
+        triggers = []
+
+        for value in values:
+            triggers.append(
+                generate_state_trigger(
+                    f"{device_id} == '{value}'",
+                    self.trigger_state,
+                    {"tags": [value, "presence"]},
+                )
+            )
 
 
 class KaufLight:
@@ -797,22 +864,6 @@ def test_event():
 
     event_manager.create_event(event)
 
-    time.sleep(1)
-
-    event = {
-        "device_name": name,
-        "tags": ["off", "ias_zone"],
-    }
-    log.info(f"\nCreating Event: {event}")
-
-    event_manager.create_event(event)
-
-    time.sleep(1)
-
-    event = {"device_name": name, "tags": ["off", "occupancy"]}
-    log.info(f"\nCreating Event: {event}")
-
-    event_manager.create_event(event)
 
 
 init()
