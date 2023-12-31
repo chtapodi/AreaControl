@@ -287,33 +287,6 @@ class EventManager:
             log.warning(f"Device {device_name} not found")
             return False
 
-    def get_relevent_devices(self, event_data, rule):
-        # Get area input device is in
-        device_name = event_data["device_name"]
-        device = self.area_tree.get_device(device_name)
-        device_area = device.get_area()
-
-        # get areas in scope of device_area
-        scope = rule.get("scope", [])[0]
-
-        function_name = "get_" + str(list(scope.keys())[0])
-        args = scope.get(function_name, [])
-
-        # checks if function exists
-        if hasattr(self.area_tree, function_name):
-            func = getattr(self.area_tree, function_name)
-        else:
-            log.warning(f"Function '{function_name}' not implemented.")
-            return None
-
-        areas_in_scope = func(device_area.name, **args)
-        areas_in_scope.append(device_area)
-        devices = []
-        for area in areas_in_scope:
-            devices += area.get_devices()
-
-        return devices
-
     def _check_tags(self, event, rule):
         """Checks if the tags passed the rules tags"""
         tags = event.get("tags", [])
@@ -526,6 +499,9 @@ class AreaTree:
                                         area_tree[new_device.name] = new_device
 
         return area_tree
+
+    def pretty_print(self) :
+        return self.get_area(self.root_name).pretty_print()
 
 
 class Device:
@@ -806,8 +782,9 @@ class KaufLight:
 @service
 def test_event():
     reset()
+    log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name="motion_binary_sensor_hallway_presence"
+    name="motion_binary_sensor_lumi_lumi_sensor_motion_aq2_53fe8208_ias_zone"
     event = {
         "device_name": name,
         "value": "on",

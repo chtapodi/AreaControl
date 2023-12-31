@@ -14,10 +14,7 @@ motion_binary_sensor_0 :  # Wildcard for matching events with type starting with
 
 motion_binary_sensor_1 :  
   trigger_prefix: "motion_binary_sensor_"
-  required_tags: ["off"]
-  functions:
-    - check_time: []
-    - are_people_asleep: []
+  required_tags: ["off", "occupancy"]
   scope:
     - lesser_siblings: []
   state:
