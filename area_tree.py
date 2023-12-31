@@ -54,6 +54,25 @@ def get_event_manager():
     return event_manager
 
 
+def get_function_by_name(function_name, func_object=None) :
+    func=None
+    if func_object is None :
+        if function_name in globals().keys():
+            func = globals()[function_name]
+        else :
+            log.warning(f"Function {function_name} not found")
+    else :
+        if hasattr(func_object, function_name):
+            func = getattr(func_object, function_name)
+
+    if func is None :    
+        log.warning(f"Function {function_name} not found")
+    else :
+        log.info(f"Function {function_name} found")
+    return func
+
+
+
 ## RULES ##
 # These must have an interface that mathes the following and returns boolean
 
@@ -280,6 +299,18 @@ class EventManager:
 
             greatest_parent = self.area_tree.get_greatest_area(device_area.name)
             event_state = rule.get("state", {})
+
+            function_states=[]
+            # if there are state functions, run them
+            if "state_functions" in rule:
+                log.info(f"GETTING state functions: {rule['state_functions']}")
+                for function_pair in rule["state_functions"] : # function_name:args
+                    for function_name, args in function_pair.items():
+                        function=get_function_by_name(function_name)
+                        if function is not None:
+                            function_state = function(event_state)
+                            function_states.append(function_state)
+
 
             greatest_parent.set_state(event_state)
             return True
