@@ -87,9 +87,9 @@ def combine_states(state_list, strategy="last"):
         for state in state_list:
             for key, value in state.items():
                 if key in final_state.keys():
-                    if key=="status" : # being on overrides being off
-                        final_state[key] =max(value + final_state[key])
-                    else :
+                    if key == "status":  # being on overrides being off
+                        final_state[key] = max(value + final_state[key])
+                    else:
                         final_state[key] = (value + final_state[key]) / 2
                 else:
                     final_state[key] = value
@@ -100,17 +100,16 @@ def combine_states(state_list, strategy="last"):
     return final_state
 
 
-def summarize_state(state) :
-    flat_state={}
-    for key, value in state.items() :
-        if type(value) == dict :
-            new_state=summarize_state(value)
-            flat_state=combine_states([flat_state, new_state], strategy="average") 
-        else :
-            flat_state[key]=value
+def summarize_state(state):
+    flat_state = {}
+    for key, value in state.items():
+        if type(value) == dict:
+            new_state = summarize_state(value)
+            flat_state = combine_states([flat_state, new_state], strategy="average")
+        else:
+            flat_state[key] = value
     log.info(f"summarized state {state} as {flat_state}")
     return flat_state
-
 
 
 def combine_colors(color_one, color_two, strategy="add"):
@@ -126,8 +125,8 @@ def combine_colors(color_one, color_two, strategy="add"):
     else:
         log.warning(f"Strategy {strategy} not found")
 
-    for i in range(len(color)) :
-        val=color[i]
+    for i in range(len(color)):
+        val = color[i]
         if val > 255:
             color[i] = 255
         if val < 0:
@@ -175,7 +174,7 @@ def get_time_based_state(device, area):
 
     scope_state = area.get_state()
     log.info(f"scope state is {scope_state}")
-    scope_state=summarize_state(scope_state)
+    scope_state = summarize_state(scope_state)
 
     step_increment = 50
 
@@ -185,27 +184,26 @@ def get_time_based_state(device, area):
 
     # using now, have if statements for times of day: early morning, morning, midday, afternoon, evening, night, late night
 
-    if "rgb_color" in scope_state:
-
-        redder_state = combine_colors(
-            scope_state["rgb_color"],
-            [step_increment, -step_increment, -step_increment],
-            "add",
-        )
-        state["rgb_color"] = redder_state
-        
-
     if now > 0 and now < 5:
         log.info("it is late_night")
+
+        if scope_state["status"] == 0:  # if the light is off, go to dark first
+            state["brightness"] = 50
+            state["rgb_color"] = [255, 0, 0]
 
     elif now >= 5 and now < 7:
         log.info("it is dawn")
 
     elif now >= 7 and now < 8:
         log.info("it is early morning")
+        state["brightness"] = 255
+        state["rgb_color"] = [255, 200, 185]
+
+
 
     elif now >= 8 and now < 11:
         log.info("it is morning")
+        state["color_temp"]=350
 
     elif now >= 11 and now < 14:  # 11-2
         log.info("it is midday")
@@ -215,12 +213,19 @@ def get_time_based_state(device, area):
 
     elif now >= 18 and now < 20:  # 6-8
         log.info("it is evening")
+        state["rgb_color"] = [255, 200, 185]
 
     elif now >= 20:  # 8-12
         log.info("it is night")
-        if scope_state["status"] == 0:  # if the light is off, go to dark first
-            state["brightness"] = 50
-            state["rgb_color"] = [255, 0, 0]
+
+        if "rgb_color" in scope_state and scope_state["status"] == 0:
+            log.info("Light is off, darkening color")
+            redder_state = combine_colors(
+                scope_state["rgb_color"],
+                [step_increment, -step_increment, -step_increment],
+                "add",
+            )
+            state["rgb_color"] = redder_state
 
     log.info(f"Time based state is {state}")
     return state
@@ -232,9 +237,7 @@ def generate_state_trigger(trigger, functions, kwarg_list):
     @service
     @state_trigger(trigger)
     def func_trig(**kwargs):
-        log.info(
-            f"TRIGGER: state trigger @{trigger} {functions}( {kwarg_list} )"
-        )
+        log.info(f"TRIGGER: state trigger @{trigger} {functions}( {kwarg_list} )")
         # This assumes that if the functions are lists the kwargs are as well.
         if isinstance(functions, list):
             for function, kwargs in zip(functions, kwarg_list):
@@ -800,9 +803,9 @@ class MotionSensorDriver:
             else:
                 tag = "motion_occupancy"
 
-            if f"binary_sensor.{device_id}{trigger_type}" in locals() :
+            if f"binary_sensor.{device_id}{trigger_type}" in locals():
                 log.info(f"IN LOCALS: {device_id}")
-            if f"binary_sensor.{device_id}{trigger_type}" in globals() :
+            if f"binary_sensor.{device_id}{trigger_type}" in globals():
                 log.info(f"IN GLOBALS: {device_id}")
 
             for value in values:
@@ -861,15 +864,13 @@ class PresenceSensorDriver:
 
         triggers = []
 
-        if f"binary_sensor.{device_id}" in locals() :
+        if f"binary_sensor.{device_id}" in locals():
             log.info(f"IN LOCALS: {device_id}")
-        if f"binary_sensor.{device_id}"  in globals() :
+        if f"binary_sensor.{device_id}" in globals():
             log.info(f"IN GLOBALS: {device_id}")
 
         for value in values:
             triggers.append(
-
-
                 generate_state_trigger(
                     f"binary_sensor.{device_id} == '{value}'",
                     self.trigger_state,
@@ -923,12 +924,12 @@ class KaufLight:
             self.apply_values(rgb_color=self.color)
 
     def get_rgb(self):
-        color=None
+        color = None
         try:
             color = state.get(f"light.{self.name}.rgb_color")
         except:
             log.warning(f"Unable to get rgb_color from {self.name}")
-        
+
         if color is None or color == "null":
             if self.rgb_color is not None:
                 log.info("Getting cached rgb_color")
@@ -1020,7 +1021,7 @@ class KaufLight:
                 if not self.is_on():  # if it is off set it to the default color
                     if self.default_color is not None:
                         new_args["rgb_color"] = self.default_color
-            else :
+            else:
                 self.rgb_color = new_args["rgb_color"]
                 log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
 
