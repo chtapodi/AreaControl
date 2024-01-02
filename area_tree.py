@@ -213,7 +213,8 @@ def get_time_based_state(device, area):
 
     elif now >= 18 and now < 20:  # 6-8
         log.info("it is evening")
-        state["rgb_color"] = [255, 200, 185]
+        if scope_state["status"] == 0:
+            state["rgb_color"] = [255, 200, 185]
 
     elif now >= 20:  # 8-12
         log.info("it is night")
@@ -222,7 +223,7 @@ def get_time_based_state(device, area):
             log.info("Light is off, darkening color")
             redder_state = combine_colors(
                 scope_state["rgb_color"],
-                [step_increment, -step_increment, -step_increment],
+                [+step_increment, -step_increment, -step_increment],
                 "add",
             )
             state["rgb_color"] = redder_state
