@@ -222,8 +222,8 @@ laundry_room:
       - lumi_lumi_sensor_motion_aq2
   outputs:
     - kauf_laundry_room_0
-    - kauf_laundry_room_1
     - kauf_laundry_room_2
+    - kauf_laundry_room_3
 
 office:
   sub_areas:
@@ -233,6 +233,7 @@ office:
       - "lumi_lumi_sensor_motion_aq2_9c978308"
   outputs:
     - kauf_office_light
+    - kauf_square_lamp
 
 hallway:
   sub_areas:
