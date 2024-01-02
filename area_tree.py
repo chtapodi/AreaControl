@@ -87,7 +87,10 @@ def combine_states(state_list, strategy="last"):
         for state in state_list:
             for key, value in state.items():
                 if key in final_state.keys():
-                    final_state[key] = (value + final_state[key]) / 2
+                    if key=="status" : # being on overrides being off
+                        final_state[key] =max(value + final_state[key])
+                    else :
+                        final_state[key] = (value + final_state[key]) / 2
                 else:
                     final_state[key] = value
     else:
@@ -95,6 +98,19 @@ def combine_states(state_list, strategy="last"):
 
     log.info(f"final state {final_state}")
     return final_state
+
+
+def summarize_state(state) :
+    flat_state={}
+    for key, value in state.items() :
+        if type(value) == dict :
+            new_state=summarize_state(value)
+            flat_state=combine_states([flat_state, new_state], strategy="average") 
+        else :
+            flat_state[key]=value
+    log.info(f"summarized state {state} as {flat_state}")
+    return flat_state
+
 
 
 def combine_colors(color_one, color_two, strategy="add"):
@@ -110,11 +126,12 @@ def combine_colors(color_one, color_two, strategy="add"):
     else:
         log.warning(f"Strategy {strategy} not found")
 
-    for val in color:
+    for i in range(len(color)) :
+        val=color[i]
         if val > 255:
-            val = 255
+            color[i] = 255
         if val < 0:
-            val = 0
+            color[i] = 0
 
     log.info(f"combined: {color_one} + {color_two} = {color}")
     return color_one
@@ -157,8 +174,8 @@ def get_time_based_state(device, area):
     now = time.localtime().tm_hour
 
     scope_state = area.get_state()
-
     log.info(f"scope state is {scope_state}")
+    scope_state=summarize_state(scope_state)
 
     step_increment = 50
 
@@ -168,15 +185,15 @@ def get_time_based_state(device, area):
 
     # using now, have if statements for times of day: early morning, morning, midday, afternoon, evening, night, late night
 
-    if scope_state["status"] == 0:  # if the light is off, go to dark first
-        if "rgb_color" in scope_state:
+    if "rgb_color" in scope_state:
 
-            redder_state = combine_colors(
-                scope_state["rgb_color"],
-                [step_increment, -step_increment, -step_increment],
-                "add",
-            )
+        redder_state = combine_colors(
+            scope_state["rgb_color"],
+            [step_increment, -step_increment, -step_increment],
+            "add",
+        )
         state["rgb_color"] = redder_state
+        
 
     if now > 0 and now < 5:
         log.info("it is late_night")
@@ -1024,10 +1041,10 @@ def test_event():
     reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "presence_sensor_living_room_chair_0"
+    name = "lumi_lumi_sensor_motion_aq2"
     event = {
         "device_name": name,
-        "tags": ["on", "presence"],
+        "tags": ["on"],
     }
     log.info(f"\nCreating Event: {event}")
 

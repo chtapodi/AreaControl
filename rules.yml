@@ -26,12 +26,12 @@ presence_sensor_0:
   scope:
     - lesser_siblings: []
   state:
-    status: 0
+    status: 1
 
-presence_sensor_1:
-  trigger_prefix: "presence_sensor_living_room_"
-  required_tags: ["off", "presence"]
-  scope:
-    - lesser_siblings: []
-  state:
-    status: 0
+# presence_sensor_1:
+#   trigger_prefix: "presence_sensor_living_room_"
+#   required_tags: ["off", "presence"]
+#   scope:
+#     - lesser_siblings: []
+#   state:
+#     status: 0
