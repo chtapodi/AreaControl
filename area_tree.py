@@ -17,6 +17,7 @@ STATE_VALUES = {
 area_tree = None
 event_manager = None
 global_triggers = None
+verbose_mode = False
 
 
 @service
@@ -24,9 +25,11 @@ def reset():
     global area_tree
     global event_manager
     global global_triggers
+    global verbose_mode
     area_tree = None
     event_manager = None
     global_triggers = None
+    verbose_mode = False
     init()
 
 
@@ -54,6 +57,10 @@ def get_event_manager():
     return event_manager
 
 
+def get_verbose_mode():
+    global verbose_mode
+    return verbose_mode
+
 def get_function_by_name(function_name, func_object=None):
     func = None
     if func_object is None:
@@ -74,7 +81,6 @@ def get_function_by_name(function_name, func_object=None):
 
 def combine_states(state_list, strategy="last"):
     final_state = {}
-    log.info(f"combining states {state_list}")
 
     if strategy == "first":
         state_list.reverse()
@@ -88,15 +94,20 @@ def combine_states(state_list, strategy="last"):
             for key, value in state.items():
                 if key in final_state.keys():
                     if key == "status":  # being on overrides being off
-                        final_state[key] = max(value + final_state[key])
-                    else:
-                        final_state[key] = (value + final_state[key]) / 2
+                        if value or final_state[key]:
+                            final_state[key] = True
+                    elif type(final_state[key])==tuple or type(final_state[key])==list :
+                            new_value=[]
+                            for i in range(len(value)) :
+                                new_value.append((value[i]+final_state[key][i])/2)
+                    else :
+                        final_state[key] = (value + int(final_state[key])) / 2
                 else:
                     final_state[key] = value
     else:
         log.warning(f"Strategy {strategy} not found")
-
-    log.info(f"final state {final_state}")
+    if get_verbose_mode() :
+        log.info(f"combined states {state_list} into {final_state}")
     return final_state
 
 
@@ -108,7 +119,8 @@ def summarize_state(state):
             flat_state = combine_states([flat_state, new_state], strategy="average")
         else:
             flat_state[key] = value
-    log.info(f"summarized state {state} as {flat_state}")
+    if get_verbose_mode() :
+        log.info(f"summarized state {state} as {flat_state}")
     return flat_state
 
 
@@ -167,13 +179,16 @@ def check_sleep(
     log.info(f"theo sleep {is_theo_alseep}")
 
 
+def motion_sensor_mode() :
+    return input_boolean.motion_sensor_mode == "on"
+
+
 ### State functions
 # Functions that return a state based on some value
 def get_time_based_state(device, area):
     now = time.localtime().tm_hour
 
     scope_state = area.get_state()
-    log.info(f"scope state is {scope_state}")
     scope_state = summarize_state(scope_state)
 
     step_increment = 50
@@ -216,7 +231,7 @@ def get_time_based_state(device, area):
         if scope_state["status"] == 0:
             state["rgb_color"] = [255, 200, 185]
 
-    elif now >= 20:  # 8-12
+    elif now >= 20:  # 8-11
         log.info("it is night")
 
         if "rgb_color" in scope_state and scope_state["status"] == 0:
@@ -227,10 +242,24 @@ def get_time_based_state(device, area):
                 "add",
             )
             state["rgb_color"] = redder_state
+        else :
+            state["rgb_color"] = [255, 80, 0]
+
+    elif now >= 23 :  # 23-0
+        if scope_state["status"] == 0:
+            log.info("it is late-ish_night")
+            state["rgb_color"] = [255, 0, 0]
+        else :
+            state["brightess"] = -5
+
 
     log.info(f"Time based state is {state}")
     return state
 
+
+
+
+###
 
 def generate_state_trigger(trigger, functions, kwarg_list):
     log.info(f"generating state trigger @{trigger} {functions}( {kwarg_list} )")
@@ -253,6 +282,7 @@ def generate_state_trigger(trigger, functions, kwarg_list):
 
 
 def merge_states(state_list, name=None):
+
     if len(state_list) == 1:  # Case where merge does not need to happen
         return state_list[0]
 
@@ -272,13 +302,23 @@ def merge_states(state_list, name=None):
 
     # Find shared values
     for key in all_keys:
+        key_value=None
+        same=True
         values = set()
         for dict_ in state_list:
             if key in dict_:
+                if key_value is not None :
+                    key_value = dict_[key]
+                else :
+                    if key_value != dict_[key] :
+                        same = False
+                        break
+                        
+
                 values.add(dict_[key])  # Gather values for present keys
 
-        if len(values) == 1:  # Shared if all present values are identical
-            merged_state[key] = values.pop()
+        if same :  # If all present values are identical
+            merged_state[key] = key_value
 
     # Find individual values
     for dict_ in state_list:
@@ -388,7 +428,7 @@ class EventManager:
         self.area_tree = area_tree
 
     def create_event(self, event):
-        log.info(f"\nEventManager: New event: {event}")
+        log.info(f"EventManager: New event: {event}")
 
         result = self.check_event(event)
 
@@ -398,18 +438,12 @@ class EventManager:
             # Get devices that names match trigger_prefix
             trigger_prefix = self.rules[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
-                log.info(f"EventManager: Rule matched name: {rule_name}")
                 if self._check_tags(event, self.rules[rule_name]):
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
-        log.info(f"EventManager:Applying : {len(matching_rules)} Rules")
-        for rule in matching_rules:
-            log.info(f"Applying Rule: {rule}")
-            if "prohibited_tags" in self.rules[rule]:
-                log.info(f"Prohibited tags: {self.rules[rule]['prohibited_tags']}")
-            if "required_tags" in self.rules[rule]:
-                log.info(f"required tags: {self.rules[rule]['required_tags']}")
+        log.info(f"EventManager: Event: {event} Matchs:{matching_rules} Rules")
+
 
         results = []
         for rule_name in matching_rules:
@@ -454,15 +488,11 @@ class EventManager:
     def _check_tags(self, event, rule):
         """Checks if the tags passed the rules tags"""
         tags = event.get("tags", [])
-        log.info(f"Checking tags: {tags} against:")
         if "required_tags" in rule:
-            log.info(f"\tRequired tags: {rule['required_tags']}")
             for tag in rule["required_tags"]:
                 if tag not in tags:
                     return False
         if "prohibited_tags" in rule:
-            log.info(f"\Prohibited tags: {rule['required_tags']}")
-
             for tag in rule["prohibited_tags"]:
                 if tag in tags:
                     return False
@@ -648,7 +678,7 @@ class AreaTree:
                                 for device_id in device_id_list:
                                     if device_id is not None:
                                         new_input = None
-                                        if "lumi" in device_id:
+                                        if "motion" in device_id:
                                             log.info(f"lumi: {device_id}")
                                             new_input = MotionSensorDriver(
                                                 input_type, device_id
@@ -713,7 +743,7 @@ class Device:
         global event_manager
 
         event = {"device_name": self.name, "tags": tags}
-        log.info(f"Device{self.area.name} Triggered. Event: {event}")
+        log.info(f"Device {self.area.name} Triggered. Event: {event}")
 
         event_manager.create_event(event)
 
@@ -845,6 +875,8 @@ class PresenceSensorDriver:
 
     def get_state(self):
         state = self.last_state
+        if state is None:
+            state = {}
         state["name"] = self.name
         return state
 
@@ -1043,7 +1075,7 @@ def test_event():
     reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "lumi_lumi_sensor_motion_aq2"
+    name = "motion_lumi_lumi_sensor_motion_aq2"
     event = {
         "device_name": name,
         "tags": ["on"],
