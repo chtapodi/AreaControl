@@ -23,17 +23,17 @@ motion_off_after_15:
   state:
     status: 0
 
-# living_room_zones_on:
-#   trigger_prefix: "presence_sensor_living_room_"
-#   required_tags: ["on", "presence"]
-#   functions:
-#     - motion_sensor_mode: []
-#   scope:
-#     - lesser_siblings: []
-#   state:
-#     status: 1
-#   state_functions:
-#     - get_time_based_state: []
+living_room_zones_on:
+  trigger_prefix: "presence_sensor_living_room_"
+  required_tags: ["on", "presence"]
+  functions:
+    - motion_sensor_mode: []
+  scope:
+    - lesser_siblings: []
+  state:
+    status: 1
+  state_functions:
+    - get_time_based_state: []
 
 # turn_living_room_off:
 #   trigger_prefix: "presence_sensor_living_room"
