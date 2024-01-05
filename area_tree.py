@@ -125,7 +125,6 @@ def summarize_state(state):
 
 
 def combine_colors(color_one, color_two, strategy="add"):
-    log.info(f"combining {color_one} + {color_two} with strategy {strategy}")
     color = [0, 0, 0]
     if strategy == "average":
         color[0] = (color_one[0] + color_two[0]) / 2
@@ -144,8 +143,9 @@ def combine_colors(color_one, color_two, strategy="add"):
             color[i] = 255
         if val < 0:
             color[i] = 0
+    if get_verbose_mode() :
+        log.info(f"combined: {color_one} + {color_two} = {color}")
 
-    log.info(f"combined: {color_one} + {color_two} = {color}")
     return color
 
 
@@ -280,14 +280,14 @@ def get_time_based_state(device, area):
                     state["brightess"] = 50
 
 
-    if scope_state["status"] : 
+    if scope_state["status"] :
         # if the light is on, don't apply rgb_color or temp
         if "rgb_color" in state:
             del state["rgb_color"]
 
         if "color_temp" in state:
             del state["color_temp"]
-    
+
 
 
     log.info(f"Time based state is {state}")
@@ -350,7 +350,7 @@ def merge_states(state_list, name=None):
                     if key_value != dict_[key] :
                         same = False
                         break
-                        
+
 
                 values.add(dict_[key])  # Gather values for present keys
 
@@ -964,11 +964,8 @@ class KaufLight:
     def set_status(self, status, edit=0):
         """Sets the status of the light (on or off)"""
 
-        if status == 1 or status == "on" or status == "1":
-            self.apply_values(rgb_color=self.get_rgb())
+        self.apply_values(rgb_color=self.get_rgb())
 
-        else:
-            light.turn_off(entity_id=f"light.{self.name}")
 
     def get_status(self):
         """Gets status"""
@@ -1002,7 +999,7 @@ class KaufLight:
 
         if color is None or color == "null":
             if self.rgb_color is not None:
-                log.info("Getting cached rgb_color")
+                log.info(f"Color is {color}. Getting cached rgb_color")
                 color = self.rgb_color
 
         return color if color != "null" else None
@@ -1094,7 +1091,6 @@ class KaufLight:
             else:
                 self.rgb_color = new_args["rgb_color"]
                 log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
-
             try:
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
