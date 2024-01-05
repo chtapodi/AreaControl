@@ -61,6 +61,7 @@ def get_verbose_mode():
     global verbose_mode
     return verbose_mode
 
+
 def get_function_by_name(function_name, func_object=None):
     func = None
     if func_object is None:
@@ -96,17 +97,20 @@ def combine_states(state_list, strategy="last"):
                     if key == "status":  # being on overrides being off
                         if value or final_state[key]:
                             final_state[key] = True
-                    elif type(final_state[key])==tuple or type(final_state[key])==list :
-                            new_value=[]
-                            for i in range(len(value)) :
-                                new_value.append((value[i]+final_state[key][i])/2)
-                    else :
+                    elif (
+                        type(final_state[key]) == tuple
+                        or type(final_state[key]) == list
+                    ):
+                        new_value = []
+                        for i in range(len(value)):
+                            new_value.append((value[i] + final_state[key][i]) / 2)
+                    else:
                         final_state[key] = (value + int(final_state[key])) / 2
                 else:
                     final_state[key] = value
     else:
         log.warning(f"Strategy {strategy} not found")
-    if get_verbose_mode() :
+    if get_verbose_mode():
         log.info(f"combined states {state_list} into {final_state}")
     return final_state
 
@@ -119,7 +123,7 @@ def summarize_state(state):
             flat_state = combine_states([flat_state, new_state], strategy="average")
         else:
             flat_state[key] = value
-    if get_verbose_mode() :
+    if get_verbose_mode():
         log.info(f"summarized state {state} as {flat_state}")
     return flat_state
 
@@ -143,7 +147,7 @@ def combine_colors(color_one, color_two, strategy="add"):
             color[i] = 255
         if val < 0:
             color[i] = 0
-    if get_verbose_mode() :
+    if get_verbose_mode():
         log.info(f"combined: {color_one} + {color_two} = {color}")
 
     return color
@@ -180,7 +184,7 @@ def check_sleep(
     log.info(f"theo sleep {is_theo_alseep}")
 
 
-def motion_sensor_mode() :
+def motion_sensor_mode():
     return input_boolean.motion_sensor_mode == "on"
 
 
@@ -210,23 +214,21 @@ def get_time_based_state(device, area):
         log.info("it is dawn")
         state["rgb_color"] = [255, 0, 0]
 
-
-
     elif now >= 7 and now < 8:
         log.info("it is early morning")
         state["brightness"] = 255
 
-        goal_color=[255, 200, 185]
-        if "rgb_color" in scope_state :
-            state["rgb_color"] = combine_colors(scope_state["rgb_color"], goal_color, strategy="average") #scope_state["rgb_color"]
-        else :
+        goal_color = [255, 200, 185]
+        if "rgb_color" in scope_state:
+            state["rgb_color"] = combine_colors(
+                scope_state["rgb_color"], goal_color, strategy="average"
+            )  # scope_state["rgb_color"]
+        else:
             state["rgb_color"] = goal_color
-
-
 
     elif now >= 8 and now < 11:
         log.info("it is morning")
-        state["color_temp"]=350
+        state["color_temp"] = 350
 
     elif now >= 11 and now < 14:  # 11-2
         log.info("it is midday")
@@ -236,27 +238,31 @@ def get_time_based_state(device, area):
 
     elif now >= 18 and now < 20:  # 6-8
         log.info("it is evening")
-        goal_color=[255, 200, 185]
-        if "rgb_color" in scope_state :
+        goal_color = [255, 200, 185]
+        if "rgb_color" in scope_state:
             log.info(f"combining {scope_state['rgb_color']} with {goal_color}")
-            state["rgb_color"] = combine_colors(scope_state["rgb_color"], goal_color, strategy="average") #scope_state["rgb_color"]
-        else :
+            state["rgb_color"] = combine_colors(
+                scope_state["rgb_color"], goal_color, strategy="average"
+            )  # scope_state["rgb_color"]
+        else:
             log.info("just setting the color")
             state["rgb_color"] = goal_color
 
     elif now >= 20 and now < 22:  # 8-10
         log.info("it is late evening")
 
-        goal_color=[255, 172, 89]
-        if "rgb_color" in scope_state :
-            state["rgb_color"] = combine_colors(scope_state["rgb_color"], goal_color, strategy="average") #scope_state["rgb_color"]
-        else :
+        goal_color = [255, 172, 89]
+        if "rgb_color" in scope_state:
+            state["rgb_color"] = combine_colors(
+                scope_state["rgb_color"], goal_color, strategy="average"
+            )  # scope_state["rgb_color"]
+        else:
             state["rgb_color"] = goal_color
 
     elif now >= 22:  # 10-11
         log.info("it is night")
 
-        if "rgb_color" in scope_state :
+        if "rgb_color" in scope_state:
             log.info("Light is off, darkening color")
             redder_state = combine_colors(
                 scope_state["rgb_color"],
@@ -264,23 +270,22 @@ def get_time_based_state(device, area):
                 "add",
             )
             state["rgb_color"] = redder_state
-        else :
+        else:
             state["rgb_color"] = [255, 80, 0]
 
-    elif now >= 23 :  # 23-0
+    elif now >= 23:  # 23-0
         if scope_state["status"] == 0:
             log.info("it is late-ish_night")
             state["rgb_color"] = [255, 0, 0]
-        else :
+        else:
             if "brightness" in scope_state:
                 current_brightness = scope_state["brightness"]
-                if current_brightness > 50 :
+                if current_brightness > 50:
                     state["brightess"] = current_brightness - 5
-            else :
-                    state["brightess"] = 50
+            else:
+                state["brightess"] = 50
 
-
-    if scope_state["status"] :
+    if scope_state["status"]:
         # if the light is on, don't apply rgb_color or temp
         if "rgb_color" in state:
             del state["rgb_color"]
@@ -288,15 +293,12 @@ def get_time_based_state(device, area):
         if "color_temp" in state:
             del state["color_temp"]
 
-
-
     log.info(f"Time based state is {state}")
     return state
 
 
-
-
 ###
+
 
 def generate_state_trigger(trigger, functions, kwarg_list):
     log.info(f"generating state trigger @{trigger} {functions}( {kwarg_list} )")
@@ -319,7 +321,6 @@ def generate_state_trigger(trigger, functions, kwarg_list):
 
 
 def merge_states(state_list, name=None):
-
     if len(state_list) == 1:  # Case where merge does not need to happen
         return state_list[0]
 
@@ -339,22 +340,21 @@ def merge_states(state_list, name=None):
 
     # Find shared values
     for key in all_keys:
-        key_value=None
-        same=True
+        key_value = None
+        same = True
         values = set()
         for dict_ in state_list:
             if key in dict_:
-                if key_value is not None :
+                if key_value is not None:
                     key_value = dict_[key]
-                else :
-                    if key_value != dict_[key] :
+                else:
+                    if key_value != dict_[key]:
                         same = False
                         break
 
-
                 values.add(dict_[key])  # Gather values for present keys
 
-        if same :  # If all present values are identical
+        if same:  # If all present values are identical
             merged_state[key] = key_value
 
     # Find individual values
@@ -480,7 +480,6 @@ class EventManager:
 
         event_tags = event.get("tags", [])
         log.info(f"EventManager: Event: {event} Matchs:{matching_rules} Rules")
-
 
         results = []
         for rule_name in matching_rules:
@@ -854,8 +853,10 @@ class MotionSensorDriver:
             if "tags" in kwargs:
                 tags = kwargs["tags"]
                 log.info(f"tags are {tags}")
-
-                self.callback(tags)
+                if motion_sensor_mode():
+                    self.callback(tags)
+                else:
+                    log.info(f"Motion Sensor: {self.name} not in motion mode")
             else:
                 log.info(f"No tags in kwargs {kwargs}")
 
@@ -924,7 +925,10 @@ class PresenceSensorDriver:
                 tags = kwargs["tags"]
                 log.info(f"tags are {tags}")
 
-                self.callback(tags)
+                if motion_sensor_mode():
+                    self.callback(tags)
+                else:
+                    log.info(f"Motion Sensor: {self.name} not in motion mode")
             else:
                 log.info(f"No tags in kwargs {kwargs}")
 
@@ -965,7 +969,6 @@ class KaufLight:
         """Sets the status of the light (on or off)"""
 
         self.apply_values(rgb_color=self.get_rgb())
-
 
     def get_status(self):
         """Gets status"""
