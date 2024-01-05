@@ -125,6 +125,7 @@ def summarize_state(state):
 
 
 def combine_colors(color_one, color_two, strategy="add"):
+    log.info(f"combining {color_one} + {color_two} with strategy {strategy}")
     color = [0, 0, 0]
     if strategy == "average":
         color[0] = (color_one[0] + color_two[0]) / 2
@@ -145,7 +146,7 @@ def combine_colors(color_one, color_two, strategy="add"):
             color[i] = 0
 
     log.info(f"combined: {color_one} + {color_two} = {color}")
-    return color_one
+    return color
 
 
 ## RULES ##
@@ -191,7 +192,7 @@ def get_time_based_state(device, area):
     scope_state = area.get_state()
     scope_state = summarize_state(scope_state)
 
-    step_increment = 50
+    step_increment = 20
 
     state = {}
 
@@ -202,17 +203,24 @@ def get_time_based_state(device, area):
     if now > 0 and now < 5:
         log.info("it is late_night")
 
-        if scope_state["status"] == 0:  # if the light is off, go to dark first
-            state["brightness"] = 50
-            state["rgb_color"] = [255, 0, 0]
+        state["brightness"] = 50
+        state["rgb_color"] = [255, 0, 0]
 
     elif now >= 5 and now < 7:
         log.info("it is dawn")
+        state["rgb_color"] = [255, 0, 0]
+
+
 
     elif now >= 7 and now < 8:
         log.info("it is early morning")
         state["brightness"] = 255
-        state["rgb_color"] = [255, 200, 185]
+
+        goal_color=[255, 200, 185]
+        if "rgb_color" in scope_state :
+            state["rgb_color"] = combine_colors(scope_state["rgb_color"], goal_color, strategy="average") #scope_state["rgb_color"]
+        else :
+            state["rgb_color"] = goal_color
 
 
 
@@ -228,13 +236,27 @@ def get_time_based_state(device, area):
 
     elif now >= 18 and now < 20:  # 6-8
         log.info("it is evening")
-        if scope_state["status"] == 0:
-            state["rgb_color"] = [255, 200, 185]
+        goal_color=[255, 200, 185]
+        if "rgb_color" in scope_state :
+            log.info(f"combining {scope_state['rgb_color']} with {goal_color}")
+            state["rgb_color"] = combine_colors(scope_state["rgb_color"], goal_color, strategy="average") #scope_state["rgb_color"]
+        else :
+            log.info("just setting the color")
+            state["rgb_color"] = goal_color
 
-    elif now >= 20:  # 8-11
+    elif now >= 20 and now < 22:  # 8-10
+        log.info("it is late evening")
+
+        goal_color=[255, 172, 89]
+        if "rgb_color" in scope_state :
+            state["rgb_color"] = combine_colors(scope_state["rgb_color"], goal_color, strategy="average") #scope_state["rgb_color"]
+        else :
+            state["rgb_color"] = goal_color
+
+    elif now >= 22:  # 10-11
         log.info("it is night")
 
-        if "rgb_color" in scope_state and scope_state["status"] == 0:
+        if "rgb_color" in scope_state :
             log.info("Light is off, darkening color")
             redder_state = combine_colors(
                 scope_state["rgb_color"],
@@ -250,7 +272,22 @@ def get_time_based_state(device, area):
             log.info("it is late-ish_night")
             state["rgb_color"] = [255, 0, 0]
         else :
-            state["brightess"] = -5
+            if "brightness" in scope_state:
+                current_brightness = scope_state["brightness"]
+                if current_brightness > 50 :
+                    state["brightess"] = current_brightness - 5
+            else :
+                    state["brightess"] = 50
+
+
+    if scope_state["status"] : 
+        # if the light is on, don't apply rgb_color or temp
+        if "rgb_color" in state:
+            del state["rgb_color"]
+
+        if "color_temp" in state:
+            del state["color_temp"]
+    
 
 
     log.info(f"Time based state is {state}")
@@ -800,7 +837,7 @@ class MotionSensorDriver:
         if "." in device_id:
             # get value after .
             device_id = device_id.split(".", 1)[1]
-        name = f"{input_type}_{device_id}"
+        name = f"{device_id}"
         return name
 
     def add_callback(self, callback):
@@ -1075,7 +1112,7 @@ def test_event():
     reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "motion_lumi_lumi_sensor_motion_aq2"
+    name = "motion_sensor_kitchen"
     event = {
         "device_name": name,
         "tags": ["on"],

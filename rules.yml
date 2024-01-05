@@ -3,6 +3,7 @@ motion_on:
   prohibited_tags: ["anna_asleep", "bedroom_sensor"]
   required_tags: ["on"]
   functions:
+    - motion_sensor_mode: []
     - check_time: []
     - are_people_asleep: []
   scope:
@@ -15,23 +16,29 @@ motion_on:
 motion_off_after_15:
   trigger_prefix: "motion_"
   required_tags: ["off", "motion_occupancy"]
+  functions:
+    - motion_sensor_mode: []
   scope:
     - lesser_siblings: []
   state:
     status: 0
 
-living_room_zones_pn:
-  trigger_prefix: "presence_sensor_living_room_"
-  required_tags: ["on", "presence"]
-  scope:
-    - lesser_siblings: []
-  state:
-    status: 1
+# living_room_zones_on:
+#   trigger_prefix: "presence_sensor_living_room_"
+#   required_tags: ["on", "presence"]
+#   functions:
+#     - motion_sensor_mode: []
+#   scope:
+#     - lesser_siblings: []
+#   state:
+#     status: 1
+#   state_functions:
+#     - get_time_based_state: []
 
-turn_living_room_off:
-  trigger_prefix: "presence_sensor_living_room"
-  required_tags: ["off", "presence"]
-  scope:
-    - lesser_siblings: []
-  state:
-    status: 0
+# turn_living_room_off:
+#   trigger_prefix: "presence_sensor_living_room"
+#   required_tags: ["off", "presence"]
+#   scope:
+#     - lesser_siblings: []
+#   state:
+#     status: 0
