@@ -2,7 +2,9 @@ everything:
   sub_areas:
     - home
     - outside
-
+  inputs:
+    service: # for homeassistant services
+      - service_input_lights
 home:
   sub_areas:
     - front

@@ -17,7 +17,7 @@ STATE_VALUES = {
 area_tree = None
 event_manager = None
 global_triggers = None
-verbose_mode = False
+verbose_mode = True
 
 
 @service
@@ -29,7 +29,7 @@ def reset():
     area_tree = None
     event_manager = None
     global_triggers = None
-    verbose_mode = False
+    verbose_mode = True
     init()
 
 
@@ -56,10 +56,33 @@ def get_event_manager():
         init()
     return event_manager
 
+def get_area_tree():
+    event_manager=get_event_manager()
+    return event_manager.get_area_tree()
+
 
 def get_verbose_mode():
     global verbose_mode
-    return verbose_mode
+    return True
+
+
+@service
+def create_event(**kwargs):
+    log.info(f"Service creating event:  with kwargs {kwargs}")
+    if "name" in kwargs.keys():
+        event = {"device_name": kwargs["name"]}
+        if "tags" in kwargs.keys():
+            event["tags"] = kwargs["tags"]
+
+        event_state=None
+        if "event_state" in kwargs.keys():
+            event_state = kwargs["event_state"]
+        event_manager=get_event_manager()
+        event_manager.create_event(event, event_state=kwargs)
+
+    else:
+        log.warning(f"No devic_name in serice created event {kwargs}")
+
 
 
 def get_function_by_name(function_name, func_object=None):
@@ -88,7 +111,8 @@ def combine_states(state_list, strategy="last"):
 
     if strategy == "last" or strategy == "first":
         for state in state_list:
-            final_state.update(state)  # Update overwrites previous value
+            if state is not None :
+                final_state.update(state)  # Update overwrites previous value
 
     elif strategy == "average":
         for state in state_list:
@@ -116,7 +140,6 @@ def combine_states(state_list, strategy="last"):
 
 
 def summarize_state(state):
-
     flat_state = {}
     for key, value in state.items():
         if type(value) == dict:
@@ -172,22 +195,27 @@ def motion_sensor_mode(*args, **kwargs):
 
 
 ### Scope functions
+def get_entire_scope(device, device_area, *args) :
+    return [get_area_tree().get_root()]
 
-#get immediate scope
+
+# get immediate scope
 # make it so they filter by all checking
 def get_immediate_scope(device, device_area, *args):
     ...
 
+
 def get_local_scope(device, device_area, *args):
-    greatest_parent = get_event_manager().area_tree.get_greatest_area(device_area.name)
+    greatest_parent = get_area_tree().get_greatest_area(device_area.name)
     return [greatest_parent]
+
 
 ### State functions
 # Functions that return a state based on some value
 def get_time_based_state(device, scope, *args):
     now = time.localtime().tm_hour
     states = {}
-    for area in scope :
+    for area in scope:
         states[area.name] = area.get_state()
     scope_state = summarize_state(states)
 
@@ -459,45 +487,61 @@ class EventManager:
         self.rules = load_yaml(rules_file)
         self.area_tree = area_tree
 
-    def create_event(self, event):
+    def create_event(self, event, event_state=None):
         log.info(f"EventManager: New event: {event}")
 
-        result = self.check_event(event)
+        result = self.check_event(event, event_state)
 
-    def check_event(self, event):
+    def check_event(self, event, event_state=None):
         matching_rules = []
         for rule_name in self.rules.keys():
             # Get devices that names match trigger_prefix
             trigger_prefix = self.rules[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
-                if self._check_tags(
-                    event, self.rules[rule_name]
-                ) and self._check_functions(
-                    event, self.rules[rule_name]
-                ):  #
-                    matching_rules.append(rule_name)
+                if get_verbose_mode():
+                    log.info(
+                        f"EventManager: Rule {rule_name} prefix matches {event['device_name']}"
+                    )
+
+                if self._check_tags(event, self.rules[rule_name]) : 
+                        if get_verbose_mode():
+                            log.info(f"EventManager: {rule_name} Passed tag check")
+                            if self._check_functions(event, self.rules[rule_name]):  
+                                log.info(f"EventManager: Event: {event} Matches:NOTHING Rules")
+
+
+                                if get_verbose_mode():
+                                    log.info(
+                                    f"EventManager: {rule_name} Passed function check"
+                                    )
+
+                                matching_rules.append(rule_name)
+                                log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
+
 
         event_tags = event.get("tags", [])
-        log.info(f"EventManager: Event: {event} Matchs:{matching_rules} Rules")
+        log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
 
         results = []
         for rule_name in matching_rules:
             rule = self.rules[rule_name]
-            results.append(self.execute_rule(event, rule))
-        return results
+            results.append(self.execute_rule(event, rule, event_state))
+
+        if results is not None :
+            return results
 
         return False  # No matching rule
 
-    def execute_rule(self, event_data, rule):
+    def execute_rule(self, event_data, rule, event_state):
         device_name = event_data["device_name"]
-        device = self.area_tree.get_device(device_name)
+        device = self.get_area_tree().get_device(device_name)
 
         if device is not None:
             # get values
             device_area = device.get_area()
-            event_state = rule.get("state", {})
+            rule_state = rule.get("state", {})
 
-            scope = None #Should these be anded?
+            scope = None  # Should these be anded?
             # Get scope to apply to
             if "scope_function" in rule:
                 for function_pair in rule["scope_function"]:  # function_name:args
@@ -506,18 +550,25 @@ class EventManager:
                         # If function exitst, run it
                         if function is not None:
                             new_scope = function(device, device_area, args)
-                            log.info(f"New scope: {new_scope}")
                             if new_scope is not None:
-                                scope = new_scope
-                            else : #and them
-                                edited_scope=[]
-                                for area in scope :
-                                    if area in new_scope :
-                                        edited_scope.append(area)
-                                log.info(f"Edited scope: {scope}->{edited_scope}")
-                                scope = edited_scope
+                                if scope is None: # if no scope to compare with, set
+                                    scope = new_scope
+                                else :
+                                    edited_scope = []
+                                    for area in scope:
+                                        if get_verbose_mode():
+                                            log.info(
+                                                f"Checking if {area.name} in {new_scope}"
+                                            )
+                                        if area in new_scope:
+                                            edited_scope.append(area)
+                                    log.info(f"Edited scope: {scope}->{edited_scope}")
+                                    scope = edited_scope
+                                
+
+
             if scope is None:
-                scope=get_local_scope(device, device_area)
+                scope = get_local_scope(device, device_area)
 
             function_states = []
             # if there are state functions, run them
@@ -531,11 +582,13 @@ class EventManager:
                             function_states.append(function_state)
 
             # Add state_list to event_state
-            state_list = [event_state]
+            state_list = [event_state, rule_state]
             state_list.extend(function_states)
-            final_state = combine_states(state_list) #TODO: add combination method
+            final_state = combine_states(state_list)  # TODO: add combination method
 
-            for areas in scope :
+            if get_verbose_mode():
+                log.info(f"Scope is {scope}")
+            for areas in scope:
                 areas.set_state(final_state)
 
             return True
@@ -547,30 +600,51 @@ class EventManager:
         """Checks if the tags passed the rules tags"""
         tags = event.get("tags", [])
         if "required_tags" in rule:
+            if get_verbose_mode():
+                log.info(f"Checking Required tags {rule['required_tags']} against {tags}")
             for tag in rule["required_tags"]:
                 if tag not in tags:
+                    if get_verbose_mode():
+                        log.info(f"Required tag {tag} not found in event {event}")
                     return False
         if "prohibited_tags" in rule:
+            if get_verbose_mode():
+                log.info(f"Checking Prohibited tags {rule['prohibited_tags']} against {tags}")
             for tag in rule["prohibited_tags"]:
                 if tag in tags:
+                    if get_verbose_mode():
+                        log.info(f"Prohibited tag {tag} found in event {event}")
                     return False
+        if get_verbose_mode():
+            log.info(f"Passed tag check")
         return True
 
     def _check_functions(self, event, rule, **kwargs):
         functions = rule.get("functions", [])
         if len(functions) > 0:
+            
             for function_data in functions:
                 # split dict key and value to get functoin name and args
                 function_name = list(function_data.keys())[0]
+                if get_verbose_mode():
+                    log.info(
+                        f"Checking function {function_name} with args {function_data[function_name]}"
+                    )
 
                 function = get_function_by_name(function_name)
                 if function is not None:
-                    return function(event, **kwargs)
-                else:
-                    return True  # as to not stop passing
+                    result =function(event, **kwargs)
+                    if not result:
+                        if get_verbose_mode():
+                            log.info(f"Function {function_name} failed")
+                        return False
+            
+            log.info(f"Passed function check")
+        return True # If passed all checks or theres no functions to pass
 
-            return True
 
+    def get_area_tree(self) :
+        return self.area_tree
 
 class AreaTree:
     """Acts as an interface to the area tree"""
@@ -579,12 +653,15 @@ class AreaTree:
         self.config_path = config_path
         self.area_tree_lookup = self._create_area_tree(self.config_path)
 
-        self.root_name = self._find_root()
+        self.root_name = self._find_root_area_name()
 
     def get_state(self, area=None):
         if area is None:
             area = self.root_name
         return self.area_tree_lookup[area].get_state()
+
+    def get_root(self) :
+        return self.get_area(self.root_name) 
 
     def get_area(self, area_name=None):
         if area_name is None:
@@ -597,10 +674,10 @@ class AreaTree:
             return None
         return self.area_tree_lookup[device_name]
 
-    def get_area_tree(self):
+    def get_area_tree_lookup(self):
         return self.area_tree_lookup
 
-    def _find_root(self):
+    def _find_root_area_name(self):
         root_area = None
         for name, area in self.area_tree_lookup.items():
             if area.parent is None:
@@ -746,6 +823,13 @@ class AreaTree:
                                                 f"Creating presence device: {device_id}"
                                             )
                                             new_input = PresenceSensorDriver(
+                                                input_type, device_id
+                                            )
+                                        elif "service" in device_id:
+                                            log.info(
+                                                f"Creating service device: {device_id}"
+                                            )
+                                            new_input = ServiceDriver(
                                                 input_type, device_id
                                             )
                                         else:
@@ -904,6 +988,21 @@ class MotionSensorDriver:
                         {"tags": [value, tag]},
                     )
                 )
+
+
+class ServiceDriver:
+    def __init__(self, input_type, device_id):
+        self.name = device_id
+        log.info(f"Creating Service Input: {self.name}")
+
+        self.last_state = None
+
+    def add_callback(self, callback):
+        pass
+
+
+
+
 
 
 class PresenceSensorDriver:
