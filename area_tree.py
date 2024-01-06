@@ -1226,7 +1226,8 @@ class KaufLight:
         else :
             if not self.is_on(): #if already on, apply values
                 state["off"] = 1
-            self.apply_values(**state)
+                
+        self.apply_values(**state)
 
     def get_state(self):
         state = {}
