@@ -2,7 +2,8 @@ import yaml
 from collections import defaultdict
 import copy
 import time
-
+from pyscript.k_to_rgb import convert_K_to_RGB
+from acrylic import Color
 
 STATE_VALUES = {
     "input": {
@@ -49,6 +50,17 @@ def get_global_triggers():
         init()
     return global_triggers
 
+@service
+def get_total_average_state(key=None):
+    area_tree=get_area_tree()
+    root=area_tree.get_root()
+    state=summarize_state(root.get_state())
+    if key is not None :
+        if key in state :
+            return state[key]
+        else :
+            return None
+    return state
 
 def get_event_manager():
     global event_manager
@@ -401,6 +413,20 @@ def merge_states(state_list, name=None):
 
     return merged_state
 
+# Color helpers
+
+def rgb_to_hsl(r, g, b):
+    h,s,l=Color(rgb=[r, g, b]).hsl
+    l_range=50-100
+    s_range=100
+    s=((l-100)*s_range)/l_range
+    return h,s,l
+
+def hs_to_rgb(h, s):
+    return Color(hsl=[h, s, 50]).rgb
+
+def k_to_rgb(k) :
+    r,g,b=convert_K_to_RG
 
 class Area:
     def __init__(self, name):
@@ -1008,9 +1034,29 @@ class ServiceDriver:
         log.info(f"Creating Service Input: {self.name}")
 
         self.last_state = None
+        self.trigger=self.create_trigger()
 
     def add_callback(self, callback):
         pass
+
+    @service
+    def create_trigger(self, **kwargs):
+        log.info(f"Triggering Service: with value: {kwargs}")
+
+        @service
+        def service_driver_trigger(**kwargs) :
+
+            if "state" in kwargs:
+                state=kwargs["state"]
+                if "hs_color" in state:
+                    hs_color = state["hs_color"]
+                    rgb=hs_to_rgb(hs_color[0], hs_color[1])
+                    rgb=[rgb[0], rgb[1], rgb[2]]
+                    state={"device_name": self.name, "state" : {"rgb_color":rgb} }
+
+                    get_event_manager().create_event(state) 
+
+        return service_driver_trigger
 
 
 

@@ -9,7 +9,6 @@
 
 HA_only_on_lights: 
   trigger_prefix: "service_input"
-  required_tags: ["on"]
   scope_function:
     - get_entire_scope: []
   # state is passed by service call
