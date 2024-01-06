@@ -530,21 +530,34 @@ class EventManager:
                     log.info(
                         f"EventManager: Rule {rule_name} prefix matches {event['device_name']}"
                     )
+                function_override=False
+                tag_override=False
+                if "tags" in event:
+                    if "tag_override" in event["tags"] :
+                        tag_override=True
+                    if "function_override" in event["tags"] :
+                        function_override=True
 
-                if self._check_tags(event, self.rules[rule_name]) : 
-                        if get_verbose_mode():
-                            log.info(f"EventManager: {rule_name} Passed tag check")
-                            if self._check_functions(event, self.rules[rule_name]):  
-                                log.info(f"EventManager: Event: {event} Matches:NOTHING Rules")
+                approved=True
+                if not (tag_override and self._check_tags(event, self.rules[rule_name]) ) :
+                    approved=False 
+                    
+                if get_verbose_mode():
+                    log.info(f"EventManager: {rule_name} Passed tag check")
 
+                if "tags" in event:
+                    if "tag_override" in event["tags"] :
+                        tag_override=True
 
-                                if get_verbose_mode():
-                                    log.info(
-                                    f"EventManager: {rule_name} Passed function check"
-                                    )
+                if not approved or (function_override and self._check_functions(event, self.rules[rule_name]) ):  
+                    approved=False
+                        
+                if get_verbose_mode():
+                    log.info(f"EventManager: {rule_name} Passed function check")
 
-                                matching_rules.append(rule_name)
-                                log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
+                if approved :
+                    matching_rules.append(rule_name)
+                    log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
 
 
         event_tags = event.get("tags", [])
@@ -1320,13 +1333,13 @@ class KaufLight:
 
 @service
 def test_event():
-    # reset()
+    reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
     name = "motion_sensor_kitchen"
     event = {
         "device_name": name,
-        "tags": ["on"],
+        "tags": ["on", "tag_override", "function_override"],
     }
     log.info(f"\nCreating Event: {event}")
 
