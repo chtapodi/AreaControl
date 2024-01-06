@@ -539,10 +539,13 @@ class EventManager:
                         function_override=True
 
                 approved=True
-                if not (tag_override and self._check_tags(event, self.rules[rule_name]) ) :
+                if not (tag_override or self._check_tags(event, self.rules[rule_name]) ) :
                     approved=False 
+                    log.info(f"EventManager: {rule_name} FAILED tag check")
+                    log.info (f"Override: {tag_override} {self._check_tags(event, self.rules[rule_name])}" )
+
                     
-                if get_verbose_mode():
+                if get_verbose_mode() and approved:
                     log.info(f"EventManager: {rule_name} Passed tag check")
 
                 if "tags" in event:
@@ -551,8 +554,10 @@ class EventManager:
 
                 if not approved or (function_override and self._check_functions(event, self.rules[rule_name]) ):  
                     approved=False
+                    log.info(f"EventManager: {rule_name} FAILED function check")
+
                         
-                if get_verbose_mode():
+                if get_verbose_mode() and approved:
                     log.info(f"EventManager: {rule_name} Passed function check")
 
                 if approved :
