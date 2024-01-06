@@ -1054,6 +1054,10 @@ class ServiceDriver:
                     rgb=hs_to_rgb(hs_color[0], hs_color[1])
                     rgb=[rgb[0], rgb[1], rgb[2]]
                     state={"device_name": self.name, "state" : {"rgb_color":rgb} }
+                
+                if "temp" in state:
+                    state["color_temp"] = state["temp"]
+                    del state["temp"]
 
                 log.info(f"state: {state}")
                 new_state["state"]=state
