@@ -157,25 +157,6 @@ def combine_colors(color_one, color_two, strategy="add"):
 # These must have an interface that mathes the following and returns boolean
 
 
-def check_time(event, area_state, **kwargs):
-    # returns tags based on time
-    tags = []
-
-    now = time.localtime().tm_hour
-
-    if now < 5:
-        tags.append("late_night")
-
-    if now > 18:
-        if now < 20:
-            tags.append("evening")
-        else:
-            tags.append("night")
-    else:
-        tags.append("day")
-    return tags
-
-
 def check_sleep(
     event,
     area_state,
@@ -184,7 +165,8 @@ def check_sleep(
     log.info(f"theo sleep {is_theo_alseep}")
 
 
-def motion_sensor_mode():
+def motion_sensor_mode(*args, **kwargs):
+    log.info(f"motion_sensor_mode {input_boolean.motion_sensor_mode}")
     return input_boolean.motion_sensor_mode == "on"
 
 
@@ -475,7 +457,9 @@ class EventManager:
             # Get devices that names match trigger_prefix
             trigger_prefix = self.rules[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
-                if self._check_tags(event, self.rules[rule_name]):
+                if self._check_tags(
+                    event, self.rules[rule_name]
+                ) and self._check_functions(event, self.rules[rule_name]): #
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
@@ -534,7 +518,7 @@ class EventManager:
                     return False
         return True
 
-    def _check_functions(self, device_tags, event_data, rule):
+    def _check_functions(self, event, rule, **kwargs):
         functions = rule.get("functions", [])
         if len(functions) > 0:
             for function_data in functions:
@@ -543,7 +527,7 @@ class EventManager:
 
                 function = get_function_by_name(function_name)
                 if function is not None:
-                    return function(device_tags, event_data, **args)
+                    return function(event, **kwargs)
                 else:
                     return True  # as to not stop passing
 
@@ -853,10 +837,7 @@ class MotionSensorDriver:
             if "tags" in kwargs:
                 tags = kwargs["tags"]
                 log.info(f"tags are {tags}")
-                if motion_sensor_mode():
-                    self.callback(tags)
-                else:
-                    log.info(f"Motion Sensor: {self.name} not in motion mode")
+                self.callback(tags)
             else:
                 log.info(f"No tags in kwargs {kwargs}")
 
@@ -924,11 +905,7 @@ class PresenceSensorDriver:
             if "tags" in kwargs:
                 tags = kwargs["tags"]
                 log.info(f"tags are {tags}")
-
-                if motion_sensor_mode():
-                    self.callback(tags)
-                else:
-                    log.info(f"Motion Sensor: {self.name} not in motion mode")
+                self.callback(tags)
             else:
                 log.info(f"No tags in kwargs {kwargs}")
 

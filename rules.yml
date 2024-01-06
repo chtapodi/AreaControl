@@ -4,7 +4,6 @@ motion_on:
   required_tags: ["on"]
   functions:
     - motion_sensor_mode: []
-    - check_time: []
     - are_people_asleep: []
   scope:
     - lesser_siblings: []
