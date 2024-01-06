@@ -73,6 +73,9 @@ def create_event(**kwargs):
         event = {"device_name": kwargs["name"]}
         if "tags" in kwargs.keys():
             event["tags"] = kwargs["tags"]
+        
+        if "state" in kwargs.keys():
+            event["state"] = kwargs["state"]
 
         event_state=None
         if "event_state" in kwargs.keys():
@@ -307,14 +310,16 @@ def get_time_based_state(device, scope, *args):
                     state["brightess"] = current_brightness - 5
             else:
                 state["brightess"] = 50
+    if "status" in state:
+        if scope_state["status"]:
+            # if the light is on, don't apply rgb_color or temp
+            if "rgb_color" in state:
+                del state["rgb_color"]
 
-    if scope_state["status"]:
-        # if the light is on, don't apply rgb_color or temp
-        if "rgb_color" in state:
-            del state["rgb_color"]
-
-        if "color_temp" in state:
-            del state["color_temp"]
+            if "color_temp" in state:
+                del state["color_temp"]
+    else :
+        log.warning("Status is not in scope_state")
 
     log.info(f"Time based state is {state}")
     return state
@@ -582,12 +587,21 @@ class EventManager:
                             function_states.append(function_state)
 
             # Add state_list to event_state
-            state_list = [event_state, rule_state]
+            state_list = [rule_state]
+            if "state" in event_data :
+                state_list.append(event_data["state"])
             state_list.extend(function_states)
             final_state = combine_states(state_list)  # TODO: add combination method
 
             if get_verbose_mode():
-                log.info(f"Scope is {scope}")
+                # event state 
+                log.info(f"Event state is {rule_state}")
+                log.info(f"Rule state is {rule_state}")
+                log.info(f"Final state is {final_state}")
+
+            if get_verbose_mode():
+                for area in scope :
+                    log.info(f"Scope is {area.name}")
             for areas in scope:
                 areas.set_state(final_state)
 
@@ -893,14 +907,12 @@ class Device:
         self.add_to_cache(state)
         state = copy.deepcopy(state)
         if hasattr(self.driver, "set_state"):
-            if "status" not in state.keys():
-                log.info(f"{self.name}: State does not contain status {state}. Caching")
+            state = self.fillout_state_from_cache(state)
+            if get_verbose_mode():
+                log.info(f"Setting state: {state} on {self.name}")
 
-            else:
-                state = self.fillout_state_from_cache(state)
-
-                self.driver.set_state(state)
-                self.last_state = state
+            self.driver.set_state(state)
+            self.last_state = state
 
     def get(self, value):
         return self.last_state[value]
@@ -1089,6 +1101,7 @@ class KaufLight:
 
         try:
             status = state.get(f"light.{self.name}")
+            log.info(f"Got Light {self.name} status: {status}")
 
             return status
         except:
@@ -1157,13 +1170,20 @@ class KaufLight:
         Converts state to kauf specific values.
         Only does anything if state value is present, including changing brightness.
         """
+
+        log.info(f"Setting {self.name}: {state}. currently {self.is_on()}")
         if "status" in state.keys():
             if not state["status"]:  # if being set to off
                 state["off"] = 1
 
             del state["status"]
+        else :
+            if self.is_on(): #if already on, apply values
+                state["on"] = 1
+            else :
+                state["off"] = 1
 
-            self.apply_values(**state)
+        self.apply_values(**state)
 
     def get_state(self):
         state = {}
@@ -1194,11 +1214,15 @@ class KaufLight:
             self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
 
+
         else:
             new_args = {}
             for k, v in kwargs.items():
                 if v is not None:
                     new_args[k] = v
+
+            if "on" not in new_args:
+                new_args["on"] = True
 
             # If being turned on and no rgb present, rgb color is set to value.
             if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
@@ -1208,7 +1232,9 @@ class KaufLight:
             else:
                 self.rgb_color = new_args["rgb_color"]
                 log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+
             try:
+                log.info(f"\nPYSCRIPT: Setting {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
 
