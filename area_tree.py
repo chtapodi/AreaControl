@@ -89,11 +89,8 @@ def create_event(**kwargs):
         if "state" in kwargs.keys():
             event["state"] = kwargs["state"]
 
-        event_state=None
-        if "event_state" in kwargs.keys():
-            event_state = kwargs["event_state"]
         event_manager=get_event_manager()
-        event_manager.create_event(event, event_state=kwargs)
+        event_manager.create_event(event)
 
     else:
         log.warning(f"No devic_name in serice created event {kwargs}")
@@ -518,12 +515,12 @@ class EventManager:
         self.rules = load_yaml(rules_file)
         self.area_tree = area_tree
 
-    def create_event(self, event, event_state=None):
+    def create_event(self, event):
         log.info(f"EventManager: New event: {event}")
 
-        result = self.check_event(event, event_state)
+        result = self.check_event(event)
 
-    def check_event(self, event, event_state=None):
+    def check_event(self, event):
         matching_rules = []
         for rule_name in self.rules.keys():
             # Get devices that names match trigger_prefix
@@ -556,15 +553,17 @@ class EventManager:
         results = []
         for rule_name in matching_rules:
             rule = self.rules[rule_name]
-            results.append(self.execute_rule(event, rule, event_state))
+            results.append(self.execute_rule(event, rule))
 
         if results is not None :
             return results
 
         return False  # No matching rule
 
-    def execute_rule(self, event_data, rule, event_state):
+    def execute_rule(self, event_data, rule):
         device_name = event_data["device_name"]
+
+        log.info(f"EVENT {event_data}")
         device = self.get_area_tree().get_device(device_name)
 
         if device is not None:
@@ -615,13 +614,13 @@ class EventManager:
             # Add state_list to event_state
             state_list = [rule_state]
             if "state" in event_data :
+                log.info(f"Event state is {event_data['state']}")
                 state_list.append(event_data["state"])
             state_list.extend(function_states)
             final_state = combine_states(state_list)  # TODO: add combination method
 
             if get_verbose_mode():
                 # event state 
-                log.info(f"Event state is {rule_state}")
                 log.info(f"Rule state is {rule_state}")
                 log.info(f"Final state is {final_state}")
 
@@ -1041,10 +1040,12 @@ class ServiceDriver:
 
     @service
     def create_trigger(self, **kwargs):
-        log.info(f"Triggering Service: with value: {kwargs}")
 
         @service
         def service_driver_trigger(**kwargs) :
+            log.info(f"Triggering Service: with value: {kwargs}")
+            new_state={}
+            new_state["device_name"] = self.name
 
             if "state" in kwargs:
                 state=kwargs["state"]
@@ -1054,7 +1055,9 @@ class ServiceDriver:
                     rgb=[rgb[0], rgb[1], rgb[2]]
                     state={"device_name": self.name, "state" : {"rgb_color":rgb} }
 
-                    get_event_manager().create_event(state) 
+                log.info(f"state: {state}")
+                new_state["state"]=state
+            get_event_manager().create_event(new_state) 
 
         return service_driver_trigger
 
@@ -1147,7 +1150,6 @@ class KaufLight:
 
         try:
             status = state.get(f"light.{self.name}")
-            log.info(f"Got Light {self.name} status: {status}")
 
             return status
         except:
@@ -1217,7 +1219,6 @@ class KaufLight:
         Only does anything if state value is present, including changing brightness.
         """
 
-        log.info(f"Setting {self.name}: {state}. currently {self.is_on()}")
         if "status" in state.keys():
             if not state["status"]:  # if being set to off
                 state["off"] = 1
@@ -1226,7 +1227,7 @@ class KaufLight:
         else :
             if not self.is_on(): #if already on, apply values
                 state["off"] = 1
-                
+
         self.apply_values(**state)
 
     def get_state(self):
