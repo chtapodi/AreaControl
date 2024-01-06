@@ -1236,11 +1236,19 @@ class KaufLight:
         self.apply_values(color_temp=self.temperature)
 
     def get_temperature(self):
+        temperature = None
         try:
             temperature = state.get(f"light.{self.name}.color_temp")
         except:
             log.warning(f"Unable to get color_temp from {self.name}")
-            return None
+        
+        if temperature is None or temperature == "null":
+            if self.temperature is not None:
+                log.info(f"temperature is {temperature}. Getting cached temperature")
+                temperature = self.temperature
+        else :
+            self.temperature=temperature
+
         return temperature if temperature != "null" else None
 
     def set_state(self, state):
@@ -1290,8 +1298,24 @@ class KaufLight:
         for k, v in kwargs.items():
             if v is not None:
                 new_args[k] = v
-        #if a color is being set, cache #TODO: improve complexity, use full state
-        if "rgb_color" not in new_args.keys() and "color_temp" not in new_args.keys():
+
+        if "rgb_color" in new_args.keys():
+            self.rgb_color = new_args["rgb_color"]
+            log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+            self.color_type = "rgb"
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+
+
+        elif "color_temp" in new_args.keys():
+            self.color_temp = new_args["color_temp"]
+            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
+            self.color_type = "temp"
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+
+        else :
+            log.info(f"Neither rgb_color nor color_temp in {new_args}")
+
+            log.info(f"color_type is {self.color_type} -> {new_args}")
             if self.color_type == "rgb":
                 rgb=self.get_rgb()
                 
@@ -1301,20 +1325,10 @@ class KaufLight:
                     log.info(f"Supplimenting rgb_color to {rgb}")
             else :
                 temp=self.get_temperature()
+                log.info(f"color_temp not in new_args. self color_temp is {temp}")
                 if temp is not None:
                     new_args["color_temp"] = temp
-                    log.info(f"Supplimenting rgb_color to {rgb}")
-
-
-        elif "rgb_color" in new_args.keys():
-            self.rgb_color = new_args["rgb_color"]
-            log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
-            self.color_type == "rgb"
-
-        elif "color_temp" in new_args.keys():
-            self.color_temp = new_args["color_temp"]
-            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
-            self.color_type == "temp"
+                    log.info(f"Supplimenting color_temp to {temp}")
 
         if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
             self.last_state = {"off": True}
@@ -1338,7 +1352,7 @@ class KaufLight:
 
 @service
 def test_event():
-    reset()
+    # reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
     name = "motion_sensor_kitchen"
