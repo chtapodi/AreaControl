@@ -1172,6 +1172,7 @@ class KaufLight:
     # RGB (color)
     def set_rgb(self, color, apply=False):
         self.color = color
+        log.info(f"Caching color: {self.color}")
         if apply or self.is_on():
             self.apply_values(rgb_color=self.color)
 
@@ -1186,6 +1187,8 @@ class KaufLight:
             if self.rgb_color is not None:
                 log.info(f"Color is {color}. Getting cached rgb_color")
                 color = self.rgb_color
+        else :
+            self.rgb_color=color
 
         return color if color != "null" else None
 
@@ -1262,26 +1265,29 @@ class KaufLight:
     # Apply values
     def apply_values(self, **kwargs):
         """This parses the state that is passed in and sends those values to the light."""
-        if "off" in kwargs and kwargs["off"]:  # If "off" : True is present, turn off
+
+        new_args = {}
+        for k, v in kwargs.items():
+            if v is not None:
+                new_args[k] = v
+        #if a color is being set, cache #TODO: improve complexity, use full state
+        if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
+            rgb=self.get_rgb()
+            log.info(f"rgb_color not in new_args. self rgb is {rgb}")
+            if rgb is not None:
+                new_args["rgb_color"] = rgb
+                log.info(f"Supplimenting rgb_color to {rgb}")
+
+        else:
+            self.rgb_color = new_args["rgb_color"]
+            log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+
+        if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
             self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
 
 
-        else:
-            new_args = {}
-            for k, v in kwargs.items():
-                if v is not None:
-                    new_args[k] = v
-
-
-            # If being turned on and no rgb present, rgb color is set to value.
-            if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
-                if not self.is_on():  # if it is off set it to the default color
-                    if self.default_color is not None:
-                        new_args["rgb_color"] = self.default_color
-            else:
-                self.rgb_color = new_args["rgb_color"]
-                log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+        else: #Turn on
 
             try:
                 log.info(f"\nPYSCRIPT: Setting {self.name} {new_args}")
@@ -1298,7 +1304,7 @@ class KaufLight:
 
 @service
 def test_event():
-    reset()
+    # reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
     name = "motion_sensor_kitchen"
