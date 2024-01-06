@@ -1178,12 +1178,9 @@ class KaufLight:
 
             del state["status"]
         else :
-            if self.is_on(): #if already on, apply values
-                state["on"] = 1
-            else :
+            if not self.is_on(): #if already on, apply values
                 state["off"] = 1
-
-        self.apply_values(**state)
+            self.apply_values(**state)
 
     def get_state(self):
         state = {}
@@ -1221,8 +1218,6 @@ class KaufLight:
                 if v is not None:
                     new_args[k] = v
 
-            if "on" not in new_args:
-                new_args["on"] = True
 
             # If being turned on and no rgb present, rgb color is set to value.
             if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
