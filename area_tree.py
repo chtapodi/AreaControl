@@ -116,6 +116,7 @@ def combine_states(state_list, strategy="last"):
 
 
 def summarize_state(state):
+
     flat_state = {}
     for key, value in state.items():
         if type(value) == dict:
@@ -170,13 +171,25 @@ def motion_sensor_mode(*args, **kwargs):
     return input_boolean.motion_sensor_mode == "on"
 
 
+### Scope functions
+
+#get immediate scope
+# make it so they filter by all checking
+def get_immediate_scope(device, device_area, *args):
+    ...
+
+def get_local_scope(device, device_area, *args):
+    greatest_parent = get_event_manager().area_tree.get_greatest_area(device_area.name)
+    return [greatest_parent]
+
 ### State functions
 # Functions that return a state based on some value
-def get_time_based_state(device, area):
+def get_time_based_state(device, scope, *args):
     now = time.localtime().tm_hour
-
-    scope_state = area.get_state()
-    scope_state = summarize_state(scope_state)
+    states = {}
+    for area in scope :
+        states[area.name] = area.get_state()
+    scope_state = summarize_state(states)
 
     step_increment = 20
 
@@ -459,7 +472,9 @@ class EventManager:
             if event["device_name"].startswith(trigger_prefix):
                 if self._check_tags(
                     event, self.rules[rule_name]
-                ) and self._check_functions(event, self.rules[rule_name]): #
+                ) and self._check_functions(
+                    event, self.rules[rule_name]
+                ):  #
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
@@ -476,11 +491,33 @@ class EventManager:
     def execute_rule(self, event_data, rule):
         device_name = event_data["device_name"]
         device = self.area_tree.get_device(device_name)
-        if device is not None:
-            device_area = device.get_area()
 
-            greatest_parent = self.area_tree.get_greatest_area(device_area.name)
+        if device is not None:
+            # get values
+            device_area = device.get_area()
             event_state = rule.get("state", {})
+
+            scope = None #Should these be anded?
+            # Get scope to apply to
+            if "scope_function" in rule:
+                for function_pair in rule["scope_function"]:  # function_name:args
+                    for function_name, args in function_pair.items():
+                        function = get_function_by_name(function_name)
+                        # If function exitst, run it
+                        if function is not None:
+                            new_scope = function(device, device_area, args)
+                            log.info(f"New scope: {new_scope}")
+                            if new_scope is not None:
+                                scope = new_scope
+                            else : #and them
+                                edited_scope=[]
+                                for area in scope :
+                                    if area in new_scope :
+                                        edited_scope.append(area)
+                                log.info(f"Edited scope: {scope}->{edited_scope}")
+                                scope = edited_scope
+            if scope is None:
+                scope=get_local_scope(device, device_area)
 
             function_states = []
             # if there are state functions, run them
@@ -490,16 +527,17 @@ class EventManager:
                         function = get_function_by_name(function_name)
                         # If function exitst, run it
                         if function is not None:
-                            function_state = function(device, greatest_parent)
+                            function_state = function(device, scope, args)
                             function_states.append(function_state)
 
+            # Add state_list to event_state
             state_list = [event_state]
             state_list.extend(function_states)
-            final_state = combine_states(state_list)
+            final_state = combine_states(state_list) #TODO: add combination method
 
-            greatest_parent.set_state(
-                final_state
-            )  # TODO: Combine states higher up for all rules before applying
+            for areas in scope :
+                areas.set_state(final_state)
+
             return True
         else:
             log.warning(f"Device {device_name} not found")

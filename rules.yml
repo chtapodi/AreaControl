@@ -1,12 +1,20 @@
+# Rule_Id: 
+#   trigger_prefix: The start of the devices name you want to trigger this rule
+#   required_tags: Tags that must be in the event for the rule to trigger
+#   functions: # functions that need to pass in order for the rule to trigger
+#   scope_function: #Determines the area the state is applied to
+#   state: The state that is the basis for what is applied
+#     status: 1
+#   state_functions: #functions that return states that are combined with the provided state (if any)
+
+
 motion_on: 
   trigger_prefix: "motion_"
-  prohibited_tags: ["anna_asleep", "bedroom_sensor"]
   required_tags: ["on"]
   functions:
     - motion_sensor_mode: []
-    - are_people_asleep: []
-  scope:
-    - lesser_siblings: []
+  scope_function:
+    - get_local_scope: []
   state:
     status: 1
   state_functions:
@@ -17,8 +25,8 @@ motion_off_after_15:
   required_tags: ["off", "motion_occupancy"]
   functions:
     - motion_sensor_mode: []
-  scope:
-    - lesser_siblings: []
+  scope_function:
+    - get_local_scope: []
   state:
     status: 0
 
@@ -27,8 +35,8 @@ living_room_zones_on:
   required_tags: ["on", "presence"]
   functions:
     - motion_sensor_mode: []
-  scope:
-    - lesser_siblings: []
+  scope_function:
+    - get_local_scope: []
   state:
     status: 1
   state_functions:
@@ -37,7 +45,7 @@ living_room_zones_on:
 # turn_living_room_off:
 #   trigger_prefix: "presence_sensor_living_room"
 #   required_tags: ["off", "presence"]
-#   scope:
+#   scope_function:
 #     - lesser_siblings: []
 #   state:
 #     status: 0
