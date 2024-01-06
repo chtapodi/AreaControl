@@ -941,6 +941,7 @@ class Device:
             self.driver.set_state(state)
             self.last_state = state
 
+
     def get(self, value):
         return self.last_state[value]
 
@@ -1145,6 +1146,7 @@ class KaufLight:
         self.brightness = None
         self.temperature = None
         self.default_color = None
+        self.color_type="rgb"
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -1271,16 +1273,30 @@ class KaufLight:
             if v is not None:
                 new_args[k] = v
         #if a color is being set, cache #TODO: improve complexity, use full state
-        if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
-            rgb=self.get_rgb()
-            log.info(f"rgb_color not in new_args. self rgb is {rgb}")
-            if rgb is not None:
-                new_args["rgb_color"] = rgb
-                log.info(f"Supplimenting rgb_color to {rgb}")
+        if "rgb_color" not in new_args.keys() and "color_temp" not in new_args.keys():
+            if self.color_type == "rgb":
+                rgb=self.get_rgb()
+                
+                log.info(f"rgb_color not in new_args. self rgb is {rgb}")
+                if rgb is not None:
+                    new_args["rgb_color"] = rgb
+                    log.info(f"Supplimenting rgb_color to {rgb}")
+            else :
+                temp=self.get_temperature()
+                if temp is not None:
+                    new_args["color_temp"] = temp
+                    log.info(f"Supplimenting rgb_color to {rgb}")
 
-        else:
+
+        elif "rgb_color" in new_args.keys():
             self.rgb_color = new_args["rgb_color"]
             log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+            self.color_type == "rgb"
+
+        elif "color_temp" in new_args.keys():
+            self.color_temp = new_args["color_temp"]
+            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
+            self.color_type == "temp"
 
         if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
             self.last_state = {"off": True}

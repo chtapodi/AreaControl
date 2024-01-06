@@ -7,6 +7,13 @@
 #     status: 1
 #   state_functions: #functions that return states that are combined with the provided state (if any)
 
+toggle_lights: 
+  trigger_prefix: "button_"
+  state_functions:
+    - toggle_state: []
+ #include and parse area: "area"
+
+
 HA_only_on_lights: 
   trigger_prefix: "service_input"
   scope_function:
