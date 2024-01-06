@@ -614,13 +614,15 @@ class EventManager:
             # Add state_list to event_state
             state_list = [rule_state]
             if "state" in event_data :
-                log.info(f"Event state is {event_data['state']}")
+                log.info(f"Event data is {event_data}")
                 state_list.append(event_data["state"])
+
             state_list.extend(function_states)
             final_state = combine_states(state_list)  # TODO: add combination method
 
             if get_verbose_mode():
                 # event state 
+                log.info(f"state_list is {state_list}")
                 log.info(f"Rule state is {rule_state}")
                 log.info(f"Final state is {final_state}")
 
@@ -1044,24 +1046,25 @@ class ServiceDriver:
         @service
         def service_driver_trigger(**kwargs) :
             log.info(f"Triggering Service: with value: {kwargs}")
-            new_state={}
-            new_state["device_name"] = self.name
-
+            new_event={}
             if "state" in kwargs:
                 state=kwargs["state"]
                 if "hs_color" in state:
                     hs_color = state["hs_color"]
                     rgb=hs_to_rgb(hs_color[0], hs_color[1])
                     rgb=[rgb[0], rgb[1], rgb[2]]
-                    state={"device_name": self.name, "state" : {"rgb_color":rgb} }
+                    state["rgb_color"] = rgb
+
+                    del state["hs_color"]
                 
                 if "temp" in state:
                     state["color_temp"] = state["temp"]
                     del state["temp"]
 
                 log.info(f"state: {state}")
-                new_state["state"]=state
-            get_event_manager().create_event(new_state) 
+                new_event["state"]=state
+                new_event["device_name"]=self.name
+            get_event_manager().create_event(new_event) 
 
         return service_driver_trigger
 
