@@ -11,8 +11,8 @@ toggle_lights:
   trigger_prefix: "service_input_button_single"
   scope_function:
     - get_area_local_scope: ["living_room"]
-  # state_functions:
-    # - toggle_state: []
+  state_functions:
+    - toggle_state: []
   state: {}
   prohibited_tags: ["bedroom", "off"]
   # state is passed by service call
