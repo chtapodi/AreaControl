@@ -2,14 +2,14 @@
 #   trigger_prefix: The start of the devices name you want to trigger this rule
 #   required_tags: Tags that must be in the event for the rule to trigger
 #   functions: # functions that need to pass in order for the rule to trigger
-#   scope_function: #Determines the area the state is applied to
+#   scope_functions: #Determines the area the state is applied to
 #   state: The state that is the basis for what is applied
 #     status: 1
 #   state_functions: #functions that return states that are combined with the provided state (if any)
 
 toggle_lights:
   trigger_prefix: "service_input_button_single"
-  # scope_function:
+  # scope_functions:
   #   - get_area_local_scope: ["hallway"]
   state_functions:
     - toggle_state: []
@@ -19,7 +19,7 @@ toggle_lights:
 
 HA_only_on_lights: 
   trigger_prefix: "service_input_all_lights"
-  scope_function:
+  scope_functions:
     - get_entire_scope: []
   # state is passed by service call
 
@@ -28,7 +28,7 @@ motion_on:
   required_tags: ["on"]
   functions:
     - motion_sensor_mode: []
-  scope_function:
+  scope_functions:
     - get_local_scope: []
   state:
     status: 1
@@ -40,7 +40,7 @@ motion_off_after_15:
   required_tags: ["off", "motion_occupancy"]
   functions:
     - motion_sensor_mode: []
-  scope_function:
+  scope_functions:
     - get_local_scope: []
   state:
     status: 0
@@ -50,7 +50,7 @@ living_room_zones_on:
   required_tags: ["on", "presence"]
   functions:
     - motion_sensor_mode: []
-  scope_function:
+  scope_functions:
     - get_local_scope: []
   state:
     status: 1
@@ -60,7 +60,7 @@ living_room_zones_on:
 # turn_living_room_off:
 #   trigger_prefix: "presence_sensor_living_room"
 #   required_tags: ["off", "presence"]
-#   scope_function:
+#   scope_functions:
 #     - lesser_siblings: []
 #   state:
 #     status: 0

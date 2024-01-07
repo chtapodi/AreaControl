@@ -81,8 +81,14 @@ def get_verbose_mode():
 @service
 def create_event(**kwargs):
     log.info(f"Service creating event:  with kwargs {kwargs}")
+    event={}
     if "name" in kwargs.keys():
-        event = {"device_name": kwargs["name"]}
+        event["device_name"] = kwargs["name"]
+
+    elif "device_name" in kwargs.keys():
+        event["device_name"] = kwargs["device_name"]
+        
+    if "device_name" in event.keys():
         if "tags" in kwargs.keys():
             event["tags"] = kwargs["tags"]
         
@@ -96,6 +102,7 @@ def create_event(**kwargs):
             event["state_functions"] = kwargs["state_functions"]
 
         event_manager=get_event_manager()
+        log.info(f"Service creating event: {event}")
         event_manager.create_event(event)
 
     else:
@@ -356,7 +363,9 @@ def toggle_state(device, scope, *args):
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
+        log.info(f"Area {area.name} state is {states[area.name]}")
     scope_state = summarize_state(states)
+    log.info(f"Toggling state is {scope_state}")
     if "status" in scope_state :
         if scope_state["status"] : # if on
             return {"status": 0} # turn off
@@ -625,8 +634,8 @@ class EventManager:
 
             scope = None  # Should these be anded?
             # Get scope to apply to
-            if "scope_function" in rule:
-                for function_pair in rule["scope_function"]:  # function_name:args
+            if "scope_functions" in rule:
+                for function_pair in rule["scope_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
                         function = get_function_by_name(function_name)
                         # If function exitst, run it
@@ -1407,7 +1416,7 @@ def test_event():
     name = "service_input_button_single"
     event = {
         "device_name": name,
-        "scope_function": [{"get_area_local_scope" : ["kitchen"]}],
+        "scope_functions": [{"get_area_local_scope" : ["kitchen"]}],
     }
     log.info(f"\nCreating Event: {event}")
 
