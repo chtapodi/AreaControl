@@ -89,6 +89,12 @@ def create_event(**kwargs):
         if "state" in kwargs.keys():
             event["state"] = kwargs["state"]
 
+        if "scope_functions" in kwargs.keys():
+            event["scope_functions"] = kwargs["scope_functions"]
+
+        if "state_functions" in kwargs.keys():
+            event["state_functions"] = kwargs["state_functions"]
+
         event_manager=get_event_manager()
         event_manager.create_event(event)
 
@@ -613,6 +619,9 @@ class EventManager:
             # get values
             device_area = device.get_area()
             rule_state = rule.get("state", {})
+
+            log.info(f"updating {rule} with {event_data}")
+            rule.update(event_data)
 
             scope = None  # Should these be anded?
             # Get scope to apply to
@@ -1398,6 +1407,7 @@ def test_event():
     name = "service_input_button_single"
     event = {
         "device_name": name,
+        "scope_function": [{"get_area_local_scope" : ["kitchen"]}],
     }
     log.info(f"\nCreating Event: {event}")
 

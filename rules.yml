@@ -9,8 +9,8 @@
 
 toggle_lights:
   trigger_prefix: "service_input_button_single"
-  scope_function:
-    - get_area_local_scope: ["living_room"]
+  # scope_function:
+  #   - get_area_local_scope: ["hallway"]
   state_functions:
     - toggle_state: []
   state: {}
