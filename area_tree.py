@@ -1398,10 +1398,6 @@ def test_event():
     name = "service_input_button_single"
     event = {
         "device_name": name,
-<<<<<<< HEAD
-=======
-        "tags": ["on", "tag_override", "function_override"],
->>>>>>> dev
     }
     log.info(f"\nCreating Event: {event}")
 
