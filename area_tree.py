@@ -1133,10 +1133,14 @@ class ServiceDriver:
                 if "temp" in state:
                     state["color_temp"] = state["temp"]
                     del state["temp"]
+                if "name" in kwargs:
+                    new_event["device_name"]=kwargs["name"]
+                else :
+                    new_event["device_name"]=self.name
 
                 log.info(f"state: {state}")
                 new_event["state"]=state
-                new_event["device_name"]=self.name
+                
             get_event_manager().create_event(new_event) 
 
         return service_driver_trigger
