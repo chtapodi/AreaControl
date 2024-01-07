@@ -555,21 +555,39 @@ class EventManager:
                     log.info(
                         f"EventManager: Rule {rule_name} prefix matches {event['device_name']}"
                     )
+                function_override=False
+                tag_override=False
+                if "tags" in event:
+                    if "tag_override" in event["tags"] :
+                        tag_override=True
+                    if "function_override" in event["tags"] :
+                        function_override=True
 
-                if self._check_tags(event, self.rules[rule_name]) : 
-                        if get_verbose_mode():
-                            log.info(f"EventManager: {rule_name} Passed tag check")
-                            if self._check_functions(event, self.rules[rule_name]):  
-                                log.info(f"EventManager: Event: {event} Matches:NOTHING Rules")
+                approved=True
+                if not (tag_override or self._check_tags(event, self.rules[rule_name]) ) :
+                    approved=False 
+                    log.info(f"EventManager: {rule_name} FAILED tag check")
+                    log.info (f"Override: {tag_override} {self._check_tags(event, self.rules[rule_name])}" )
 
+                    
+                if get_verbose_mode() and approved:
+                    log.info(f"EventManager: {rule_name} Passed tag check")
 
-                                if get_verbose_mode():
-                                    log.info(
-                                    f"EventManager: {rule_name} Passed function check"
-                                    )
+                if "tags" in event:
+                    if "tag_override" in event["tags"] :
+                        tag_override=True
 
-                                matching_rules.append(rule_name)
-                                log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
+                if not approved or (function_override and self._check_functions(event, self.rules[rule_name]) ):  
+                    approved=False
+                    log.info(f"EventManager: {rule_name} FAILED function check")
+
+                        
+                if get_verbose_mode() and approved:
+                    log.info(f"EventManager: {rule_name} Passed function check")
+
+                if approved :
+                    matching_rules.append(rule_name)
+                    log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
 
 
         event_tags = event.get("tags", [])
@@ -977,6 +995,7 @@ class Device:
             self.driver.set_state(state)
             self.last_state = state
 
+
     def get(self, value):
         return self.last_state[value]
 
@@ -1185,6 +1204,7 @@ class KaufLight:
         self.brightness = None
         self.temperature = None
         self.default_color = None
+        self.color_type="rgb"
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -1256,11 +1276,19 @@ class KaufLight:
         self.apply_values(color_temp=self.temperature)
 
     def get_temperature(self):
+        temperature = None
         try:
             temperature = state.get(f"light.{self.name}.color_temp")
         except:
             log.warning(f"Unable to get color_temp from {self.name}")
-            return None
+        
+        if temperature is None or temperature == "null":
+            if self.temperature is not None:
+                log.info(f"temperature is {temperature}. Getting cached temperature")
+                temperature = self.temperature
+        else :
+            self.temperature=temperature
+
         return temperature if temperature != "null" else None
 
     def set_state(self, state):
@@ -1310,17 +1338,37 @@ class KaufLight:
         for k, v in kwargs.items():
             if v is not None:
                 new_args[k] = v
-        #if a color is being set, cache #TODO: improve complexity, use full state
-        if "rgb_color" not in new_args.keys() or new_args["rgb_color"] is None:
-            rgb=self.get_rgb()
-            log.info(f"rgb_color not in new_args. self rgb is {rgb}")
-            if rgb is not None:
-                new_args["rgb_color"] = rgb
-                log.info(f"Supplimenting rgb_color to {rgb}")
 
-        else:
+        if "rgb_color" in new_args.keys():
             self.rgb_color = new_args["rgb_color"]
             log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+            self.color_type = "rgb"
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+
+
+        elif "color_temp" in new_args.keys():
+            self.color_temp = new_args["color_temp"]
+            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
+            self.color_type = "temp"
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+
+        else :
+            log.info(f"Neither rgb_color nor color_temp in {new_args}")
+
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+            if self.color_type == "rgb":
+                rgb=self.get_rgb()
+                
+                log.info(f"rgb_color not in new_args. self rgb is {rgb}")
+                if rgb is not None:
+                    new_args["rgb_color"] = rgb
+                    log.info(f"Supplimenting rgb_color to {rgb}")
+            else :
+                temp=self.get_temperature()
+                log.info(f"color_temp not in new_args. self color_temp is {temp}")
+                if temp is not None:
+                    new_args["color_temp"] = temp
+                    log.info(f"Supplimenting color_temp to {temp}")
 
         if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
             self.last_state = {"off": True}
@@ -1350,6 +1398,10 @@ def test_event():
     name = "service_input_button_single"
     event = {
         "device_name": name,
+<<<<<<< HEAD
+=======
+        "tags": ["on", "tag_override", "function_override"],
+>>>>>>> dev
     }
     log.info(f"\nCreating Event: {event}")
 
