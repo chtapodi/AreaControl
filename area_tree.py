@@ -334,6 +334,17 @@ def get_time_based_state(device, scope, *args):
     return state
 
 
+def toggle_state(device, scope, *args):
+    states = {}
+    for area in scope:
+        states[area.name] = area.get_state()
+    scope_state = summarize_state(states)
+    if "status" in scope_state :
+        if scope_state["status"] : # if on
+            return {"status": 0} # turn off
+        else :
+            return {"status": 1} # turn on
+
 ###
 
 
@@ -1307,10 +1318,9 @@ def test_event():
     # reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "motion_sensor_kitchen"
+    name = "service_input_button_single"
     event = {
         "device_name": name,
-        "tags": ["on"],
     }
     log.info(f"\nCreating Event: {event}")
 
