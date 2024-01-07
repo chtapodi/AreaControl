@@ -553,7 +553,7 @@ class EventManager:
                     log.info(f"SERVICESEARCH")
                 if get_verbose_mode():
                     log.info(
-                        f"EventManager: Rule {rule_name} prefix matches {event['device_name']}"
+                        f"EventManager: Rule {rule_name} prefix [{trigger_prefix}] matches {event['device_name']}"
                     )
                 function_override=False
                 tag_override=False

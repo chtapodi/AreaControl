@@ -18,7 +18,7 @@ toggle_lights:
   # state is passed by service call
 
 HA_only_on_lights: 
-  trigger_prefix: "service_input"
+  trigger_prefix: "service_input_all_lights"
   scope_function:
     - get_entire_scope: []
   # state is passed by service call
