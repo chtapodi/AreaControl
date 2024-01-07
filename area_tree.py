@@ -18,7 +18,7 @@ STATE_VALUES = {
 area_tree = None
 event_manager = None
 global_triggers = None
-verbose_mode = True
+verbose_mode = False
 
 
 @service
@@ -30,7 +30,7 @@ def reset():
     area_tree = None
     event_manager = None
     global_triggers = None
-    verbose_mode = True
+    verbose_mode = False
     init()
 
 
@@ -221,6 +221,18 @@ def get_local_scope(device, device_area, *args):
     greatest_parent = get_area_tree().get_greatest_area(device_area.name)
     return [greatest_parent]
 
+#When area names are passed in as args, gets their local scopes
+def get_area_local_scope(device, device_area, *args):
+    log.info(f"get_area_local_scope {args}")
+    areas=[]
+    for area_name in args[0] :
+        area_tree=get_area_tree()   
+        if area_tree.is_area(area_name) :
+            areas.append(area_tree.get_area(area_name))
+        else :
+            log.info(f"Area {area_name} not found")
+    log.info(f"get_area_local_scope {areas[0].name}")
+    return areas
 
 ### State functions
 # Functions that return a state based on some value
@@ -320,7 +332,7 @@ def get_time_based_state(device, scope, *args):
             else:
                 state["brightess"] = 50
     if "status" in state:
-        if scope_state["status"]:
+        if state["status"]:
             # if the light is on, don't apply rgb_color or temp
             if "rgb_color" in state:
                 del state["rgb_color"]
@@ -537,6 +549,8 @@ class EventManager:
             # Get devices that names match trigger_prefix
             trigger_prefix = self.rules[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
+                if "service" in event["device_name"]:
+                    log.info(f"SERVICESEARCH")
                 if get_verbose_mode():
                     log.info(
                         f"EventManager: Rule {rule_name} prefix matches {event['device_name']}"
@@ -718,6 +732,9 @@ class AreaTree:
     def get_area(self, area_name=None):
         if area_name is None:
             area_name = self.root_name
+        if area_name not in self.area_tree_lookup:
+            log.warning(f"Area {area_name} not found in area tree")
+            return None
         return self.area_tree_lookup[area_name]
 
     def get_device(self, device_name):
@@ -730,6 +747,12 @@ class AreaTree:
 
     def get_area_tree_lookup(self):
         return self.area_tree_lookup
+
+    def is_area(self, area_name) :
+        log.info(f"Checking if {area_name} is an area")
+        if area_name in self.get_area_tree_lookup() :
+            return True
+        return False
 
     def _find_root_area_name(self):
         root_area = None
@@ -1082,6 +1105,10 @@ class ServiceDriver:
         return service_driver_trigger
 
 
+    def get_state(self) :
+        return {"name":self.name}
+
+
 
 
 
@@ -1317,7 +1344,7 @@ class KaufLight:
 
 @service
 def test_event():
-    # reset()
+    reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
     name = "service_input_button_single"
