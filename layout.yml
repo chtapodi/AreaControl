@@ -4,7 +4,7 @@ everything:
     - outside
   inputs:
     service: # for homeassistant services
-      - service_input_lights
+      - service_input
 home:
   sub_areas:
     - front

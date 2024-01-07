@@ -722,6 +722,8 @@ class AreaTree:
 
     def get_device(self, device_name):
         if device_name not in self.area_tree_lookup:
+            if "service_" in device_name:
+                return self.area_tree_lookup["service_input"]
             log.warning(f"Device {device_name} not found in area tree")
             return None
         return self.area_tree_lookup[device_name]
