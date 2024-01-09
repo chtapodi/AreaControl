@@ -1440,44 +1440,44 @@ class KaufLight:
         for k, v in kwargs.items():
             if v is not None:
                 new_args[k] = v
-
-        if "rgb_color" in new_args.keys():
-            self.rgb_color = new_args["rgb_color"]
-            log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
-            self.color_type = "rgb"
-            log.info(f"color_type is {self.color_type} -> {new_args}")
-
-
-        elif "color_temp" in new_args.keys():
-            self.color_temp = new_args["color_temp"]
-            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
-            self.color_type = "temp"
-            log.info(f"color_type is {self.color_type} -> {new_args}")
-
-        else :
-            log.info(f"Neither rgb_color nor color_temp in {new_args}")
-
-            log.info(f"color_type is {self.color_type} -> {new_args}")
-            if self.color_type == "rgb":
-                rgb=self.get_rgb()
-                
-                log.info(f"rgb_color not in new_args. self rgb is {rgb}")
-                if rgb is not None:
-                    new_args["rgb_color"] = rgb
-                    log.info(f"Supplimenting rgb_color to {rgb}")
-            else :
-                temp=self.get_temperature()
-                log.info(f"color_temp not in new_args. self color_temp is {temp}")
-                if temp is not None:
-                    new_args["color_temp"] = temp
-                    log.info(f"Supplimenting color_temp to {temp}")
-
         if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
             self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
 
 
         else: #Turn on
+
+            if "rgb_color" in new_args.keys():
+                self.rgb_color = new_args["rgb_color"]
+                log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+                self.color_type = "rgb"
+                log.info(f"color_type is {self.color_type} -> {new_args}")
+
+
+            elif "color_temp" in new_args.keys():
+                self.color_temp = new_args["color_temp"]
+                log.info(f"Caching {self.name} color_temp to {self.color_temp }")
+                self.color_type = "temp"
+                log.info(f"color_type is {self.color_type} -> {new_args}")
+
+            else :
+                log.info(f"Neither rgb_color nor color_temp in {new_args}")
+
+                log.info(f"color_type is {self.color_type} -> {new_args}")
+                if self.color_type == "rgb":
+                    rgb=self.get_rgb()
+                    
+                    log.info(f"rgb_color not in new_args. self rgb is {rgb}")
+                    if rgb is not None:
+                        new_args["rgb_color"] = rgb
+                        log.info(f"Supplimenting rgb_color to {rgb}")
+                else :
+                    temp=self.get_temperature()
+                    log.info(f"color_temp not in new_args. self color_temp is {temp}")
+                    if temp is not None:
+                        new_args["color_temp"] = temp
+                        log.info(f"Supplimenting color_temp to {temp}")
+
 
             try:
                 log.info(f"\nPYSCRIPT: Setting {self.name} {new_args}")
@@ -1492,12 +1492,36 @@ class KaufLight:
                 self.last_state = {"on": True}
 
 
+# def test_toggle(area_name="kitchen") :
+#     event_manager=get_event_manager()
+
+#     scope={"get_area_local_scope": [area_name]}
+
+#     area=event_manager.area_tree.get_area(area_name)
+
+#     # Set initial color for area
+#     event = {
+#         "device_name": "service_input_all_",
+#         "state:": {"status": 1, "rgb_color": [255, 0, 0]}
+#     }.update(scope)
+
+#     area_state=area.get_state()
+#     if area_state["status"] :
+#         log.fatal("Failed turning on test")
+        
+#     #toggle status
+#     event = {
+#         "device_name": "service_input_button_single",
+#     }.update(scope)
+
+
+
 @service
 def test_event():
     # reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "service_input_button_single"
+    name = "service_input_button_double"
     event = {
         "device_name": name,
         "scope_functions": [{"get_area_local_scope" : ["kitchen"]}],

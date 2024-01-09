@@ -7,15 +7,25 @@
 #     status: 1
 #   state_functions: #functions that return states that are combined with the provided state (if any)
 
-toggle_lights:
-  trigger_prefix: "service_input_button_single"
-  # scope_functions:
-  #   - get_area_local_scope: ["hallway"]
+toggle_light_color:
+  trigger_prefix: "service_input_button_double"
+  scope_functions:
+    - get_area_local_scope: []
   state_functions:
     - toggle_state: []
   state: {}
-  prohibited_tags: ["bedroom", "off"]
   # state is passed by service call
+
+
+toggle_light_status:
+  trigger_prefix: "service_input_button_single"
+  scope_functions:
+    - get_area_local_scope: []
+  state_functions:
+    - toggle_status: []
+  state: {}
+  # state is passed by service call
+
 
 HA_only_on_lights: 
   trigger_prefix: "service_input_all_"
