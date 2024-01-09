@@ -23,6 +23,7 @@ verbose_mode = False
 
 @service
 def reset():
+    log.warning("RESETTING. MAKE SURE YOU WANT THIS")
     global area_tree
     global event_manager
     global global_triggers
@@ -75,7 +76,7 @@ def get_area_tree():
 
 def get_verbose_mode():
     global verbose_mode
-    return True
+    return verbose_mode
 
 
 @service
@@ -359,18 +360,74 @@ def get_time_based_state(device, scope, *args):
     return state
 
 
-def toggle_state(device, scope, *args):
+def toggle_status(device, scope, *args):
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
         log.info(f"Area {area.name} state is {states[area.name]}")
     scope_state = summarize_state(states)
-    log.info(f"Toggling state is {scope_state}")
+    log.info(f"Toggling status is {scope_state}")
     if "status" in scope_state :
         if scope_state["status"] : # if on
             return {"status": 0} # turn off
         else :
             return {"status": 1} # turn on
+
+
+def toggle_state(device, scope, *args):
+    goal_state={
+        "status": 1,
+        "color_temp":350
+    }
+
+    def does_state_match_goal(state) :
+        for key, value in goal_state.items() :
+            if key not in state :
+                log.info(f"Key {key} not in state")
+                return False
+            else :
+                if not state[key] == value :
+                    log.info(f"Key {key} does not match goal {value}")
+                    return False
+        return True
+        
+
+    states = {}
+    for area in scope:
+        states[area.name] = area.get_state()
+        log.info(f"TOG Area {area.name} state is {states[area.name]}")
+    scope_state = summarize_state(states)
+
+    log.info(f"Toggling state is {scope_state}")
+    if does_state_match_goal(scope_state) :
+        log.info(f"TOG Already in goal state, toggling back")
+
+        last_states = {}
+        for area in scope:
+            last_states[area.name] = area.get_last_state()
+        last_scope_state = summarize_state(last_states)
+        log.info(f"TOG Last state is {last_scope_state}")
+
+        #TODO: Theres gotta be a better way
+        if "temperature" in last_scope_state :
+            del last_scope_state["temperature"]
+
+        if "temp_color" in last_scope_state :
+            del last_scope_state["temp_color"]
+
+        if "name" in last_scope_state :
+            del last_scope_state["name"]
+
+        if "device_name" in last_scope_state :
+            del last_scope_state["device_name"]
+
+        return last_scope_state
+
+    else : 
+        log.info(f"TOG Toggling to {goal_state}")
+        return goal_state
+
+    return scope_state
 
 ###
 
@@ -517,6 +574,17 @@ class Area:
 
         return merged
 
+    def get_last_state(self):
+        child_states = []
+
+        for child in self.get_children():
+            child_state = child.get_last_state()
+            child_states.append(child_state)
+
+        merged = merge_states(child_states, self.name)
+
+        return merged
+
     def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
         """Prints a tree representation with accurate direct child highlighting."""
         string_rep = (
@@ -557,6 +625,7 @@ class EventManager:
         log.info(f"EventManager: New event: {event}")
 
         result = self.check_event(event)
+        log.info(f"EventManager: created event")
 
     def check_event(self, event):
         matching_rules = []
@@ -981,7 +1050,14 @@ class Device:
     def get_state(self):
         state = self.driver.get_state()
         state["name"] = self.name
+        self.cached_state = state
+        return state
+
+    def get_last_state(self) :
+        state = self.last_state
+        state["name"] = self.name
         self.last_state = state
+        log.info(f"Last state: {state}")
         return state
 
     def fillout_state_from_cache(self, state):
@@ -992,6 +1068,7 @@ class Device:
         return state
 
     def add_to_cache(self, state):
+        self.last_state = self.cached_state
         self.cached_state = copy.deepcopy(state)
 
     def input_trigger(self, tags):
@@ -1011,11 +1088,11 @@ class Device:
                 log.info(f"Setting state: {state} on {self.name}")
 
             self.driver.set_state(state)
-            self.last_state = state
+            self.cached_state = state
 
 
     def get(self, value):
-        return self.last_state[value]
+        return self.cached_state[value]
 
     def set_area(self, area):
         self.area = area
@@ -1043,7 +1120,6 @@ class Device:
 class MotionSensorDriver:
     def __init__(self, input_type, device_id):
         self.name = self.create_name(input_type, device_id)
-        log.info(f"Creating Motion Sensor: {self.name}")
 
         self.last_state = {}
         self.trigger = self.setup_service_triggers(device_id)
@@ -1143,8 +1219,10 @@ class ServiceDriver:
                 
             get_event_manager().create_event(new_event) 
 
-        return service_driver_trigger
+        get_global_triggers().append(["Service", service_driver_trigger])
+        
 
+        return service_driver_trigger # return the function created?
 
     def get_state(self) :
         return {"name":self.name}
@@ -1342,13 +1420,15 @@ class KaufLight:
             if self.brightness is not None:
                 state["brightness"] = self.brightness
 
-        rgb = self.get_rgb()
-        if rgb is not None:
-            state["rgb_color"] = rgb
+        if self.color_type == "rgb":
+            rgb = self.get_rgb()
+            if rgb is not None:
+                state["rgb_color"] = rgb
+        else :
+            color_temp = self.get_temperature()
+            if color_temp is not None:
+                state["color_temp"] = color_temp
 
-        temperature = self.get_temperature()
-        if temperature is not None:
-            state["temperature"] = temperature
 
         return state
 
@@ -1414,7 +1494,7 @@ class KaufLight:
 
 @service
 def test_event():
-    reset()
+    # reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
     name = "service_input_button_single"
