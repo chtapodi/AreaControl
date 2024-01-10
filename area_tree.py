@@ -149,6 +149,7 @@ def combine_states(state_list, strategy="last"):
                             final_state[key] = True
                     elif (
                         type(final_state[key]) == tuple
+                        or type(final_state[key]) == 'TupleWrapper'
                         or type(final_state[key]) == list
                     ):
                         new_value = []

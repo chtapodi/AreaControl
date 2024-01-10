@@ -254,6 +254,7 @@ bathroom_1:
     motion:
       - "motion_sensor_bathroom"
   outputs:
+    - kauf_bathroom_0
     - kauf_bathroom_1
     - kauf_bathroom_center
 
