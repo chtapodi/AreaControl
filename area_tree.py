@@ -289,7 +289,7 @@ def get_time_based_state(device, scope, *args):
 
     elif now >= 8 and now < 11:
         log.info("it is morning")
-        state["color_temp"] = 350
+        state["color_temp"] = 500
 
     elif now >= 11 and now < 14:  # 11-2
         log.info("it is midday")
@@ -345,8 +345,9 @@ def get_time_based_state(device, scope, *args):
                     state["brightess"] = current_brightness - 5
             else:
                 state["brightess"] = 50
-    if "status" in state:
-        if state["status"]:
+    
+    if "status" in scope_state:
+        if scope_state["status"]:
             # if the light is on, don't apply rgb_color or temp
             if "rgb_color" in state:
                 del state["rgb_color"]
@@ -377,7 +378,7 @@ def toggle_status(device, scope, *args):
 def toggle_state(device, scope, *args):
     goal_state={
         "status": 1,
-        "color_temp":350
+        "color_temp":500
     }
 
     def does_state_match_goal(state) :
@@ -629,9 +630,10 @@ class EventManager:
 
     def check_event(self, event):
         matching_rules = []
-        for rule_name in self.rules.keys():
+        rule_lookup=self.get_rules()
+        for rule_name in rule_lookup.keys():
             # Get devices that names match trigger_prefix
-            trigger_prefix = self.rules[rule_name]["trigger_prefix"]
+            trigger_prefix = rule_lookup[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
                 if "service" in event["device_name"]:
                     log.info(f"SERVICESEARCH")
@@ -648,7 +650,7 @@ class EventManager:
                         function_override=True
 
                 approved=True
-                if not (tag_override or self._check_tags(event, self.rules[rule_name]) ) :
+                if not (tag_override or self._check_tags(event, rule_lookup[rule_name]) ) :
                     approved=False 
                     log.info(f"EventManager: {rule_name} FAILED tag check")
                     log.info (f"Override: {tag_override} {self._check_tags(event, self.rules[rule_name])}" )
@@ -661,7 +663,7 @@ class EventManager:
                     if "tag_override" in event["tags"] :
                         tag_override=True
 
-                if not approved or (function_override and self._check_functions(event, self.rules[rule_name]) ):  
+                if not approved or (function_override and self._check_functions(event, rule_lookup[rule_name]) ):  
                     approved=False
                     log.info(f"EventManager: {rule_name} FAILED function check")
 
@@ -679,7 +681,8 @@ class EventManager:
 
         results = []
         for rule_name in matching_rules:
-            rule = self.rules[rule_name]
+            rule = copy.deepcopy(self.rules[rule_name])
+            log.info(f"EventManager: Rule: {rule}")
             results.append(self.execute_rule(event, rule))
 
         if results is not None :
@@ -748,7 +751,7 @@ class EventManager:
                 state_list.append(event_data["state"])
 
             state_list.extend(function_states)
-            final_state = combine_states(state_list)  # TODO: add combination method
+            final_state = combine_states(state_list, strategy="average")  # TODO: add combination method
 
             if get_verbose_mode():
                 # event state 
@@ -759,6 +762,7 @@ class EventManager:
             if get_verbose_mode():
                 for area in scope :
                     log.info(f"Scope is {area.name}")
+
             for areas in scope:
                 areas.set_state(final_state)
 
@@ -816,6 +820,9 @@ class EventManager:
 
     def get_area_tree(self) :
         return self.area_tree
+        
+    def get_rules(self) :
+        return copy.deepcopy(self.rules)
 
 class AreaTree:
     """Acts as an interface to the area tree"""
@@ -1440,44 +1447,44 @@ class KaufLight:
         for k, v in kwargs.items():
             if v is not None:
                 new_args[k] = v
+
+        if "rgb_color" in new_args.keys():
+            self.rgb_color = new_args["rgb_color"]
+            log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+            self.color_type = "rgb"
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+
+
+        elif "color_temp" in new_args.keys():
+            self.color_temp = new_args["color_temp"]
+            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
+            self.color_type = "temp"
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+
+        else :
+            log.info(f"Neither rgb_color nor color_temp in {new_args}")
+
+            log.info(f"color_type is {self.color_type} -> {new_args}")
+            if self.color_type == "rgb":
+                rgb=self.get_rgb()
+                
+                log.info(f"rgb_color not in new_args. self rgb is {rgb}")
+                if rgb is not None:
+                    new_args["rgb_color"] = rgb
+                    log.info(f"Supplimenting rgb_color to {rgb}")
+            else :
+                temp=self.get_temperature()
+                log.info(f"color_temp not in new_args. self color_temp is {temp}")
+                if temp is not None:
+                    new_args["color_temp"] = temp
+                    log.info(f"Supplimenting color_temp to {temp}")
+
         if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
             self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
 
 
         else: #Turn on
-
-            if "rgb_color" in new_args.keys():
-                self.rgb_color = new_args["rgb_color"]
-                log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
-                self.color_type = "rgb"
-                log.info(f"color_type is {self.color_type} -> {new_args}")
-
-
-            elif "color_temp" in new_args.keys():
-                self.color_temp = new_args["color_temp"]
-                log.info(f"Caching {self.name} color_temp to {self.color_temp }")
-                self.color_type = "temp"
-                log.info(f"color_type is {self.color_type} -> {new_args}")
-
-            else :
-                log.info(f"Neither rgb_color nor color_temp in {new_args}")
-
-                log.info(f"color_type is {self.color_type} -> {new_args}")
-                if self.color_type == "rgb":
-                    rgb=self.get_rgb()
-                    
-                    log.info(f"rgb_color not in new_args. self rgb is {rgb}")
-                    if rgb is not None:
-                        new_args["rgb_color"] = rgb
-                        log.info(f"Supplimenting rgb_color to {rgb}")
-                else :
-                    temp=self.get_temperature()
-                    log.info(f"color_temp not in new_args. self color_temp is {temp}")
-                    if temp is not None:
-                        new_args["color_temp"] = temp
-                        log.info(f"Supplimenting color_temp to {temp}")
-
 
             try:
                 log.info(f"\nPYSCRIPT: Setting {self.name} {new_args}")
