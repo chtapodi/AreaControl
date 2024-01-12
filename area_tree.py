@@ -379,7 +379,7 @@ def toggle_status(device, scope, *args):
 def toggle_state(device, scope, *args):
     goal_state={
         "status": 1,
-        "color_temp":500
+        "color_temp":350
     }
 
     def does_state_match_goal(state) :
