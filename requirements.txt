@@ -1,0 +1,6 @@
+pyyaml
+acrylic
+requests
+networkx
+matplotlib
+scipy
