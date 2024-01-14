@@ -51,17 +51,19 @@ def get_global_triggers():
         init()
     return global_triggers
 
+
 @service
 def get_total_average_state(key=None):
-    area_tree=get_area_tree()
-    root=area_tree.get_root()
-    state=summarize_state(root.get_state())
-    if key is not None :
-        if key in state :
+    area_tree = get_area_tree()
+    root = area_tree.get_root()
+    state = summarize_state(root.get_state())
+    if key is not None:
+        if key in state:
             return state[key]
-        else :
+        else:
             return None
     return state
+
 
 def get_event_manager():
     global event_manager
@@ -69,8 +71,9 @@ def get_event_manager():
         init()
     return event_manager
 
+
 def get_area_tree():
-    event_manager=get_event_manager()
+    event_manager = get_event_manager()
     return event_manager.get_area_tree()
 
 
@@ -82,17 +85,17 @@ def get_verbose_mode():
 @service
 def create_event(**kwargs):
     log.info(f"Service creating event:  with kwargs {kwargs}")
-    event={}
+    event = {}
     if "name" in kwargs.keys():
         event["device_name"] = kwargs["name"]
 
     elif "device_name" in kwargs.keys():
         event["device_name"] = kwargs["device_name"]
-        
+
     if "device_name" in event.keys():
         if "tags" in kwargs.keys():
             event["tags"] = kwargs["tags"]
-        
+
         if "state" in kwargs.keys():
             event["state"] = kwargs["state"]
 
@@ -102,13 +105,12 @@ def create_event(**kwargs):
         if "state_functions" in kwargs.keys():
             event["state_functions"] = kwargs["state_functions"]
 
-        event_manager=get_event_manager()
+        event_manager = get_event_manager()
         log.info(f"Service creating event: {event}")
         event_manager.create_event(event)
 
     else:
         log.warning(f"No devic_name in serice created event {kwargs}")
-
 
 
 def get_function_by_name(function_name, func_object=None):
@@ -137,7 +139,7 @@ def combine_states(state_list, strategy="last"):
 
     if strategy == "last" or strategy == "first":
         for state in state_list:
-            if state is not None :
+            if state is not None:
                 final_state.update(state)  # Update overwrites previous value
 
     elif strategy == "average":
@@ -148,9 +150,8 @@ def combine_states(state_list, strategy="last"):
                         if value or final_state[key]:
                             final_state[key] = True
                     elif (
-                        type(final_state[key]) == tuple
-                        or type(final_state[key]) == 'TupleWrapper'
-                        or type(final_state[key]) == list
+                        isinstance(final_state[key], (tuple, list))
+                        or final_state[key].__class__.__name__ == "TupleWrapper"
                     ):
                         new_value = []
                         for i in range(len(value)):
@@ -222,7 +223,7 @@ def motion_sensor_mode(*args, **kwargs):
 
 
 ### Scope functions
-def get_entire_scope(device, device_area, *args) :
+def get_entire_scope(device, device_area, *args):
     return [get_area_tree().get_root()]
 
 
@@ -236,18 +237,20 @@ def get_local_scope(device, device_area, *args):
     greatest_parent = get_area_tree().get_greatest_area(device_area.name)
     return [greatest_parent]
 
-#When area names are passed in as args, gets their local scopes
+
+# When area names are passed in as args, gets their local scopes
 def get_area_local_scope(device, device_area, *args):
     log.info(f"get_area_local_scope {args}")
-    areas=[]
-    for area_name in args[0] :
-        area_tree=get_area_tree()   
-        if area_tree.is_area(area_name) :
+    areas = []
+    for area_name in args[0]:
+        area_tree = get_area_tree()
+        if area_tree.is_area(area_name):
             areas.append(area_tree.get_area(area_name))
-        else :
+        else:
             log.info(f"Area {area_name} not found")
     log.info(f"get_area_local_scope {areas[0].name}")
     return areas
+
 
 ### State functions
 # Functions that return a state based on some value
@@ -346,7 +349,7 @@ def get_time_based_state(device, scope, *args):
                     state["brightess"] = current_brightness - 5
             else:
                 state["brightess"] = 50
-    
+
     if "status" in scope_state:
         if scope_state["status"]:
             # if the light is on, don't apply rgb_color or temp
@@ -355,7 +358,7 @@ def get_time_based_state(device, scope, *args):
 
             if "color_temp" in state:
                 del state["color_temp"]
-    else :
+    else:
         log.warning("Status is not in scope_state")
 
     log.info(f"Time based state is {state}")
@@ -369,30 +372,26 @@ def toggle_status(device, scope, *args):
         log.info(f"Area {area.name} state is {states[area.name]}")
     scope_state = summarize_state(states)
     log.info(f"Toggling status is {scope_state}")
-    if "status" in scope_state :
-        if scope_state["status"] : # if on
-            return {"status": 0} # turn off
-        else :
-            return {"status": 1} # turn on
+    if "status" in scope_state:
+        if scope_state["status"]:  # if on
+            return {"status": 0}  # turn off
+        else:
+            return {"status": 1}  # turn on
 
 
 def toggle_state(device, scope, *args):
-    goal_state={
-        "status": 1,
-        "color_temp":350
-    }
+    goal_state = {"status": 1, "color_temp": 350}
 
-    def does_state_match_goal(state) :
-        for key, value in goal_state.items() :
-            if key not in state :
+    def does_state_match_goal(state):
+        for key, value in goal_state.items():
+            if key not in state:
                 log.info(f"Key {key} not in state")
                 return False
-            else :
-                if not state[key] == value :
+            else:
+                if not state[key] == value:
                     log.info(f"Key {key} does not match goal {value}")
                     return False
         return True
-        
 
     states = {}
     for area in scope:
@@ -401,7 +400,7 @@ def toggle_state(device, scope, *args):
     scope_state = summarize_state(states)
 
     log.info(f"Toggling state is {scope_state}")
-    if does_state_match_goal(scope_state) :
+    if does_state_match_goal(scope_state):
         log.info(f"TOG Already in goal state, toggling back")
 
         last_states = {}
@@ -410,26 +409,27 @@ def toggle_state(device, scope, *args):
         last_scope_state = summarize_state(last_states)
         log.info(f"TOG Last state is {last_scope_state}")
 
-        #TODO: Theres gotta be a better way
-        if "temperature" in last_scope_state :
+        # TODO: Theres gotta be a better way
+        if "temperature" in last_scope_state:
             del last_scope_state["temperature"]
 
-        if "temp_color" in last_scope_state :
+        if "temp_color" in last_scope_state:
             del last_scope_state["temp_color"]
 
-        if "name" in last_scope_state :
+        if "name" in last_scope_state:
             del last_scope_state["name"]
 
-        if "device_name" in last_scope_state :
+        if "device_name" in last_scope_state:
             del last_scope_state["device_name"]
 
         return last_scope_state
 
-    else : 
+    else:
         log.info(f"TOG Toggling to {goal_state}")
         return goal_state
 
     return scope_state
+
 
 ###
 
@@ -507,20 +507,25 @@ def merge_states(state_list, name=None):
 
     return merged_state
 
+
 # Color helpers
 
+
 def rgb_to_hsl(r, g, b):
-    h,s,l=Color(rgb=[r, g, b]).hsl
-    l_range=50-100
-    s_range=100
-    s=((l-100)*s_range)/l_range
-    return h,s,l
+    h, s, l = Color(rgb=[r, g, b]).hsl
+    l_range = 50 - 100
+    s_range = 100
+    s = ((l - 100) * s_range) / l_range
+    return h, s, l
+
 
 def hs_to_rgb(h, s):
     return Color(hsl=[h, s, 50]).rgb
 
-def k_to_rgb(k) :
-    r,g,b=convert_K_to_RG
+
+def k_to_rgb(k):
+    r, g, b = convert_K_to_RG
+
 
 class Area:
     def __init__(self, name):
@@ -631,7 +636,7 @@ class EventManager:
 
     def check_event(self, event):
         matching_rules = []
-        rule_lookup=self.get_rules()
+        rule_lookup = self.get_rules()
         for rule_name in rule_lookup.keys():
             # Get devices that names match trigger_prefix
             trigger_prefix = rule_lookup[rule_name]["trigger_prefix"]
@@ -642,40 +647,46 @@ class EventManager:
                     log.info(
                         f"EventManager: Rule {rule_name} prefix [{trigger_prefix}] matches {event['device_name']}"
                     )
-                function_override=False
-                tag_override=False
+                function_override = False
+                tag_override = False
                 if "tags" in event:
-                    if "tag_override" in event["tags"] :
-                        tag_override=True
-                    if "function_override" in event["tags"] :
-                        function_override=True
+                    if "tag_override" in event["tags"]:
+                        tag_override = True
+                    if "function_override" in event["tags"]:
+                        function_override = True
 
-                approved=True
-                if not (tag_override or self._check_tags(event, rule_lookup[rule_name]) ) :
-                    approved=False 
+                approved = True
+                if not (
+                    tag_override or self._check_tags(event, rule_lookup[rule_name])
+                ):
+                    approved = False
                     log.info(f"EventManager: {rule_name} FAILED tag check")
-                    log.info (f"Override: {tag_override} {self._check_tags(event, self.rules[rule_name])}" )
+                    log.info(
+                        f"Override: {tag_override} {self._check_tags(event, self.rules[rule_name])}"
+                    )
 
-                    
                 if get_verbose_mode() and approved:
                     log.info(f"EventManager: {rule_name} Passed tag check")
 
                 if "tags" in event:
-                    if "tag_override" in event["tags"] :
-                        tag_override=True
+                    if "tag_override" in event["tags"]:
+                        tag_override = True
 
-                if not approved or (function_override and self._check_functions(event, rule_lookup[rule_name]) ):  
-                    approved=False
+                if not approved or (
+                    function_override
+                    and self._check_functions(event, rule_lookup[rule_name])
+                ):
+                    approved = False
                     log.info(f"EventManager: {rule_name} FAILED function check")
 
-                        
                 if get_verbose_mode() and approved:
                     log.info(f"EventManager: {rule_name} Passed function check")
 
-                if approved :
+                if approved:
                     matching_rules.append(rule_name)
-                    log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
-
+                    log.info(
+                        f"EventManager: Event: {event} Matches:{matching_rules} Rules"
+                    )
 
         event_tags = event.get("tags", [])
         log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
@@ -686,7 +697,7 @@ class EventManager:
             log.info(f"EventManager: Rule: {rule}")
             results.append(self.execute_rule(event, rule))
 
-        if results is not None :
+        if results is not None:
             return results
 
         return False  # No matching rule
@@ -715,9 +726,9 @@ class EventManager:
                         if function is not None:
                             new_scope = function(device, device_area, args)
                             if new_scope is not None:
-                                if scope is None: # if no scope to compare with, set
+                                if scope is None:  # if no scope to compare with, set
                                     scope = new_scope
-                                else :
+                                else:
                                     edited_scope = []
                                     for area in scope:
                                         if get_verbose_mode():
@@ -728,8 +739,6 @@ class EventManager:
                                             edited_scope.append(area)
                                     log.info(f"Edited scope: {scope}->{edited_scope}")
                                     scope = edited_scope
-                                
-
 
             if scope is None:
                 scope = get_local_scope(device, device_area)
@@ -747,21 +756,23 @@ class EventManager:
 
             # Add state_list to event_state
             state_list = [rule_state]
-            if "state" in event_data :
+            if "state" in event_data:
                 log.info(f"Event data is {event_data}")
                 state_list.append(event_data["state"])
 
             state_list.extend(function_states)
-            final_state = combine_states(state_list, strategy="average")  # TODO: add combination method
+            final_state = combine_states(
+                state_list, strategy="average"
+            )  # TODO: add combination method
 
             if get_verbose_mode():
-                # event state 
+                # event state
                 log.info(f"state_list is {state_list}")
                 log.info(f"Rule state is {rule_state}")
                 log.info(f"Final state is {final_state}")
 
             if get_verbose_mode():
-                for area in scope :
+                for area in scope:
                     log.info(f"Scope is {area.name}")
 
             for areas in scope:
@@ -777,7 +788,9 @@ class EventManager:
         tags = event.get("tags", [])
         if "required_tags" in rule:
             if get_verbose_mode():
-                log.info(f"Checking Required tags {rule['required_tags']} against {tags}")
+                log.info(
+                    f"Checking Required tags {rule['required_tags']} against {tags}"
+                )
             for tag in rule["required_tags"]:
                 if tag not in tags:
                     if get_verbose_mode():
@@ -785,7 +798,9 @@ class EventManager:
                     return False
         if "prohibited_tags" in rule:
             if get_verbose_mode():
-                log.info(f"Checking Prohibited tags {rule['prohibited_tags']} against {tags}")
+                log.info(
+                    f"Checking Prohibited tags {rule['prohibited_tags']} against {tags}"
+                )
             for tag in rule["prohibited_tags"]:
                 if tag in tags:
                     if get_verbose_mode():
@@ -798,7 +813,6 @@ class EventManager:
     def _check_functions(self, event, rule, **kwargs):
         functions = rule.get("functions", [])
         if len(functions) > 0:
-            
             for function_data in functions:
                 # split dict key and value to get functoin name and args
                 function_name = list(function_data.keys())[0]
@@ -809,21 +823,21 @@ class EventManager:
 
                 function = get_function_by_name(function_name)
                 if function is not None:
-                    result =function(event, **kwargs)
+                    result = function(event, **kwargs)
                     if not result:
                         if get_verbose_mode():
                             log.info(f"Function {function_name} failed")
                         return False
-            
+
             log.info(f"Passed function check")
-        return True # If passed all checks or theres no functions to pass
+        return True  # If passed all checks or theres no functions to pass
 
-
-    def get_area_tree(self) :
+    def get_area_tree(self):
         return self.area_tree
-        
-    def get_rules(self) :
+
+    def get_rules(self):
         return copy.deepcopy(self.rules)
+
 
 class AreaTree:
     """Acts as an interface to the area tree"""
@@ -839,8 +853,8 @@ class AreaTree:
             area = self.root_name
         return self.area_tree_lookup[area].get_state()
 
-    def get_root(self) :
-        return self.get_area(self.root_name) 
+    def get_root(self):
+        return self.get_area(self.root_name)
 
     def get_area(self, area_name=None):
         if area_name is None:
@@ -861,9 +875,9 @@ class AreaTree:
     def get_area_tree_lookup(self):
         return self.area_tree_lookup
 
-    def is_area(self, area_name) :
+    def is_area(self, area_name):
         log.info(f"Checking if {area_name} is an area")
-        if area_name in self.get_area_tree_lookup() :
+        if area_name in self.get_area_tree_lookup():
             return True
         return False
 
@@ -1061,7 +1075,7 @@ class Device:
         self.cached_state = state
         return state
 
-    def get_last_state(self) :
+    def get_last_state(self):
         state = self.last_state
         state["name"] = self.name
         self.last_state = state
@@ -1097,7 +1111,6 @@ class Device:
 
             self.driver.set_state(state)
             self.cached_state = state
-
 
     def get(self, value):
         return self.cached_state[value]
@@ -1192,52 +1205,46 @@ class ServiceDriver:
         log.info(f"Creating Service Input: {self.name}")
 
         self.last_state = None
-        self.trigger=self.create_trigger()
+        self.trigger = self.create_trigger()
 
     def add_callback(self, callback):
         pass
 
     @service
     def create_trigger(self, **kwargs):
-
         @service
-        def service_driver_trigger(**kwargs) :
+        def service_driver_trigger(**kwargs):
             log.info(f"Triggering Service: with value: {kwargs}")
-            new_event={}
+            new_event = {}
             if "state" in kwargs:
-                state=kwargs["state"]
+                state = kwargs["state"]
                 if "hs_color" in state:
                     hs_color = state["hs_color"]
-                    rgb=hs_to_rgb(hs_color[0], hs_color[1])
-                    rgb=[rgb[0], rgb[1], rgb[2]]
+                    rgb = hs_to_rgb(hs_color[0], hs_color[1])
+                    rgb = [rgb[0], rgb[1], rgb[2]]
                     state["rgb_color"] = rgb
 
                     del state["hs_color"]
-                
+
                 if "temp" in state:
                     state["color_temp"] = state["temp"]
                     del state["temp"]
                 if "name" in kwargs:
-                    new_event["device_name"]=kwargs["name"]
-                else :
-                    new_event["device_name"]=self.name
+                    new_event["device_name"] = kwargs["name"]
+                else:
+                    new_event["device_name"] = self.name
 
                 log.info(f"state: {state}")
-                new_event["state"]=state
-                
-            get_event_manager().create_event(new_event) 
+                new_event["state"] = state
+
+            get_event_manager().create_event(new_event)
 
         get_global_triggers().append(["Service", service_driver_trigger])
-        
 
-        return service_driver_trigger # return the function created?
+        return service_driver_trigger  # return the function created?
 
-    def get_state(self) :
-        return {"name":self.name}
-
-
-
-
+    def get_state(self):
+        return {"name": self.name}
 
 
 class PresenceSensorDriver:
@@ -1312,7 +1319,7 @@ class KaufLight:
         self.brightness = None
         self.temperature = None
         self.default_color = None
-        self.color_type="rgb"
+        self.color_type = "rgb"
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -1355,8 +1362,8 @@ class KaufLight:
             if self.rgb_color is not None:
                 log.info(f"Color is {color}. Getting cached rgb_color")
                 color = self.rgb_color
-        else :
-            self.rgb_color=color
+        else:
+            self.rgb_color = color
 
         return color if color != "null" else None
 
@@ -1389,13 +1396,13 @@ class KaufLight:
             temperature = state.get(f"light.{self.name}.color_temp")
         except:
             log.warning(f"Unable to get color_temp from {self.name}")
-        
+
         if temperature is None or temperature == "null":
             if self.temperature is not None:
                 log.info(f"temperature is {temperature}. Getting cached temperature")
                 temperature = self.temperature
-        else :
-            self.temperature=temperature
+        else:
+            self.temperature = temperature
 
         return temperature if temperature != "null" else None
 
@@ -1410,8 +1417,8 @@ class KaufLight:
                 state["off"] = 1
 
             del state["status"]
-        else :
-            if not self.is_on(): #if already on, apply values
+        else:
+            if not self.is_on():  # if already on, apply values
                 state["off"] = 1
 
         self.apply_values(**state)
@@ -1432,11 +1439,10 @@ class KaufLight:
             rgb = self.get_rgb()
             if rgb is not None:
                 state["rgb_color"] = rgb
-        else :
+        else:
             color_temp = self.get_temperature()
             if color_temp is not None:
                 state["color_temp"] = color_temp
-
 
         return state
 
@@ -1455,38 +1461,37 @@ class KaufLight:
             self.color_type = "rgb"
             log.info(f"color_type is {self.color_type} -> {new_args}")
 
-
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
             log.info(f"Caching {self.name} color_temp to {self.color_temp }")
             self.color_type = "temp"
             log.info(f"color_type is {self.color_type} -> {new_args}")
 
-        else :
+        else:
             log.info(f"Neither rgb_color nor color_temp in {new_args}")
 
             log.info(f"color_type is {self.color_type} -> {new_args}")
             if self.color_type == "rgb":
-                rgb=self.get_rgb()
-                
+                rgb = self.get_rgb()
+
                 log.info(f"rgb_color not in new_args. self rgb is {rgb}")
                 if rgb is not None:
                     new_args["rgb_color"] = rgb
                     log.info(f"Supplimenting rgb_color to {rgb}")
-            else :
-                temp=self.get_temperature()
+            else:
+                temp = self.get_temperature()
                 log.info(f"color_temp not in new_args. self color_temp is {temp}")
                 if temp is not None:
                     new_args["color_temp"] = temp
                     log.info(f"Supplimenting color_temp to {temp}")
 
-        if "off" in new_args and new_args["off"]:  # If "off" : True is present, turn off
+        if (
+            "off" in new_args and new_args["off"]
+        ):  # If "off" : True is present, turn off
             self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
 
-
-        else: #Turn on
-
+        else:  # Turn on
             try:
                 log.info(f"\nPYSCRIPT: Setting {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
@@ -1516,12 +1521,11 @@ class KaufLight:
 #     area_state=area.get_state()
 #     if area_state["status"] :
 #         log.fatal("Failed turning on test")
-        
+
 #     #toggle status
 #     event = {
 #         "device_name": "service_input_button_single",
 #     }.update(scope)
-
 
 
 @service
@@ -1532,7 +1536,7 @@ def test_event():
     name = "service_input_button_double"
     event = {
         "device_name": name,
-        "scope_functions": [{"get_area_local_scope" : ["kitchen"]}],
+        "scope_functions": [{"get_area_local_scope": ["kitchen"]}],
     }
     log.info(f"\nCreating Event: {event}")
 

@@ -214,7 +214,7 @@ back:
     - laundry_room
     - office
     - hallway
-    - bathroom_1
+    - bathroom
     - bedroom
 
 laundry_room:
@@ -247,7 +247,7 @@ hallway:
   outputs:
     - kauf_hallway
 
-bathroom_1:
+bathroom:
   sub_areas:
     -
   inputs:
