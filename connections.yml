@@ -1,0 +1,14 @@
+connections:
+  - living_room: outside
+  - living_room: bedroom
+  - living_room: dining_room
+  - bedroom: bathroom
+  - dining_room: hallway
+  - dining_room: kitchen
+  - dining_room: outside
+  - kitchen: outside
+  - hallway: bathroom
+  - hallway: office
+  - office: laundry_room
+  
+  

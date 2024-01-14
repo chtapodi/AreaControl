@@ -13,3 +13,5 @@ requirements.txt
 room_config.yml
 room_config.yml.bak
 .prettierrc
+*.png
+*.gif
