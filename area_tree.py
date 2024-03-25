@@ -19,6 +19,7 @@ area_tree = None
 event_manager = None
 global_triggers = None
 verbose_mode = False
+last_set_state={}
 
 
 @service
@@ -82,6 +83,15 @@ def get_verbose_mode():
     return verbose_mode
 
 
+def get_cached_last_set_state():
+    global last_set_state
+    return last_set_state
+
+def set_cached_last_set_state(state):
+    global last_set_state
+    log.info(f"set last set state to {state}")
+    last_set_state = state
+
 @service
 def create_event(**kwargs):
     log.info(f"Service creating event:  with kwargs {kwargs}")
@@ -134,7 +144,14 @@ def get_function_by_name(function_name, func_object=None):
 def combine_states(state_list, strategy="last"):
     final_state = {}
 
-    if strategy == "first":
+    if strategy=="first_state" : # Uses the first valid state in the list 
+        state_list.reverse()
+        for state in state_list:
+            if len(state) > 0:
+                log(f"First valid state is {state}")
+                return state
+
+    if strategy == "first": # Combine, first is least likely to be overwritten
         state_list.reverse()
 
     if strategy == "last" or strategy == "first":
@@ -368,6 +385,10 @@ def get_time_based_state(device, scope, *args):
 
     log.info(f"Time based state is {state}")
     return state
+
+
+def get_last_set_state(device, scope, *args):
+    return get_cached_last_set_state()
 
 
 def toggle_status(device, scope, *args):
@@ -769,10 +790,8 @@ class EventManager:
                         # If function exitst, run it
                         if function is not None:
                             function_state = function(device, scope, args)
+                            # Adds the states to a list to be combined
                             function_states.append(function_state)
-
-
-
 
 
             # Add state_list to event_state
@@ -791,6 +810,9 @@ class EventManager:
                 log.info(f"state_list is {state_list}")
                 log.info(f"Rule state is {rule_state}")
                 log.info(f"Final state is {final_state}")
+
+            set_cached_last_set_state(final_state)
+
 
             if get_verbose_mode():
                 for area in scope:
