@@ -292,13 +292,19 @@ def get_time_based_state(device, scope, *args):
 
     elif now >= 8 and now < 11:
         log.info("it is morning")
-        state["color_temp"] = 500
+        state["brightness"] = 255
+        state["color_temp"] = 350
 
     elif now >= 11 and now < 14:  # 11-2
         log.info("it is midday")
+        state["brightness"] = 255
+        state["color_temp"] = 350
 
     elif now >= 14 and now < 18:  # 2-6
         log.info("it is afternoon")
+        state["brightness"] = 255
+        state["color_temp"] = 350
+
 
     elif now >= 18 and now < 20:  # 6-8
         log.info("it is evening")
