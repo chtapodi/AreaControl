@@ -44,6 +44,7 @@ motion_on:
     status: 1
   state_functions:
     - get_time_based_state: []
+  # combination_strategy: "first_state"
 
 motion_off_after_15:
   trigger_prefix: "motion_"

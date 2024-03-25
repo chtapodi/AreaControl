@@ -801,9 +801,12 @@ class EventManager:
                 state_list.append(event_data["state"])
 
             state_list.extend(function_states)
+            trategy="average"
+            if "combination_strategy" in rule:
+                strategy = rule["combination_strategy"]
             final_state = combine_states(
-                state_list, strategy="average"
-            )  # TODO: add combination method
+                state_list, strategy=strategy
+            )
 
             if get_verbose_mode():
                 # event state
