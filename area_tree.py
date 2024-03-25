@@ -1126,6 +1126,15 @@ class Device:
         self.cached_state = None
         self.area = None
         self.tags = []
+        self.locked=False
+
+    # "Lock" The device so it can't be changed
+    def lock(self, value=True):
+        if value:
+            log.info(f"Locking {self.name}")
+        else:
+            log.info(f"Unlocking {self.name}")
+        self.locked = value
 
     def get_state(self):
         state = self.driver.get_state()
@@ -1160,15 +1169,20 @@ class Device:
         event_manager.create_event(event)
 
     def set_state(self, state):
-        self.add_to_cache(state)
-        state = copy.deepcopy(state)
-        if hasattr(self.driver, "set_state"):
-            state = self.fillout_state_from_cache(state)
-            if get_verbose_mode():
-                log.info(f"Setting state: {state} on {self.name}")
 
-            self.driver.set_state(state)
-            self.cached_state = state
+        if not self.locked:
+            self.add_to_cache(state)
+            state = copy.deepcopy(state)
+            if hasattr(self.driver, "set_state"):
+                state = self.fillout_state_from_cache(state)
+                if get_verbose_mode():
+                    log.info(f"Setting state: {state} on {self.name}")
+
+                self.driver.set_state(state)
+                self.cached_state = state
+        else :
+            if get_verbose_mode():
+                log.info(f"Device {self.name} is locked, not setting state {state}")
 
     def get(self, value):
         return self.cached_state[value]
