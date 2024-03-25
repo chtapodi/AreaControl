@@ -4,6 +4,8 @@ import copy
 import time
 from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
+from homeassistant.const import EVENT_CALL_SERVICE
+
 
 STATE_VALUES = {
     "input": {
@@ -1616,3 +1618,40 @@ def test_event():
 
 
 init()
+
+
+@event_trigger(EVENT_CALL_SERVICE)
+def monitor_service_calls(**kwargs):
+    log.info(f"got EVENT_CALL_SERVICE with kwargs={kwargs}")
+
+# This monitors other methods of settings lights colors and informs the area tree
+@event_trigger(EVENT_CALL_SERVICE)
+def monitor_external_state_setting(**kwargs):
+    if "domain" in kwargs:
+        if kwargs["domain"] == "light":
+            data=kwargs["service_data"]
+            device_names=[]
+            if type(data["entity_id"]) == str:
+                device_names.append(data["entity_id"].strip("light."))
+            elif type(data["entity_id"]) == list:
+                for device_name in data["entity_id"] :
+                    device_names.append(device_name.strip("light."))
+            
+            state={}
+            if "brightness" in data:
+                state["brightness"]=data["brightness"]
+            if "color_temp" in data:
+                state["color_temp"]=data["color_temp"]
+            if "rgb_color" in data:
+                state["rgb_color"]=data["rgb_color"]
+
+            if state == {}:
+                state["off"]=True
+
+            event_manager=get_event_manager()
+
+            log.info(f"Caching {device_names} states to {state}")
+            for device_name in device_names:
+                device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
+                if device is not None:
+                    device.add_to_cache(state)
