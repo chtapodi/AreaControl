@@ -229,8 +229,7 @@ def get_entire_scope(device, device_area, *args):
 
 # get immediate scope
 # make it so they filter by all checking
-def get_immediate_scope(device, device_area, *args):
-    ...
+def get_immediate_scope(device, device_area, *args): ...
 
 
 def get_local_scope(device, device_area, *args):
@@ -708,6 +707,18 @@ class EventManager:
         log.info(f"EVENT {event_data}")
         device = self.get_area_tree().get_device(device_name)
 
+        #For now, assuming functions are boolean, if fail, ignore rule.
+        if "functions" in rule:
+            for function_pair in rule["functions"]:  # function_name:args
+                for function_name, args in function_pair.items():
+                    function = get_function_by_name(function_name)
+                    # If function exists, run it
+                    if function is not None:
+                        if not function(device, args) :
+                            log.info(f"Fuction '{function_name}' failed, not running rule.")
+                            return False
+
+
         if device is not None:
             # get values
             device_area = device.get_area()
@@ -722,7 +733,7 @@ class EventManager:
                 for function_pair in rule["scope_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
                         function = get_function_by_name(function_name)
-                        # If function exitst, run it
+                        # If function exists, run it
                         if function is not None:
                             new_scope = function(device, device_area, args)
                             if new_scope is not None:
@@ -753,6 +764,10 @@ class EventManager:
                         if function is not None:
                             function_state = function(device, scope, args)
                             function_states.append(function_state)
+
+
+
+
 
             # Add state_list to event_state
             state_list = [rule_state]
@@ -816,10 +831,9 @@ class EventManager:
             for function_data in functions:
                 # split dict key and value to get functoin name and args
                 function_name = list(function_data.keys())[0]
-                if get_verbose_mode():
-                    log.info(
-                        f"Checking function {function_name} with args {function_data[function_name]}"
-                    )
+                log.info(
+                    f"Checking function {function_name} with args {function_data[function_name]}"
+                )
 
                 function = get_function_by_name(function_name)
                 if function is not None:
