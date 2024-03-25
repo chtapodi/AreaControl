@@ -31,6 +31,9 @@ HA_only_on_lights:
   trigger_prefix: "service_input_all_"
   scope_functions:
     - get_entire_scope: []
+  functions:
+    -  set_cached_last_set_state: ["$state"]
+    
   # state is passed by service call
 
 motion_on: 

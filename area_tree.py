@@ -87,10 +87,11 @@ def get_cached_last_set_state():
     global last_set_state
     return last_set_state
 
-def set_cached_last_set_state(state):
+def set_cached_last_set_state(device,state):
     global last_set_state
     log.info(f"set last set state to {state}")
     last_set_state = state
+    return True
 
 @service
 def create_event(**kwargs):
@@ -728,22 +729,23 @@ class EventManager:
 
         return False  # No matching rule
 
+    # Looks for keywords in args and replaces them with values
+    def expand_args(self, args, event_data, state):
+        for arg in args :
+            if type(arg) is str:
+                if arg.startswith("$") :
+                    if arg == "$state" :
+                        log.info(f"Expanding $state to {state}")
+                        del args[args.index("$state")]
+                        args.append(state)
+        return args
+
     def execute_rule(self, event_data, rule):
         device_name = event_data["device_name"]
 
         log.info(f"EVENT {event_data}")
         device = self.get_area_tree().get_device(device_name)
 
-        #For now, assuming functions are boolean, if fail, ignore rule.
-        if "functions" in rule:
-            for function_pair in rule["functions"]:  # function_name:args
-                for function_name, args in function_pair.items():
-                    function = get_function_by_name(function_name)
-                    # If function exists, run it
-                    if function is not None:
-                        if not function(device, args) :
-                            log.info(f"Fuction '{function_name}' failed, not running rule.")
-                            return False
 
 
         if device is not None:
@@ -801,7 +803,7 @@ class EventManager:
                 state_list.append(event_data["state"])
 
             state_list.extend(function_states)
-            trategy="average"
+            strategy="average"
             if "combination_strategy" in rule:
                 strategy = rule["combination_strategy"]
             final_state = combine_states(
@@ -814,8 +816,19 @@ class EventManager:
                 log.info(f"Rule state is {rule_state}")
                 log.info(f"Final state is {final_state}")
 
-            set_cached_last_set_state(final_state)
-
+            #For now, assuming functions are boolean, if fail, ignore rule.
+            # This is down here so we have full states for expanding args
+            if "functions" in rule:
+                for function_pair in rule["functions"]:  # function_name:args
+                    for function_name, args in function_pair.items():
+                        function = get_function_by_name(function_name)
+                        
+                        # If function exists, run it
+                        if function is not None:
+                            args=self.expand_args(args, event_data, final_state)
+                            if not function(device, args) :
+                                log.info(f"Fuction '{function_name}' failed, not running rule.")
+                                return False    
 
             if get_verbose_mode():
                 for area in scope:
