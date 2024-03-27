@@ -46,8 +46,9 @@ motion_on:
   state:
     status: 1
   state_functions:
+    - get_last_set_state: []
     - get_time_based_state: []
-  # combination_strategy: "first_state"
+  combination_strategy: "first_state"
 
 motion_off_after_15:
   trigger_prefix: "motion_"
@@ -69,7 +70,9 @@ living_room_zones_on:
   state:
     status: 1
   state_functions:
+    - get_last_set_state: []
     - get_time_based_state: []
+  combination_strategy: "first_state"
 
 # turn_living_room_off:
 #   trigger_prefix: "presence_sensor_living_room"
