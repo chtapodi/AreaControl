@@ -412,15 +412,17 @@ def toggle_state(device, scope, *args):
     goal_state = {"status": 1, "color_temp": 350}
 
     def does_state_match_goal(state):
-        for key, value in goal_state.items():
-            if key not in state:
-                log.info(f"Key {key} not in state")
-                return False
-            else:
-                if not state[key] == value:
-                    log.info(f"Key {key} does not match goal {value}")
-                    return False
-        return True
+        # for key, value in goal_state.items():
+        #     if key not in state:
+        #         log.info(f"Key {key} not in state")
+        #         return False
+        #     else:
+        #         if not state[key] == value:
+        #             log.info(f"Key {key} does not match goal {value}")
+        #             return False
+        # return True
+        log.info(f"Does state match goal {state} == {goal_state}")
+        return get_state_similarity(state, goal_state) > 0.5
 
     states = {}
     for area in scope:
@@ -539,6 +541,51 @@ def merge_states(state_list, name=None):
 
     return merged_state
 
+
+def get_state_similarity(state1, state2):
+
+    state1=copy.deepcopy(state1)
+    if "name" in state1.keys(): del state1["name"]
+    state2=copy.deepcopy(state2)
+    if "name" in state2.keys(): del state2["name"]
+
+    unique_to_state1 = set(state1.keys()) - set(state2.keys())
+
+    # Find keys unique to state2
+    unique_to_state2 = set(state2.keys()) - set(state1.keys())
+
+    unique_keys = unique_to_state1.union(unique_to_state2)
+    log.info(f"UNIQUE keys: {unique_keys}")
+
+    # Get number of shared keys
+    shared_keys = set(state1.keys()).intersection(set(state2.keys()))
+    num_shared=len(shared_keys)
+
+    matching_vals=0
+    for key in shared_keys:
+        if  type(state2[key]) != type(state2[key]):
+            log.info(f"State keys '{key}' have mismatched types: {state1[key]} vs {state2[key]}")
+            num_shared-=1
+
+        if type(state1[key]) == dict:
+            matching_vals+=get_state_similarity(state1[key], state2[key])
+
+        elif type(state1[key]) == list:
+            for i in range(len(state1[key])):
+                if state1[key][i] == state2[key][i]:
+                    matching_vals+=1
+                    num_shared+=1  # Add one to num shared because each item in list is unique
+        elif state1[key] == state2[key]:
+            matching_vals+=1
+
+
+    similarity = matching_vals / (num_shared+len(unique_keys))
+
+    log.info(f"Similarity: {similarity}")
+    log.info(f"\tstate1: {state1}")
+    log.info(f"\tstate2: {state2}")
+
+    return similarity
 
 # Color helpers
 
