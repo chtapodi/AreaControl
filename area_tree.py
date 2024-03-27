@@ -430,13 +430,16 @@ def toggle_state(device, scope, *args):
 
     log.info(f"Toggling state is {scope_state}")
     if does_state_match_goal(scope_state):
-        log.info(f"TOG Already in goal state, toggling back")
+        log.info(f"TOG Already in goal state, toggling to last scope state")
 
         last_states = {}
         for area in scope:
             last_states[area.name] = area.get_last_state()
         last_scope_state = summarize_state(last_states)
         log.info(f"TOG Last state is {last_scope_state}")
+
+        if does_state_match_goal(last_scope_state):
+            log.info(f"TOG Last state is goal state, WHAT TO DO?")
 
         # TODO: Theres gotta be a better way
         if "temperature" in last_scope_state:
@@ -1631,11 +1634,12 @@ def monitor_external_state_setting(**kwargs):
         if kwargs["domain"] == "light":
             data=kwargs["service_data"]
             device_names=[]
-            if type(data["entity_id"]) == str:
-                device_names.append(data["entity_id"].strip("light."))
-            elif type(data["entity_id"]) == list:
-                for device_name in data["entity_id"] :
-                    device_names.append(device_name.strip("light."))
+            if "entity_id" in data:
+                if type(data["entity_id"]) == str:
+                    device_names.append(data["entity_id"].strip("light."))
+                elif type(data["entity_id"]) == list:
+                    for device_name in data["entity_id"] :
+                        device_names.append(device_name.strip("light."))
             
             state={}
             if "brightness" in data:
