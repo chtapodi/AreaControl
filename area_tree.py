@@ -151,7 +151,7 @@ def combine_states(state_list, strategy="last"):
         state_list.reverse()
         for state in state_list:
             if len(state) > 0:
-                log(f"First valid state is {state}")
+                print(f"First valid state is {state}")
                 return state
 
     if strategy == "first": # Combine, first is least likely to be overwritten
