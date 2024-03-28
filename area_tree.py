@@ -410,38 +410,32 @@ def toggle_status(device, scope, *args):
 
 def toggle_state(device, scope, *args):
     goal_state = {"status": 1, "color_temp": 350}
+    opposite_state = {"status": 1, "rgb_color": [255, 149, 51]}
 
     def does_state_match_goal(state):
-        # for key, value in goal_state.items():
-        #     if key not in state:
-        #         log.info(f"Key {key} not in state")
-        #         return False
-        #     else:
-        #         if not state[key] == value:
-        #             log.info(f"Key {key} does not match goal {value}")
-        #             return False
-        # return True
-        log.info(f"Does state match goal {state} == {goal_state}")
-        return get_state_similarity(state, goal_state) > 0.5
+        return get_state_similarity(state, goal_state) >= 0.5
 
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
-        log.info(f"TOG Area {area.name} state is {states[area.name]}")
+        log.info(f"toggle_state: Area {area.name} state is {states[area.name]}")
     scope_state = summarize_state(states)
 
-    log.info(f"Toggling state is {scope_state}")
+    log.info("toggle_state: Does scope_state match goal?")
     if does_state_match_goal(scope_state):
-        log.info(f"TOG Already in goal state, toggling to last scope state")
+        log.info(f"toggle_state: Already in goal state, toggling to last scope state")
 
         last_states = {}
         for area in scope:
             last_states[area.name] = area.get_last_state()
         last_scope_state = summarize_state(last_states)
-        log.info(f"TOG Last state is {last_scope_state}")
+        last_scope_state["status"]=1
+        log.info(f"toggle_state: Last state is {last_scope_state}")
 
+        log.info("toggle_state: Does last_scope_state match goal?")
         if does_state_match_goal(last_scope_state):
-            log.info(f"TOG Last state is goal state, WHAT TO DO?")
+            log.info(f"toggle_state: last scope state matches goal state, applying opposite state")
+            return opposite_state
 
         # TODO: Theres gotta be a better way
         if "temperature" in last_scope_state:
@@ -459,7 +453,7 @@ def toggle_state(device, scope, *args):
         return last_scope_state
 
     else:
-        log.info(f"TOG Toggling to {goal_state}")
+        log.info(f"toggle_state: scope_state does not match goal, toggling to {goal_state}")
         return goal_state
 
     return scope_state
@@ -555,6 +549,7 @@ def get_state_similarity(state1, state2):
     unique_to_state2 = set(state2.keys()) - set(state1.keys())
 
     unique_keys = unique_to_state1.union(unique_to_state2)
+    if "status" in unique_keys: unique_keys.remove("status") # If only one state has status, it probably doesn't matter in the comparison
     log.info(f"UNIQUE keys: {unique_keys}")
 
     # Get number of shared keys
@@ -1195,6 +1190,7 @@ class Device:
         return state
 
     def get_last_state(self):
+        log.info(f"GETTING LAST STATE FOR {self.name}")
         state = self.last_state
         state["name"] = self.name
         self.last_state = state
@@ -1209,6 +1205,11 @@ class Device:
         return state
 
     def add_to_cache(self, state):
+        log.info(f"Adding to cache: state:{state}")
+        log.info(f"last_state was {self.last_state}")
+        log.info(f"cached_state was {self.cached_state}")
+        log.info("last_state is cached_state. cached_state, is state")
+
         self.last_state = self.cached_state
         self.cached_state = copy.deepcopy(state)
 
@@ -1226,12 +1227,11 @@ class Device:
             self.add_to_cache(state)
             state = copy.deepcopy(state)
             if hasattr(self.driver, "set_state"):
-                state = self.fillout_state_from_cache(state)
+                state = self.fillout_state_from_cache(state) #TODO: rethink how this is done in relation to add_to_cache
                 if get_verbose_mode():
                     log.info(f"Setting state: {state} on {self.name}")
 
                 self.driver.set_state(state)
-                self.cached_state = state
         else :
             if get_verbose_mode():
                 log.info(f"Device {self.name} is locked, not setting state {state}")
@@ -1579,8 +1579,10 @@ class KaufLight:
             if v is not None:
                 new_args[k] = v
 
+
+        # If rgb_color is present: save 
         if "rgb_color" in new_args.keys():
-            self.rgb_color = new_args["rgb_color"]
+            self.rgb_color = new_args["rgb_color"] #TODO: Make setting states and caching their values more consistent and a seperate process
             log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
             self.color_type = "rgb"
             log.info(f"color_type is {self.color_type} -> {new_args}")
@@ -1701,8 +1703,8 @@ def monitor_external_state_setting(**kwargs):
 
             event_manager=get_event_manager()
 
-            log.info(f"Caching {device_names} states to {state}")
-            for device_name in device_names:
-                device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
-                if device is not None:
-                    device.add_to_cache(state)
+            # log.info(f"Caching {device_names} states to {state}")
+            # for device_name in device_names:
+            #     device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
+            #     if device is not None:
+            #         device.add_to_cache(state)
