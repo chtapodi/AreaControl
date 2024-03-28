@@ -89,6 +89,15 @@ class Track:
     def get_area(self):
         return self.get_head()[0]
 
+    def get_pretty_string(self):
+        string=""
+        track=self.get_track()
+        for i in range(len(track)):
+            string+=f"{track[i][0]}"
+            if i<len(track)-1: string+=" <- "
+        string+=f" ({self.get_duration():.3f}s)"
+        return string
+
 
 class TrackManager:
     def __init__(self, max_track_length=5, oldest_track=30 * 60, max_tracks=10, score_threshold=2.5):
@@ -251,3 +260,5 @@ def test_track_manager():
     track_manager.add_event("outside")
     log.info("Getting tracks")
     log.info(track_manager.get_tracks())
+    for track in track_manager.tracks:
+        log.info(f"Track: {track.get_pretty_string()}")
