@@ -20,7 +20,10 @@ STATE_VALUES = {
 area_tree = None
 event_manager = None
 global_triggers = None
+tracker_manager=None
+
 verbose_mode = False
+
 last_set_state={}
 
 
@@ -35,6 +38,7 @@ def reset():
     event_manager = None
     global_triggers = None
     verbose_mode = False
+    tracker_manager=None
     init()
 
 
@@ -43,9 +47,11 @@ def init():
     global area_tree
     global event_manager
     global global_triggers
+    global tracker_manager
     global_triggers = []
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
+    tracker_manager = TrackManager()
 
 
 def get_global_triggers():
@@ -73,6 +79,12 @@ def get_event_manager():
     if event_manager is None:
         init()
     return event_manager
+
+def get_tracker_manager():
+    global tracker_manager
+    if tracker_manager is None:
+        init()
+    return tracker_manager
 
 
 def get_area_tree():
@@ -699,8 +711,17 @@ def load_yaml(path):
 
 
 ### Tracker interface
-def update_tracker(device, scope, args):
-    log.info(f"got update_tracker with device={device.name}, scope={scope}, args={args}")
+def update_tracker(device, args):
+    tracker_manager=get_tracker_manager()
+
+    tracker_manager.add_event(device.get_area().name)
+
+    log.info(f"Current tracks")
+    for track in tracker_manager.tracks:
+        log.info(f"Track: {track.get_pretty_string()}")
+
+    return True
+
 
 
 class EventManager:
@@ -1665,10 +1686,13 @@ def test_event():
     # reset()
     # log.info(get_event_manager().area_tree.pretty_print())
     log.info("STARTING TEST EVENT")
-    name = "service_input_button_double"
+    name = "TEST_TRACKER"
     event = {
         "device_name": name,
-        "scope_functions": [{"get_area_local_scope": ["kitchen"]}],
+        "scope": [{"get_area_local_scope": ["office"]}],
+        "functions": {
+            "update_tracker" : []
+        }
     }
     log.info(f"\nCreating Event: {event}")
 

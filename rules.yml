@@ -13,6 +13,8 @@ toggle_light_color:
     - get_area_local_scope: []
   state_functions:
     - toggle_state: []
+  functions :
+    - update_tracker: []
   state: {}
   # state is passed by service call
 
@@ -23,6 +25,7 @@ toggle_light_status:
     - get_area_local_scope: []
   state_functions:
     - toggle_status: []
+  functions :
     - update_tracker: []
   state: {}
   # state is passed by service call
@@ -42,6 +45,7 @@ motion_on:
   required_tags: ["on"]
   functions:
     - motion_sensor_mode: []
+    - update_tracker: []
   scope_functions:
     - get_local_scope: []
   state:
@@ -50,6 +54,7 @@ motion_on:
     - get_last_set_state: []
     - get_time_based_state: []
   combination_strategy: "first_state"
+
 
 motion_off_after_15:
   trigger_prefix: "motion_"

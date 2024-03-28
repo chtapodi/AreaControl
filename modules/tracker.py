@@ -109,8 +109,28 @@ class TrackManager:
         self.graph_manager = GraphManager("./pyscript/connections.yml")
 
     def add_event(self, area, person=None):
-        new_track = Track(area, person)
-        self.try_associate_track(new_track)
+        if self.graph_manager.is_area_in_graph(area):
+            log.info(f"TrackManager: add event: {area}")
+            new_track = Track(area, person)
+            self.try_associate_track(new_track)
+        else :
+            log.info(f"TrackManager: add event: {area} - not in graph")
+
+
+    def cleanup_tracks(self):
+        for track in self.tracks:
+            # remove tracks that have not been updated in too long
+            if time.time() - track.last_event_time > self.oldest_track:
+                self.tracks.remove(track)
+            
+            # trim tracks that have too many events
+            if len(track.get_track()) > self.max_track_length:
+                track._trim()
+
+        if len(self.tracks) > self.max_tracks:
+            log.warning(f"trimming tracks: {self.tracks}")
+            self.tracks = self.tracks[-self.max_tracks :]
+
 
     def try_associate_track(self, new_track):
         log.info(
@@ -184,6 +204,11 @@ class GraphManager:
             self._visualize_graph(self.graph, self.tracks, filename=output_file)
         else:
             log.info("No graph to visualize")
+
+    def is_area_in_graph(self, area):
+        if area in self.graph.nodes:
+            return True
+        return False
 
     # Function to visualize the graph
     def _visualize_graph(self, graph, tracks=None, filename="graph.png"):
