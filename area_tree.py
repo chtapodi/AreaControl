@@ -1684,11 +1684,18 @@ def monitor_external_state_setting(**kwargs):
             data=kwargs["service_data"]
             device_names=[]
             if "entity_id" in data:
+
+                def fix_entity_name(entity_id) :
+                    entity_id=entity_id.strip("light.")
+                    if entity_id.endswith("_"): entity_id+="light"
+                    return entity_id
+
+                log.info(f"Got entity_id {data['entity_id']}")
                 if type(data["entity_id"]) == str:
-                    device_names.append(data["entity_id"].strip("light."))
+                    device_names.append(fix_entity_name(data["entity_id"]))
                 elif type(data["entity_id"]) == list:
                     for device_name in data["entity_id"] :
-                        device_names.append(device_name.strip("light."))
+                        device_names.append(fix_entity_name(device_name))
             
             state={}
             if "brightness" in data:
@@ -1699,12 +1706,19 @@ def monitor_external_state_setting(**kwargs):
                 state["rgb_color"]=data["rgb_color"]
 
             if state == {}:
-                state["off"]=True
+                state["status"]=False
 
             event_manager=get_event_manager()
 
-            # log.info(f"Caching {device_names} states to {state}")
-            # for device_name in device_names:
-            #     device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
-            #     if device is not None:
-            #         device.add_to_cache(state)
+            devices=[]
+            for device_name in device_names:
+                device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
+                if device is not None:
+                    devices.append(device)
+                    device_state=device.get_state()
+                    if device_state is not None:
+                        if get_state_similarity(device_state, state)>=0.5: 
+                            log.info(f"Externally set state is same as {device_name} current state - doing nothing")
+                        else :
+                            log.info(f"{device_name} thinks it is {device_state} - Setting to {state}")
+                            # device.set_state(state)
