@@ -249,16 +249,16 @@ plot_graph()
 # visualize_graph(graph, area_info, filename="house_graph.png")
 
 
-@service
-def test_track_manager():
-    track_manager = TrackManager()
-    track_manager.add_event("laundry_room")
-    track_manager.add_event("kitchen")
-    track_manager.add_event("dining_room")
-    track_manager.add_event("office")
-    track_manager.add_event("hallway")
-    track_manager.add_event("outside")
-    log.info("Getting tracks")
-    log.info(track_manager.get_tracks())
-    for track in track_manager.tracks:
-        log.info(f"Track: {track.get_pretty_string()}")
+# @service
+# def test_track_manager():
+#     track_manager = TrackManager()
+#     track_manager.add_event("laundry_room")
+#     track_manager.add_event("kitchen")
+#     track_manager.add_event("dining_room")
+#     track_manager.add_event("office")
+#     track_manager.add_event("hallway")
+#     track_manager.add_event("outside")
+#     log.info("Getting tracks")
+#     log.info(track_manager.get_tracks())
+#     for track in track_manager.tracks:
+#         log.info(f"Track: {track.get_pretty_string()}")

@@ -23,6 +23,7 @@ toggle_light_status:
     - get_area_local_scope: []
   state_functions:
     - toggle_status: []
+    - update_tracker: []
   state: {}
   # state is passed by service call
 

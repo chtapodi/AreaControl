@@ -5,7 +5,7 @@ import time
 from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
-
+from tracker import TrackManager, Track
 
 STATE_VALUES = {
     "input": {
@@ -164,22 +164,23 @@ def combine_states(state_list, strategy="last"):
 
     elif strategy == "average":
         for state in state_list:
-            for key, value in state.items():
-                if key in final_state.keys():
-                    if key == "status":  # being on overrides being off
-                        if value or final_state[key]:
-                            final_state[key] = True
-                    elif (
-                        isinstance(final_state[key], (tuple, list))
-                        or final_state[key].__class__.__name__ == "TupleWrapper"
-                    ):
-                        new_value = []
-                        for i in range(len(value)):
-                            new_value.append((value[i] + final_state[key][i]) / 2)
+            if state is not None:
+                for key, value in state.items():
+                    if key in final_state.keys():
+                        if key == "status":  # being on overrides being off
+                            if value or final_state[key]:
+                                final_state[key] = True
+                        elif (
+                            isinstance(final_state[key], (tuple, list))
+                            or final_state[key].__class__.__name__ == "TupleWrapper"
+                        ):
+                            new_value = []
+                            for i in range(len(value)):
+                                new_value.append((value[i] + final_state[key][i]) / 2)
+                        else:
+                            final_state[key] = (value + int(final_state[key])) / 2
                     else:
-                        final_state[key] = (value + int(final_state[key])) / 2
-                else:
-                    final_state[key] = value
+                        final_state[key] = value
     else:
         log.warning(f"Strategy {strategy} not found")
     if get_verbose_mode():
@@ -695,6 +696,11 @@ def load_yaml(path):
     with open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
+
+
+### Tracker interface
+def update_tracker(device, scope, args):
+    log.info(f"got update_tracker with device={device.name}, scope={scope}, args={args}")
 
 
 class EventManager:
@@ -1722,3 +1728,19 @@ def monitor_external_state_setting(**kwargs):
                         else :
                             log.info(f"{device_name} thinks it is {device_state} - Setting to {state}")
                             # device.set_state(state)
+
+
+
+@service
+def test_track_manager():
+    track_manager = TrackManager()
+    track_manager.add_event("laundry_room")
+    track_manager.add_event("kitchen")
+    track_manager.add_event("dining_room")
+    track_manager.add_event("office")
+    track_manager.add_event("hallway")
+    track_manager.add_event("outside")
+    log.info("Getting tracks")
+    log.info(track_manager.get_tracks())
+    for track in track_manager.tracks:
+        log.info(f"Track: {track.get_pretty_string()}")
