@@ -32,10 +32,42 @@ class Track:
         log.info(f"new track: {track}")
         self.track = track
 
+    def merge_tracks(self, track_to_merge):
+        current_track_events=self.get_track()
+        track_to_merge_events=track_to_merge.get_track()
+        current_track_age=0
+        track_to_merge_age=0
+        total_events = len(current_track_events) + len(track_to_merge_events)
+        # iterate over both tracks, and using the last event time, add the events to the current track in order
+
+        new_track=[]
+        # iterate over length of total events, adding the newest events first
+        for i in range(total_events) :
+            current_track_event_age = current_track_age + current_track_events[0][1]
+            if len(current_track_events)>0: current_track_event_age+=current_track_events[0][1]
+            track_to_merge_event_age = track_to_merge_age
+            if len(track_to_merge_events)>0: track_to_merge_event_age+=track_to_merge_events[0][1]
+
+            #FIXME: Durations will get all sorts of messed up if zipping
+            if len(track_to_merge_events)>0 and (track_to_merge_event_age+track_to_merge_events[0][1]) < current_track_event_age:
+                new_track.append(track_to_merge_events.pop(0))
+                track_to_merge_age = track_to_merge_event_age
+            elif len(current_track_events)>0 :
+                new_track.append(current_track_events.pop(0))
+                current_track_age = current_track_event_age
+
+        self.track = new_track
+        self.last_event_time = time.time()-self.get_head()[1] # the last event time is now - last event duration
+
+
     def get_head(self):
         return self.get_track()[0]
 
     def get_track(self):
+        """
+        Return the track with updated duration based on the last event time.
+        e.g. Head will have time since last update, other events will have duration
+        """
         track = self.track
         head = track[0]
         duration = time.time() - self.last_event_time
@@ -59,11 +91,12 @@ class Track:
 
 
 class TrackManager:
-    def __init__(self, max_track_length=5, oldest_track=30 * 60, max_tracks=10):
+    def __init__(self, max_track_length=5, oldest_track=30 * 60, max_tracks=10, score_threshold=2.5):
         self.tracks = []
         self.max_track_length = max_track_length
         self.oldest_track = oldest_track
         self.max_tracks = max_tracks
+        self.score_threshold = score_threshold # Tracks with score worse than threshold will not be fused
         self.graph_manager = GraphManager("./pyscript/connections.yml")
 
     def add_event(self, area, person=None):
@@ -79,14 +112,35 @@ class TrackManager:
 
             area = new_track.get_area()
             for track in self.tracks:
-                log.info(f"track: {track}, area: {area}")
                 score = self.graph_manager.get_distance(track.get_area(), area)
+                log.info(f"{track.get_area()}->{area} = {score}")
                 track_scores.append((track, score))
 
-                for track, score in track_scores:
-                    log.info(f"track: {track}, score: {score}")
-        else:
-            log.info("no tracks, adding new track")
+            # get track with lowest score
+            track, score = min(track_scores, key=lambda x: x[1])
+            best_tracks=[]
+            best_score=None
+
+            for track, score in track_scores:
+                if score < self.score_threshold:
+                    if best_score is None or score < best_score:
+                        best_tracks=[track]
+                        best_score = score
+                    elif score == best_score :
+                        best_tracks.append(track)
+
+            if len(best_tracks) > 1: #TODO: pick best track based on velocity, COG
+                log.warning(f"MULTIPLE best tracks: {best_tracks}")
+
+            if len(best_tracks) > 0:
+                best_track=best_tracks[0] 
+                log.info(f"Merging {best_track.get_track()}")
+                best_track.merge_tracks(new_track)
+            else :
+                log.info("All tracks out of range, adding new track")
+                self.tracks.append(new_track)
+        else :
+            log.info("First, Adding new track")
             self.tracks.append(new_track)
 
     def get_tracks(self):
@@ -189,8 +243,11 @@ plot_graph()
 @service
 def test_track_manager():
     track_manager = TrackManager()
-    track_manager.add_event("living_room")
-    track_manager.add_event("dining_room")
+    track_manager.add_event("laundry_room")
     track_manager.add_event("kitchen")
+    track_manager.add_event("dining_room")
+    track_manager.add_event("office")
+    track_manager.add_event("hallway")
     track_manager.add_event("outside")
+    log.info("Getting tracks")
     log.info(track_manager.get_tracks())
