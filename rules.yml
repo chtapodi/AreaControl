@@ -71,6 +71,7 @@ living_room_zones_on:
   required_tags: ["on", "presence"]
   functions:
     - motion_sensor_mode: []
+    - update_tracker: []
   scope_functions:
     - get_local_scope: []
   state:
