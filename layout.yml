@@ -233,7 +233,7 @@ office:
     -
   inputs:
     motion:
-      # - "motion_sensor_office"
+      - "motion_sensor_office"
   outputs:
     - kauf_office_light
     - kauf_square_lamp
