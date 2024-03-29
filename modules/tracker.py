@@ -75,6 +75,7 @@ class Track:
         return track
 
     def _trim(self):
+        log.info(f"trimming track: {self.track} to {self.max_length}")
         if len(self.track) > self.max_length:
             log.info(f"trimming track: {self.track}")
             self.track = self.track[-self.max_length :]
@@ -113,8 +114,17 @@ class TrackManager:
             log.info(f"TrackManager: add event: {area}")
             new_track = Track(area, person)
             self.try_associate_track(new_track)
+            self.cleanup_tracks()
+            self.output_stats()
         else :
             log.info(f"TrackManager: add event: {area} - not in graph")
+
+    def output_stats(self) :
+        heads=[]
+        for track in self.tracks:
+            heads.append(track.get_head()[0])
+        log.info(f"heads: {heads}")
+        state.set("pyscript.last_heads", heads)
 
 
     def cleanup_tracks(self):
@@ -246,7 +256,7 @@ class GraphManager:
                 nx.draw_networkx_edges(graph, pos, edgelist=track, edge_color="cyan")
 
         plt.axis("off")
-
+        log.info(f"Saving graph to {filename}")
         plt.savefig(filename)  # Save the image
 
     def get_distance(self, area_1, area_2):

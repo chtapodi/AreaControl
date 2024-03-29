@@ -563,7 +563,6 @@ def get_state_similarity(state1, state2):
 
     unique_keys = unique_to_state1.union(unique_to_state2)
     if "status" in unique_keys: unique_keys.remove("status") # If only one state has status, it probably doesn't matter in the comparison
-    log.info(f"UNIQUE keys: {unique_keys}")
 
     # Get number of shared keys
     shared_keys = set(state1.keys()).intersection(set(state2.keys()))
@@ -586,13 +585,7 @@ def get_state_similarity(state1, state2):
         elif state1[key] == state2[key]:
             matching_vals+=1
 
-
     similarity = matching_vals / (num_shared+len(unique_keys))
-
-    log.info(f"Similarity: {similarity}")
-    log.info(f"\tstate1: {state1}")
-    log.info(f"\tstate2: {state2}")
-
     return similarity
 
 # Color helpers
