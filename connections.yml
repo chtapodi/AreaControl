@@ -1,7 +1,6 @@
 connections:
-  - living_room: outside
-  - living_room: bedroom
-  - living_room: dining_room
+  # - living_room: outside
+  # - living_room: dining_room
   - bedroom: bathroom
   - dining_room: hallway
   - dining_room: kitchen
@@ -10,5 +9,36 @@ connections:
   - hallway: bathroom
   - hallway: office
   - office: laundry_room
+
+  - living_room_hallway: bedroom
+  - living_room_hallway: living_room_door
+  - living_room_door: bedroom
+  - living_room_door: outside
+  - living_room_door: living_room_front
+  - living_room_front: living_room_hallway
+  - living_room_front: chair_0
+  - living_room_front: chair_1
+  - chair_1: living_room_back
+  - living_room_front: living_room_middle
+  - living_room_middle: couch_0
+  - living_room_middle: couch_1
+  - living_room_middle: couch_2
+  - couch_0: couch_1 
+  - couch_0: couch_2
+  - living_room_hallway: dining_room_hallway
+  - dining_room_hallway: dining_room_0
+  - dining_room_hallway: dining_room_1
+  - dining_room_0: dining_room_1
+  - dining_room_0: dining_room_2
+  - dining_room_1: dining_room_3
+  - dining_room_3: living_room_back
+  - living_room_back: living_room_middle
+  - dining_room_2: outside
+  - dining_room_0: kitchen
+  - dining_room_hallway: kitchen
+
+
+
+
   
   
