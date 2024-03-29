@@ -112,7 +112,7 @@ class TrackManager:
     def add_event(self, area, person=None):
         if self.graph_manager.is_area_in_graph(area):
             log.info(f"TrackManager: add event: {area}")
-            new_track = Track(area, person)
+            new_track = Track(area)
             self.try_associate_track(new_track)
             self.cleanup_tracks()
             self.output_stats()
