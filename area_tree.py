@@ -5,7 +5,7 @@ import time
 from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
-from tracker import TrackManager, Track
+from tracker import TrackManager, Track, Event
 
 STATE_VALUES = {
     "input": {
@@ -1752,12 +1752,25 @@ def monitor_external_state_setting(**kwargs):
 def test_track_manager():
     track_manager = TrackManager()
     track_manager.add_event("laundry_room")
-    track_manager.add_event("kitchen")
-    track_manager.add_event("dining_room")
+    time.sleep(0.1)
     track_manager.add_event("office")
+    time.sleep(0.1)
+
     track_manager.add_event("hallway")
+    time.sleep(0.1)
+    track_manager.add_event("kitchen")
     track_manager.add_event("outside")
+    
+    track_manager.add_event("hallway")
+
+    track_manager.add_event("office")
+    track_manager.add_event("laundry_room")
     log.info("Getting tracks")
     log.info(track_manager.get_tracks())
     for track in track_manager.tracks:
         log.info(f"Track: {track.get_pretty_string()}")
+
+
+    
+
+test_track_manager()

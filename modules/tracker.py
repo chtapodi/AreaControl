@@ -2,6 +2,8 @@ import yaml
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
+import copy
+
 
 
 @pyscript_compile
@@ -9,6 +11,10 @@ def load_yaml(path):
     with open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
+
+
+def are_events_same(event1, event2):
+    return event1.get_area() == event2.get_area()
 
 
 class Event:
@@ -71,11 +77,19 @@ class Event:
 
 
     def get_pretty_string(self):
-        duration=self.get_duration()
+        log.info(f"Event: GETTING PRETTY STRING for {self.area}")
+        duration=self.get_time_since_last_trigger()
         if duration is not None:
             return str(f"{self.area}({duration:.3f})")
         else :
             return str(f"{self.area}")
+
+    def get_copy(self) :
+        copy=Event(self.area)
+        copy.first_presence_time=self.first_presence_time
+        copy.last_rising_edge_time=self.last_rising_edge_time
+        copy.last_falling_edge_time=self.last_falling_edge_time
+        return copy
 
 
 class Track:
@@ -85,102 +99,109 @@ class Track:
 
     """
 
-    def __init__(self, area, max_length=5):
-        self.track = [(area, 0)]  # First event
+    def __init__(self, max_length=5):
+        self.event_list = []  # First event
         self.max_length = max_length
         self.last_event_time = time.time()
 
-    def add_event(self, area, person=None):
+    def add_event(self, area, impulse=True):
         self.last_event_time = time.time()
-
-        if self.get_head()[0] == area:
-            log.info(f"TrackManager: add event: {area} - already head")
+        if len(self.event_list) == 0:
+            self.event_list.append(Event(area))
         else :
-            track = self.get_track()
-            new_event = (area, 0)
-            # add new event to track start
-            track.insert(0, new_event)
-            log.info(f"new track: {track}")
-            self.track = track
+            if self.get_head().get_area() == area:
+                log.info(f"TrackManager: add event: {area} - already head")
+                if impulse: self.get_head().impulse()
+                else : self.get_head().presence()
+            else :
+                track = self.get_track_list()
+                new_event=Event(area)
+                # add new event to track start
+                track.insert(0, new_event)
+                log.info(f"new track: {track}")
+                self.event_list = track
+
+        log.info(f"NEW EVENT ADDED {self.get_pretty_string()}")
 
     def merge_tracks(self, track_to_merge):
-        current_track_events=self.get_track()
-        track_to_merge_events=track_to_merge.get_track()
-        current_track_age=0
-        track_to_merge_age=0
-        total_events = len(current_track_events) + len(track_to_merge_events)
-        # iterate over both tracks, and using the last event time, add the events to the current track in order
+        log.info("Let us merge")
+        new_event_list=[]
+        current_track=self.get_copy()
+        log.info(f"Current track: {current_track}")
+        # current_track=copy.deepcopy(current_track) #deepcopy not working
 
-        new_track=[]
-        # iterate over length of total events, adding the newest events first
-        last_area = None
-        last_age = 0
-        for i in range(total_events) :
-            current_track_event_age = current_track_age + current_track_events[0][1]
-            if len(current_track_events)>0: current_track_event_age+=current_track_events[0][1]
-            track_to_merge_event_age = track_to_merge_age
-            if len(track_to_merge_events)>0: track_to_merge_event_age+=track_to_merge_events[0][1]
+        track_to_merge=track_to_merge.get_copy()
 
-            if len(track_to_merge_events)>0 and \
-               (track_to_merge_event_age+track_to_merge_events[0][1]) < current_track_event_age:
-                current_area, current_duration = track_to_merge_events.pop(0)
-                if last_area == current_area:
-                    new_track[-1] = (current_area, last_age+current_duration)
-                else:
-                    new_track.append((current_area, current_duration))
-                track_to_merge_age = track_to_merge_event_age
-                last_area = current_area
-                last_age = current_duration
-            elif len(current_track_events)>0 :
-                current_area, current_duration = current_track_events.pop(0)
-                if last_area == current_area:
-                    new_track[-1] = (current_area, last_age+current_duration)
-                else:
-                    new_track.append((current_area, current_duration))
-                current_track_age = current_track_event_age
-                last_area = current_area
-                last_age = current_duration
+        log.info(f"merging {track_to_merge} with {current_track}")
 
-        self.track = new_track
-        self.last_event_time = time.time()-self.get_head()[1] # the last event time is now - last event duration
+        # Start the new track with the first event
+        if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
+            new_event_list.append(track_to_merge.pop(0))
+        else :
+            new_event_list.append(current_track.pop(0))
 
+        log.info(f"Selected first event {new_event_list[0]}")
+
+        while len(current_track) > 0:
+
+            while len(track_to_merge) > 0:
+
+                if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
+                    new_event_list.insert(0, track_to_merge.pop(0))
+                else :
+                    break
+
+            new_event_list.insert(0, current_track.pop(0))
+
+        log.info(f"new merged track: {new_event_list}")
+        self.event_list=new_event_list
+
+
+    def get_copy(self) :
+        copy=[]
+        for event in self.get_track_list():
+            copy.append(event.get_copy())
+        return copy
 
     def get_head(self):
-        return self.get_track()[0]
+        if len(self.get_track_list()) == 0:
+            return None
+        return self.get_track_list()[0]
 
-    def get_track(self):
-        """
-        Return the track with updated duration based on the last event time.
-        e.g. Head will have time since last update, other events will have duration
-        """
-        track = self.track
-        head = track[0]
-        duration = time.time() - self.last_event_time
-        track[0] = (head[0], duration)
-        return track
+    def get_track_list(self):
+
+        return self.event_list
 
     def _trim(self):
-        log.info(f"trimming track: {self.track} to {self.max_length}")
-        if len(self.track) > self.max_length:
-            self.track = self.track[:self.max_length]
-            log.info(f"trimmed track: {self.track}")
+        log.info(f"trimming track: {self.event_list} to {self.max_length}")
+        if len(self.event_list) > self.max_length:
+            self.event_list = self.event_list[:self.max_length]
+            log.info(f"trimmed track: {self.event_list}")
 
     def get_duration(self):
-        total = 0
-        for event in self.get_track():
-            total += event[1]
-        return total
+        start=self.get_first_event().get_time_since_first_trigger()
+        end=self.get_last_event().get_time_since_last_trigger()
+
+
+    def get_first_event(self) :
+        return self.get_track_list()[-1]
+
+    def get_last_event(self) :
+        return self.get_track_list()[0] 
+
 
     def get_area(self):
-        return self.get_head()[0]
+        head=self.get_head()
+        if head is None: return None
+        return head.get_area()
 
     def get_pretty_string(self):
         string="⚬"
-        track=self.get_track()
-        for i in range(len(track)):
-            string+=f"{track[i][0]}({track[i][1]:.3f})"
-            if i<len(track)-1: string+=" <- "
-        string+=f" =({self.get_duration():.3f}s)"
+        track=self.get_track_list()
+        for i, event in enumerate(track):
+            string+=f"{event.get_pretty_string()}"
+            if i < len(track)-1:
+                string+=" -> "
         return string
 
 
@@ -196,7 +217,8 @@ class TrackManager:
     def add_event(self, area, person=None):
         if self.graph_manager.is_area_in_graph(area):
             log.info(f"TrackManager: add event: {area}")
-            new_track = Track(area)
+            new_track = Track()
+            new_track.add_event(area)
             self.try_associate_track(new_track)
             self.cleanup_tracks()
             self.output_stats()
@@ -218,7 +240,7 @@ class TrackManager:
                 self.tracks.remove(track)
             
             # trim tracks that have too many events
-            if len(track.get_track()) > self.max_track_length:
+            if len(track.get_track_list()) > self.max_track_length:
                 track._trim()
 
         if len(self.tracks) > self.max_tracks:
@@ -228,7 +250,7 @@ class TrackManager:
 
     def try_associate_track(self, new_track):
         log.info(
-            f"trying to associate track: {new_track.get_track()} with {self.get_tracks()}"
+            f"trying to associate track: {new_track.get_track_list()} with {self.get_tracks()}"
         )
         if len(self.get_tracks() )> 0:
             track_scores = []
@@ -257,7 +279,7 @@ class TrackManager:
 
             if len(best_tracks) > 0:
                 best_track=best_tracks[0] 
-                log.info(f"Merging {best_track.get_track()}")
+                log.info(f"Merging {best_track.get_track_list()}")
                 best_track.merge_tracks(new_track)
             else :
                 log.info("All tracks out of range, adding new track")
@@ -269,7 +291,7 @@ class TrackManager:
     def get_tracks(self):
         tracks = []
         for track in self.tracks:
-            tracks.append(track.get_track())
+            tracks.append(track.get_track_list())
 
         return tracks
 
