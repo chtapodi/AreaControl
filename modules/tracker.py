@@ -77,8 +77,7 @@ class Track:
     def _trim(self):
         log.info(f"trimming track: {self.track} to {self.max_length}")
         if len(self.track) > self.max_length:
-            log.info(f"trimming track: {self.track}")
-            self.track = self.track[-self.max_length :]
+            self.track = self.track[:self.max_length]
             log.info(f"trimmed track: {self.track}")
 
     def get_duration(self):
@@ -208,7 +207,7 @@ class GraphManager:
         graph.add_edges_from(connection_pairs)
         return graph
 
-    def visualize_graph(self, output_file="graph.png"):
+    def visualize_graph(self, output_file="pyscript/graph2.png"):
         log.info(f"graph: {self.graph}")
         if self.graph is not None:
             self._visualize_graph(self.graph, self.tracks, filename=output_file)
@@ -220,44 +219,37 @@ class GraphManager:
             return True
         return False
 
+
     # Function to visualize the graph
-    def _visualize_graph(self, graph, tracks=None, filename="graph.png"):
-        pos = nx.kamada_kawai_layout(graph)  # Adjust layout if needed
-        # colors = [
-        #     "cyan" if area_info[node]["state"] == "occupied" else "green"  # Cyan for occupied areas
-        #     for node in graph.nodes
-        # ]
+    #TODO: Make it so the graph is labeled with the names of the nodes
+    def _visualize_graph(self, graph, tracks=None, filename="pyscript/graph2.png", **kwargs,):
+        pos = nx.kamada_kawai_layout(graph, scale=50)
 
-        kwargs = {}
-        if tracks is not None:
-            visit_numbers = {}  # Initialize dictionary for visit order
-            for i, track in enumerate(tracks):
-                for j, (start, end) in enumerate(track):
-                    visit_numbers[start] = i * 10 + j + 1  # Assign unique numbers
+        colors = []
+        for node in graph.nodes:
+            if node=="hallway":
+                colors.append("cyan")
+            else:
+                colors.append("white")
 
-            labels = {
-                node: f"{node}\n{visit_numbers.get(node, '')}" for node in graph.nodes
-            }  # Add numbers to labels
-            kwargs["labels"] = labels
-            kwargs["with_labels"] = True
 
-        nx.draw(
-            graph,
-            pos,
-            font_color="black",
-            arrows=True,
-            arrowsize=10,
-            node_size=400,
-            **kwargs,
-        )
-
-        if tracks:
-            for track in tracks:
-                nx.draw_networkx_edges(graph, pos, edgelist=track, edge_color="cyan")
+        options = {
+            "font_size": 8,
+            "node_size": 500,
+            "node_color": colors,
+            "edgecolors": "black",
+            "linewidths": 2,
+            "width": 1,
+            "with_labels":True,
+        }
+        nx.draw_networkx(graph, pos, **options)
 
         plt.axis("off")
         log.info(f"Saving graph to {filename}")
         plt.savefig(filename)  # Save the image
+        plt.clf()
+        plt.close()
+        
 
     def get_distance(self, area_1, area_2):
         shortest_path_length = nx.shortest_path_length(self.graph, area_1, area_2)

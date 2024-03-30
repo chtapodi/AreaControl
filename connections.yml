@@ -6,6 +6,7 @@ connections:
   - dining_room: kitchen
   - dining_room: outside
   - kitchen: outside
+  - kitchen: hallway
   - hallway: bathroom
   - hallway: office
   - office: laundry_room
