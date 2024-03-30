@@ -50,7 +50,7 @@ class Event:
         elif self.last_rising_edge_time != self.first_presence_time: # If there have been multiple impulses, return difference
             return self.last_rising_edge_time - self.first_presence_time 
         else : # If only one impulse, duration is 0
-
+            log.info("Duration is 0")
             return 0
 
     def get_time_since_first_trigger(self) :
@@ -75,10 +75,15 @@ class Event:
         # Triggering ending presence
         self.last_falling_edge_time=time.time()
 
+    def end(self, end_timestamp=None) :
+        log.info("ENDING")
+        if end_timestamp is not None:
+            self.last_falling_edge_time=end_timestamp
+        else :
+            self.absence()
 
     def get_pretty_string(self):
-        log.info(f"Event: GETTING PRETTY STRING for {self.area}")
-        duration=self.get_time_since_last_trigger()
+        duration=self.get_duration()
         if duration is not None:
             return str(f"{self.area}({duration:.3f})")
         else :
@@ -90,6 +95,9 @@ class Event:
         copy.last_rising_edge_time=self.last_rising_edge_time
         copy.last_falling_edge_time=self.last_falling_edge_time
         return copy
+
+    def get_first_presence_time(self) :
+        return self.first_presence_time
 
 
 class Track:
@@ -103,6 +111,7 @@ class Track:
         self.event_list = []  # First event
         self.max_length = max_length
         self.last_event_time = time.time()
+        self.first_event_time=self.last_event_time
 
     def add_event(self, area, impulse=True):
         self.last_event_time = time.time()
@@ -116,6 +125,7 @@ class Track:
             else :
                 track = self.get_track_list()
                 new_event=Event(area)
+                self.get_head().end() #end last Event
                 # add new event to track start
                 track.insert(0, new_event)
                 log.info(f"new track: {track}")
@@ -124,37 +134,72 @@ class Track:
         log.info(f"NEW EVENT ADDED {self.get_pretty_string()}")
 
     def merge_tracks(self, track_to_merge):
+        """
+        Merges the given track to merge with the current track.
+
+        Parameters:
+            track_to_merge (list): The track to merge with the current track.
+
+
+        Description:
+        This function merges the given track to merge with the current track. It creates a new event list and initializes it with the first event of the current track. Then, it iterates through the events of the track to merge and inserts them into the new event list based on their time since the last trigger.
+
+        Note:
+        - Assumes that tracks and their events are monotonic
+        """
+        
         log.info("Let us merge")
         new_event_list=[]
         current_track=self.get_copy()
         log.info(f"Current track: {current_track}")
         # current_track=copy.deepcopy(current_track) #deepcopy not working
 
-        track_to_merge=track_to_merge.get_copy()
+        log.info(f"merging {track_to_merge.get_pretty_string()} with {self.get_pretty_string()}")
 
-        log.info(f"merging {track_to_merge} with {current_track}")
+        track_to_merge_event_list=track_to_merge.get_copy()
 
-        # Start the new track with the first event
-        if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
-            new_event_list.append(track_to_merge.pop(0))
+        if self.get_last_event_time() < track_to_merge.get_first_presence_time():
+            # If entire current track is older than entire new track, can just add new track to end of current track
+            for event in track_to_merge.get_track_list():
+                if (self.event_list[0].get_duration() == 0) : 
+                    self.event_list[0].end(event.get_first_presence_time())
+                self.event_list.insert(0,event)
+
+            self.last_event_time=track_to_merge.get_last_event_time()
+
         else :
-            new_event_list.append(current_track.pop(0))
 
-        log.info(f"Selected first event {new_event_list[0]}")
+            # Start the new track with the first event
+            event_to_add=None
+            if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
+                event_to_add=track_to_merge.pop(0)
+            else :
+                event_to_add=current_track.pop(0)
 
-        while len(current_track) > 0:
+            if (new_event_list[0].get_duration() == 0) : 
+                new_event_list[0].end(event_to_add.get_first_presence_time())
+
+
+            new_event_list.append(event_to_add)
+
+            # Add the rest of the events in order of them happening
+            while len(current_track) > 0:
+
+                while len(track_to_merge) > 0:
+
+                    if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
+                        new_event_list[0].end(track_to_merge[0].get_first_presence_time())
+                        new_event_list.append(track_to_merge.pop(0))
+                    else :
+                        break
+
+                new_event_list.append( current_track.pop(0))
 
             while len(track_to_merge) > 0:
+                new_event_list.append( track_to_merge.pop(0))
 
-                if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
-                    new_event_list.insert(0, track_to_merge.pop(0))
-                else :
-                    break
-
-            new_event_list.insert(0, current_track.pop(0))
-
-        log.info(f"new merged track: {new_event_list}")
-        self.event_list=new_event_list
+            log.info(f"new merged track: {new_event_list}")
+            self.event_list=new_event_list
 
 
     def get_copy(self) :
@@ -186,6 +231,12 @@ class Track:
     def get_first_event(self) :
         return self.get_track_list()[-1]
 
+    def get_last_event_time(self) :
+        return self.last_event_time
+
+    def get_first_presence_time(self) :
+        return self.first_event_time
+
     def get_last_event(self) :
         return self.get_track_list()[0] 
 
@@ -201,7 +252,7 @@ class Track:
         for i, event in enumerate(track):
             string+=f"{event.get_pretty_string()}"
             if i < len(track)-1:
-                string+=" -> "
+                string+=" <- "
         return string
 
 

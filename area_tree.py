@@ -1750,6 +1750,7 @@ def monitor_external_state_setting(**kwargs):
 
 @service
 def test_track_manager():
+    log.info("STARTING TEST TRACK MANAGER")
     track_manager = TrackManager()
     track_manager.add_event("laundry_room")
     time.sleep(0.1)
@@ -1759,12 +1760,12 @@ def test_track_manager():
     track_manager.add_event("hallway")
     time.sleep(0.1)
     track_manager.add_event("kitchen")
-    track_manager.add_event("outside")
-    
-    track_manager.add_event("hallway")
+    # track_manager.add_event("outside")
 
-    track_manager.add_event("office")
-    track_manager.add_event("laundry_room")
+    # track_manager.add_event("hallway")
+
+    # track_manager.add_event("office")
+    # track_manager.add_event("laundry_room")
     log.info("Getting tracks")
     log.info(track_manager.get_tracks())
     for track in track_manager.tracks:
