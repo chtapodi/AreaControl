@@ -45,13 +45,13 @@ motion_on:
   required_tags: ["on"]
   functions:
     - motion_sensor_mode: []
-    - update_tracker: []
   scope_functions:
     - get_local_scope: []
   state:
     status: 1
   state_functions:
     - get_last_set_state: []
+    - update_tracker: []
     - get_time_based_state: []
   combination_strategy: "first_state"
 

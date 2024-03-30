@@ -24,13 +24,17 @@ class Track:
         self.last_event_time = time.time()
 
     def add_event(self, area, person=None):
-        track = self.get_track()
-        new_event = (area, 0)
         self.last_event_time = time.time()
-        # add new event to track start
-        track.insert(0, new_event)
-        log.info(f"new track: {track}")
-        self.track = track
+
+        if self.get_head()[0] == area:
+            log.info(f"TrackManager: add event: {area} - already head")
+        else :
+            track = self.get_track()
+            new_event = (area, 0)
+            # add new event to track start
+            track.insert(0, new_event)
+            log.info(f"new track: {track}")
+            self.track = track
 
     def merge_tracks(self, track_to_merge):
         current_track_events=self.get_track()
@@ -42,19 +46,33 @@ class Track:
 
         new_track=[]
         # iterate over length of total events, adding the newest events first
+        last_area = None
+        last_age = 0
         for i in range(total_events) :
             current_track_event_age = current_track_age + current_track_events[0][1]
             if len(current_track_events)>0: current_track_event_age+=current_track_events[0][1]
             track_to_merge_event_age = track_to_merge_age
             if len(track_to_merge_events)>0: track_to_merge_event_age+=track_to_merge_events[0][1]
 
-            #FIXME: Durations will get all sorts of messed up if zipping
-            if len(track_to_merge_events)>0 and (track_to_merge_event_age+track_to_merge_events[0][1]) < current_track_event_age:
-                new_track.append(track_to_merge_events.pop(0))
+            if len(track_to_merge_events)>0 and \
+               (track_to_merge_event_age+track_to_merge_events[0][1]) < current_track_event_age:
+                current_area, current_duration = track_to_merge_events.pop(0)
+                if last_area == current_area:
+                    new_track[-1] = (current_area, last_age+current_duration)
+                else:
+                    new_track.append((current_area, current_duration))
                 track_to_merge_age = track_to_merge_event_age
+                last_area = current_area
+                last_age = current_duration
             elif len(current_track_events)>0 :
-                new_track.append(current_track_events.pop(0))
+                current_area, current_duration = current_track_events.pop(0)
+                if last_area == current_area:
+                    new_track[-1] = (current_area, last_age+current_duration)
+                else:
+                    new_track.append((current_area, current_duration))
                 current_track_age = current_track_event_age
+                last_area = current_area
+                last_age = current_duration
 
         self.track = new_track
         self.last_event_time = time.time()-self.get_head()[1] # the last event time is now - last event duration
@@ -90,12 +108,12 @@ class Track:
         return self.get_head()[0]
 
     def get_pretty_string(self):
-        string=""
+        string="⚬"
         track=self.get_track()
         for i in range(len(track)):
-            string+=f"{track[i][0]}"
+            string+=f"{track[i][0]}({track[i][1]:.3f})"
             if i<len(track)-1: string+=" <- "
-        string+=f" ({self.get_duration():.3f}s)"
+        string+=f" =({self.get_duration():.3f}s)"
         return string
 
 
@@ -119,11 +137,11 @@ class TrackManager:
             log.info(f"TrackManager: add event: {area} - not in graph")
 
     def output_stats(self) :
-        heads=[]
+        track_data=""
         for track in self.tracks:
-            heads.append(track.get_head()[0])
-        log.info(f"heads: {heads}")
-        state.set("pyscript.last_heads", heads)
+            track_data+=track.get_pretty_string()+"\n"
+        log.info(f"track_data: {track_data}")
+        state.set("pyscript.last_heads", track_data)
 
 
     def cleanup_tracks(self):
