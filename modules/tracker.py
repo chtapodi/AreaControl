@@ -11,6 +11,73 @@ def load_yaml(path):
     return data
 
 
+class Event:
+    def __init__(self, area, inpulse=True):
+        """
+        Creates a new event starting at now.
+        An Event is an impulse if there is no status on ongoing presence.
+        This event can continued to be updated with presence until it is triggerd absence.
+
+        Design philosophy should attempt to keep it so one event only is updated until a new area is triggered.  
+
+        Parameters:
+            area (str): The area associated with the event.
+            inpulse (bool, optional): Determines if the Event is ongoing or not.
+        """
+        self.first_presence_time=time.time()
+        self.area = area
+        self.last_rising_edge_time=self.first_presence_time
+        if not inpulse:
+            self.last_falling_edge_time=self.first_presence_time
+        else :
+            self.last_falling_edge_time=None
+
+    def get_presence(self) :
+        return self.last_falling_edge_time is not None
+
+    def get_area(self):
+        return self.area
+
+    def get_duration(self):
+        if self.last_falling_edge_time is not None:
+            return self.last_falling_edge_time - self.first_presence_time
+        elif self.last_rising_edge_time != self.first_presence_time: # If there have been multiple impulses, return difference
+            return self.last_rising_edge_time - self.first_presence_time 
+        else : # If only one impulse, duration is 0
+
+            return 0
+
+    def get_time_since_first_trigger(self) :
+        return time.time() - self.first_presence_time
+
+    def get_time_since_last_trigger(self) :
+        if self.last_falling_edge_time is not None:
+            return time.time() - self.last_falling_edge_time
+        else :
+            return time.time() - self.last_rising_edge_time
+
+    def presence(self) :
+        # Triggering continuing presence.
+        self.last_rising_edge_time=time.time()
+        self.last_falling_edge_time=None
+
+    def impulse(self) :
+        # Triggering new presence impulse
+        self.last_rising_edge_time=time.time()
+
+    def absence(self) :
+        # Triggering ending presence
+        self.last_falling_edge_time=time.time()
+
+
+    def get_pretty_string(self):
+        duration=self.get_duration()
+        if duration is not None:
+            return str(f"{self.area}({duration:.3f})")
+        else :
+            return str(f"{self.area}")
+
+
 class Track:
     """
     A track can only exist if there is at least one event.
