@@ -103,7 +103,7 @@ def get_cached_last_set_state():
 
 def set_cached_last_set_state(device,state):
     global last_set_state
-    log.info(f"set last set state to {state}")
+    log.info(f"set global last set state to {state}")
     last_set_state = state
     return True
 
@@ -402,9 +402,13 @@ def get_time_based_state(device, scope, *args):
     log.info(f"Time based state is {state}")
     return state
 
-
+# Gets the most recent state that was manually set
 def get_last_set_state(device, scope, *args):
     return get_cached_last_set_state()
+
+def get_last_track_state(device, scope, *args):
+    log.info("Getting last track state")
+    log.info(f"Scope: {scope} - device: {device} - args: {args}")
 
 
 def toggle_status(device, scope, *args):
@@ -1189,8 +1193,8 @@ class Device:
     def __init__(self, driver):
         self.driver = driver
         self.name = driver.name
-        self.last_state = None
-        self.cached_state = None
+        self.last_state = None # The previous state before the current one (and current cache) was applied
+        self.cached_state = None # The most recent applied state, used to fillout states.
         self.area = None
         self.tags = []
         self.locked=False
@@ -1206,7 +1210,7 @@ class Device:
     def get_state(self):
         state = self.driver.get_state()
         state["name"] = self.name
-        self.cached_state = state
+        self.cached_state = state #Update cached state to that of driver
         return state
 
     def get_last_state(self):
@@ -1452,6 +1456,7 @@ class PresenceSensorDriver:
                 )
             )
 
+        return triggers
 
 class KaufLight:
     """Light driver for kauf bulbs"""
@@ -1459,6 +1464,7 @@ class KaufLight:
     def __init__(self, name):
         self.name = name
         self.last_state = {}
+        # These values are cached on the driver, whereas the whole state is cached on the device
         self.rgb_color = None
         self.brightness = None
         self.temperature = None
@@ -1748,32 +1754,58 @@ def monitor_external_state_setting(**kwargs):
 
 
 
-@service
-def test_track_manager():
-    log.info("STARTING TEST TRACK MANAGER")
-    track_manager = TrackManager()
-    track_manager.add_event("laundry_room")
-    time.sleep(0.1)
-    track_manager.add_event("office")
-    time.sleep(0.1)
+# @service
+# def test_track_manager():
+#     log.info("STARTING TEST TRACK MANAGER")
+#     track_manager = TrackManager()
+#     track_manager.add_event("laundry_room")
+#     time.sleep(0.1)
+#     track_manager.add_event("office")
+#     time.sleep(0.1)
 
-    track_manager.add_event("hallway")
-    time.sleep(0.1)
-    track_manager.add_event("kitchen")
-    time.sleep(0.1)
-    track_manager.add_event("outside")
-    time.sleep(0.1)
-    track_manager.add_event("chair_0")
-    time.sleep(0.1)
-    track_manager.add_event("chair_1")
-    time.sleep(0.1)
-    track_manager.add_event("living_room_back")
-    log.info("Getting tracks")
-    log.info(track_manager.get_tracks())
-    for track in track_manager.tracks:
-        log.info(f"Track: {track.get_pretty_string()}")
+#     track_manager.add_event("hallway")
+#     time.sleep(0.1)
+#     track_manager.add_event("kitchen")
+#     time.sleep(0.1)
+#     track_manager.add_event("outside")
+#     time.sleep(0.1)
+#     track_manager.add_event("chair_0")
+#     time.sleep(0.1)
+#     track_manager.add_event("chair_1")
+#     time.sleep(0.1)
+#     track_manager.add_event("living_room_back")
+#     log.info("Getting tracks")
+#     log.info(track_manager.get_tracks())
+#     for track in track_manager.tracks:
+#         log.info(f"Track: {track.get_pretty_string()}")
 
 
     
 
-test_track_manager()
+# test_track_manager()
+
+
+
+def test_tracks() :
+    log.info("STARTING TEST TRACKS")
+    event_manager = get_event_manager()
+    tracker_manager=get_tracker_manager()
+    event_manager.create_event({'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_office', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_hallway', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_kitchen', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_outside', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_chair_0', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_chair_1', 'tags': ['on', 'motion_occupancy']})
+
+    event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
+
+    log.info(tracker_manager.get_pretty_string())
+
+test_tracks()

@@ -40,6 +40,15 @@ HA_only_on_lights:
     
   # state is passed by service call
 
+
+motion_on_tracker: 
+  trigger_prefix: "motion_"
+  required_tags: ["on"]
+  functions:
+    - update_tracker: []
+
+
+
 motion_on: 
   trigger_prefix: "motion_"
   required_tags: ["on"]
@@ -50,10 +59,12 @@ motion_on:
   state:
     status: 1
   state_functions:
+    - get_last_track_state: []
     - get_last_set_state: []
-    - update_tracker: []
     - get_time_based_state: []
   combination_strategy: "first_state"
+
+
 
 
 motion_off_after_15:

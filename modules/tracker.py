@@ -354,6 +354,13 @@ class TrackManager:
 
         return tracks
 
+    def get_pretty_string(self):
+        track_string=""
+        for track in self.tracks:
+            track_string+=track.get_pretty_string()+"\n"
+
+        return track_string
+        
 
 class GraphManager:
     def __init__(self, connection_config):
