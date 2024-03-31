@@ -408,24 +408,21 @@ def get_last_set_state(device, scope, *args):
     return get_cached_last_set_state()
 
 def get_last_track_state(device, scope, *args):
-    log.info("Getting last track state")
     tracker_manager=get_tracker_manager()
     area_tree=get_area_tree()
     device_area = device.get_area().name
 
-    log.info(f"looking for {device_area} in {tracker_manager.get_pretty_string()}")
+    log.info(f"get_last_track_state(): looking for {device_area} in {tracker_manager.get_pretty_string()}")
 
     for track in tracker_manager.tracks:
         if track.get_area() == device_area:
-            log.info(f"Found track: {track.get_pretty_string()} with head in {device_area}")
             previous_event=track.get_previous_event(1) # Get the event before the current one
             if previous_event is not None:
                 previous_area=previous_event.get_area()
-                log.info(f"Last event was in {previous_area}")
                 last_track_state=summarize_state(area_tree.get_state(previous_area))
                 if "name" in last_track_state:
                     del last_track_state["name"] 
-                log.info(f"Last track state is {last_track_state}")
+                log.info(f"get_last_track_state(): Last track state is {last_track_state} from {previous_area}")
                 return last_track_state
     return None
 
@@ -569,7 +566,7 @@ def merge_states(state_list, name=None):
 
     if name is not None:
         merged_state["name"] = name
-
+    log.info(f"merge_states(): Merged {state_list} to: {merged_state}")
     return merged_state
 
 
@@ -675,6 +672,7 @@ class Area:
             child.set_state(copy.deepcopy(state))
 
     def get_state(self):
+        log.info(f"Area:get_state(): Getting state for {self.get_pretty_string()}")
         child_states = []
 
         for child in self.get_children():
@@ -696,7 +694,7 @@ class Area:
 
         return merged
 
-    def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
+    def get_pretty_string(self, indent=1, is_direct_child=False, show_state=False):
         """Prints a tree representation with accurate direct child highlighting."""
         string_rep = (
             "\n"
@@ -713,7 +711,7 @@ class Area:
                 direct = False
                 if child in self.direct_children:
                     direct = True
-                string_rep += child.pretty_print(indent + 2, direct, show_state)
+                string_rep += child.get_pretty_string(indent + 2, direct, show_state)
         else:
             string_rep += "  " * indent + "└── (No children)\n"
 
@@ -733,9 +731,9 @@ def update_tracker(device, *args):
 
     tracker_manager.add_event(device.get_area().name)
 
-    log.info(f"Current tracks")
+    log.info(f"update_tracker: Current tracks")
     for track in tracker_manager.tracks:
-        log.info(f"Track: {track.get_pretty_string()}")
+        log.info(f"update_tracker: {track.get_pretty_string()}")
 
     return True
 
@@ -760,10 +758,10 @@ class EventManager:
             trigger_prefix = rule_lookup[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
                 if "service" in event["device_name"]:
-                    log.info(f"SERVICESEARCH")
+                    log.info(f"EventManager:check_event(): SERVICESEARCH")
                 if get_verbose_mode():
                     log.info(
-                        f"EventManager: Rule {rule_name} prefix [{trigger_prefix}] matches {event['device_name']}"
+                        f"EventManager:check_event(): Rule {rule_name} prefix [{trigger_prefix}] matches {event['device_name']}"
                     )
                 function_override = False
                 tag_override = False
@@ -778,13 +776,9 @@ class EventManager:
                     tag_override or self._check_tags(event, rule_lookup[rule_name])
                 ):
                     approved = False
-                    log.info(f"EventManager: {rule_name} FAILED tag check")
-                    log.info(
-                        f"Override: {tag_override} {self._check_tags(event, self.rules[rule_name])}"
-                    )
 
                 if get_verbose_mode() and approved:
-                    log.info(f"EventManager: {rule_name} Passed tag check")
+                    log.info(f"EventManager:check_event(): {rule_name} Passed tag check")
 
                 if "tags" in event:
                     if "tag_override" in event["tags"]:
@@ -795,24 +789,21 @@ class EventManager:
                     and self._check_functions(event, rule_lookup[rule_name])
                 ):
                     approved = False
-                    log.info(f"EventManager: {rule_name} FAILED function check")
+                    # log.info(f"EventManager:check_event(): {rule_name} FAILED function check")
 
                 if get_verbose_mode() and approved:
-                    log.info(f"EventManager: {rule_name} Passed function check")
+                    log.info(f"EventManager:check_event(): {rule_name} Passed function check")
 
                 if approved:
                     matching_rules.append(rule_name)
-                    log.info(
-                        f"EventManager: Event: {event} Matches:{matching_rules} Rules"
-                    )
 
         event_tags = event.get("tags", [])
-        log.info(f"EventManager: Event: {event} Matches:{matching_rules} Rules")
+        log.info(f"EventManager:check_event():  Event: {event} Matches:{matching_rules} Rules")
 
         results = []
         for rule_name in matching_rules:
             rule = copy.deepcopy(self.rules[rule_name])
-            log.info(f"EventManager: Rule: {rule}")
+            log.info(f"EventManager:check_event():  Rule: {rule}")
             results.append(self.execute_rule(event, rule))
 
         if results is not None:
@@ -834,7 +825,7 @@ class EventManager:
     def execute_rule(self, event_data, rule):
         device_name = event_data["device_name"]
 
-        log.info(f"execute_rule(): {event_data}")
+        log.info(f"EventManager:execute_rule(): {event_data}")
         device = self.get_area_tree().get_device(device_name)
 
 
@@ -844,7 +835,7 @@ class EventManager:
             device_area = device.get_area()
             rule_state = rule.get("state", {})
 
-            log.info(f"updating {rule} with {event_data}")
+            log.info(f"EventManager:execute_rule(): updating {rule} with {event_data}")
             rule.update(event_data)
 
             scope = None  # Should these be anded?
@@ -864,11 +855,11 @@ class EventManager:
                                     for area in scope:
                                         if get_verbose_mode():
                                             log.info(
-                                                f"Checking if {area.name} in {new_scope}"
+                                                f"EventManager:execute_rule(): Checking if {area.name} in {new_scope}"
                                             )
                                         if area in new_scope:
                                             edited_scope.append(area)
-                                    log.info(f"Edited scope: {scope}->{edited_scope}")
+                                    log.info(f"EventManager:execute_rule(): Edited scope: {scope}->{edited_scope}")
                                     scope = edited_scope
 
             if scope is None:
@@ -878,7 +869,7 @@ class EventManager:
             for area in scope:
                 scope_names.append(area.name)
             
-            log.info(f"Event scope is {scope_names}")
+            log.info(f"EventManager:execute_rule(): Event scope is {scope_names}")
 
             function_states = []
             # if there are state functions, run them
@@ -890,7 +881,7 @@ class EventManager:
                         if function is not None:
                             function_state = function(device, scope, args)
                             # Adds the states to a list to be combined
-                            log.info(f"Function {function_name} provided: {function_state}")
+                            log.info(f"EventManager:execute_rule(): Function {function_name} provided: {function_state}")
                             function_states.append(function_state)
 
 
@@ -911,13 +902,9 @@ class EventManager:
                 state_list, strategy=strategy
             )
 
-            log.info(f"Event state is {final_state}")
+            log.info(f"EventManager:execute_rule(): Event state is {final_state}")
 
-            if get_verbose_mode():
-                # event state
-                log.info(f"state_list is {state_list}")
-                log.info(f"Rule state is {rule_state}")
-                log.info(f"Final state is {final_state}")
+
 
             #For now, assuming functions are boolean, if fail, ignore rule.
             # This is down here so we have full states for expanding args
@@ -932,14 +919,14 @@ class EventManager:
                             if not function(device, args) :
                                 log.info(f"Fuction '{function_name}' failed, not running rule.")
                                 return False
-            log.info("Event passed all functions")
+            log.info("EventManager:execute_rule(): Event passed all functions")
             log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
             for areas in scope:
                 areas.set_state(final_state)
 
             return True
         else:
-            log.warning(f"Device {device_name} not found")
+            log.warning(f"EventManager:execute_rule(): Device {device_name} not found")
             return False
 
     def _check_tags(self, event, rule):
@@ -975,9 +962,6 @@ class EventManager:
             for function_data in functions:
                 # split dict key and value to get functoin name and args
                 function_name = list(function_data.keys())[0]
-                log.info(
-                    f"Checking function {function_name} with args {function_data[function_name]}"
-                )
 
                 function = get_function_by_name(function_name)
                 if function is not None:
@@ -987,7 +971,6 @@ class EventManager:
                             log.info(f"Function {function_name} failed")
                         return False
 
-            log.info(f"Passed function check")
         return True  # If passed all checks or theres no functions to pass
 
     def get_area_tree(self):
@@ -1009,7 +992,10 @@ class AreaTree:
     def get_state(self, area=None):
         if area is None:
             area = self.root_name
-        return self.area_tree_lookup[area].get_state()
+
+        state=self.area_tree_lookup[area].get_state()
+        log.info(f"AreaTree:get_state(): State for {area} is {state}")
+        return state
 
     def get_root(self):
         return self.get_area(self.root_name)
@@ -1212,8 +1198,8 @@ class AreaTree:
 
         return area_tree
 
-    def pretty_print(self):
-        return self.get_area(self.root_name).pretty_print()
+    def get_pretty_string(self):
+        return self.get_area(self.root_name).get_pretty_string()
 
 
 class Device:
@@ -1243,11 +1229,10 @@ class Device:
         return state
 
     def get_last_state(self):
-        log.info(f"GETTING LAST STATE FOR {self.name}")
         state = self.last_state
         state["name"] = self.name
         self.last_state = state
-        log.info(f"Last state: {state}")
+        log.info(f"Device:get_last_state(): Last state: {state}")
         return state
 
     def fillout_state_from_cache(self, state):
@@ -1258,10 +1243,9 @@ class Device:
         return state
 
     def add_to_cache(self, state):
-        log.info(f"Adding to cache: state:{state}")
-        log.info(f"last_state was {self.last_state}")
-        log.info(f"cached_state was {self.cached_state}")
-        log.info("last_state is cached_state. cached_state, is state")
+        log.info(f"Device:add_to_cache(): Adding to cache: state:{state}")
+        log.info(f"Device:add_to_cache(): last_state was {self.last_state}")
+        log.info(f"Device:add_to_cache(): cached_state was {self.cached_state}")
 
         self.last_state = self.cached_state
         self.cached_state = copy.deepcopy(state)
@@ -1304,7 +1288,7 @@ class Device:
     def get_tags(self):
         return self.tags
 
-    def pretty_print(self, indent=1, is_direct_child=False, show_state=False):
+    def get_pretty_string(self, indent=1, is_direct_child=False, show_state=False):
         string_rep = (
             " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
         )
@@ -1526,7 +1510,7 @@ class KaufLight:
     # RGB (color)
     def set_rgb(self, color, apply=False):
         self.color = color
-        log.info(f"Caching color: {self.color}")
+        log.info(f"KaufLight<{self.name}>:set_rgb(): Caching color: {self.color}")
         if apply or self.is_on():
             self.apply_values(rgb_color=self.color)
 
@@ -1539,7 +1523,7 @@ class KaufLight:
 
         if color is None or color == "null":
             if self.rgb_color is not None:
-                log.info(f"Color is {color}. Getting cached rgb_color")
+                log.info(f"KaufLight<{self.name}>:get_rgb(): Color is {color}. Getting cached rgb_color")
                 color = self.rgb_color
         else:
             self.rgb_color = color
@@ -1578,7 +1562,7 @@ class KaufLight:
 
         if temperature is None or temperature == "null":
             if self.temperature is not None:
-                log.info(f"temperature is {temperature}. Getting cached temperature")
+                log.info(f"KaufLight<{self.name}>:get_temperature(): temperature is {temperature}. Getting cached temperature")
                 temperature = self.temperature
         else:
             self.temperature = temperature
@@ -1638,33 +1622,33 @@ class KaufLight:
         # If rgb_color is present: save 
         if "rgb_color" in new_args.keys():
             self.rgb_color = new_args["rgb_color"] #TODO: Make setting states and caching their values more consistent and a seperate process
-            log.info(f"Caching {self.name} rgb_color to {self.rgb_color }")
+            log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} rgb_color to {self.rgb_color }")
             self.color_type = "rgb"
-            log.info(f"color_type is {self.color_type} -> {new_args}")
+            log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
 
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
-            log.info(f"Caching {self.name} color_temp to {self.color_temp }")
+            log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} color_temp to {self.color_temp }")
             self.color_type = "temp"
-            log.info(f"color_type is {self.color_type} -> {new_args}")
+            log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
 
         else:
-            log.info(f"Neither rgb_color nor color_temp in {new_args}")
+            log.info(f"KaufLight<{self.name}>:apply_values(): Neither rgb_color nor color_temp in {new_args}")
 
-            log.info(f"color_type is {self.color_type} -> {new_args}")
+            log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
             if self.color_type == "rgb":
                 rgb = self.get_rgb()
 
-                log.info(f"rgb_color not in new_args. self rgb is {rgb}")
+                log.info(f"KaufLight<{self.name}>:apply_values(): rgb_color not in new_args. self rgb is {rgb}")
                 if rgb is not None:
                     new_args["rgb_color"] = rgb
-                    log.info(f"Supplimenting rgb_color to {rgb}")
+                    log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting rgb_color to {rgb}")
             else:
                 temp = self.get_temperature()
-                log.info(f"color_temp not in new_args. self color_temp is {temp}")
+                log.info(f"KaufLight<{self.name}>:apply_values(): color_temp not in new_args. self color_temp is {temp}")
                 if temp is not None:
                     new_args["color_temp"] = temp
-                    log.info(f"Supplimenting color_temp to {temp}")
+                    log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting color_temp to {temp}")
 
         if (
             "off" in new_args and new_args["off"]
@@ -1674,7 +1658,7 @@ class KaufLight:
 
         else:  # Turn on
             try:
-                log.info(f"\nPYSCRIPT: Setting {self.name} {new_args}")
+                log.info(f"KaufLight<{self.name}>:apply_values():  {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
 
@@ -1712,7 +1696,7 @@ class KaufLight:
 @service
 def test_event():
     # reset()
-    # log.info(get_event_manager().area_tree.pretty_print())
+    # log.info(get_event_manager().area_tree.get_pretty_string())
     log.info("STARTING TEST EVENT")
     name = "TEST_TRACKER"
     event = {
@@ -1748,7 +1732,6 @@ def monitor_external_state_setting(**kwargs):
                     if entity_id.endswith("_"): entity_id+="light"
                     return entity_id
 
-                log.info(f"Got entity_id {data['entity_id']}")
                 if type(data["entity_id"]) == str:
                     device_names.append(fix_entity_name(data["entity_id"]))
                 elif type(data["entity_id"]) == list:
@@ -1775,10 +1758,8 @@ def monitor_external_state_setting(**kwargs):
                     devices.append(device)
                     device_state=device.get_state()
                     if device_state is not None:
-                        if get_state_similarity(device_state, state)>=0.5: 
-                            log.info(f"Externally set state is same as {device_name} current state - doing nothing")
-                        else :
-                            log.info(f"{device_name} thinks it is {device_state} - Setting to {state}")
+                        if get_state_similarity(device_state, state)<=0.5: 
+                            log.info(f"monitor_external_state_setting(): (not active){device_name} thinks it is {device_state} - Setting to {state}")
                             # device.set_state(state)
 
 
@@ -1820,20 +1801,23 @@ def test_tracks() :
     event_manager = get_event_manager()
     tracker_manager=get_tracker_manager()
     event_manager.create_event({'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']})
-
+    time.sleep(0.2)
     event_manager.create_event({'device_name': 'motion_sensor_office', 'tags': ['on', 'motion_occupancy']})
+    time.sleep(0.2)
 
     event_manager.create_event({'device_name': 'motion_sensor_hallway', 'tags': ['on', 'motion_occupancy']})
+    time.sleep(0.2)
 
     event_manager.create_event({'device_name': 'motion_sensor_kitchen', 'tags': ['on', 'motion_occupancy']})
+    time.sleep(0.2)
 
-    event_manager.create_event({'device_name': 'motion_sensor_outside', 'tags': ['on', 'motion_occupancy']})
+    # event_manager.create_event({'device_name': 'motion_sensor_outside', 'tags': ['on', 'motion_occupancy']})
 
-    event_manager.create_event({'device_name': 'motion_sensor_chair_0', 'tags': ['on', 'motion_occupancy']})
+    # event_manager.create_event({'device_name': 'motion_sensor_chair_0', 'tags': ['on', 'motion_occupancy']})
 
-    event_manager.create_event({'device_name': 'motion_sensor_chair_1', 'tags': ['on', 'motion_occupancy']})
+    # event_manager.create_event({'device_name': 'motion_sensor_chair_1', 'tags': ['on', 'motion_occupancy']})
 
-    event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
+    # event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
 
     log.info(tracker_manager.get_pretty_string())
 
