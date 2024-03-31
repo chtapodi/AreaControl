@@ -516,59 +516,92 @@ def generate_state_trigger(trigger, functions, kwarg_list):
     return func_trig
 
 
+def merge_data(data):
+    """
+    Merge the given data into a single value.
+
+    Args:
+        data (list): A list of elements to be merged.
+
+    Returns:
+        The merged value of the given data.
+
+    Raises:
+        ValueError: If the provided data is empty or not all elements are of the same type.
+        ValueError: If the data type is not supported.
+
+    Notes:
+        - The function supports merging integers and floats by taking the average.
+        - The function supports merging lists by recursively merging items at corresponding indices.
+        - The function supports merging dictionaries by recursively merging values for corresponding keys.
+
+    """
+    if not data:
+        raise ValueError("merge_data(): Empty data provided")
+
+
+    def is_similar(item1, item2):
+        if issubclass(data_type, (list,tuple)) and issubclass(type(item), (list,tuple)) :
+            return True
+        if issubclass(data_type, (int,float)) and issubclass(type(item), (int,float)) :
+            return True
+        return False
+
+    data_type = type(data[0])
+    for item in data[1:]:
+        if not issubclass(type(item), data_type) and not is_similar(item, data[0]):
+            log.error(f"merge_data(): Not all elements are of the same type {data}")
+            return None
+
+    # Handle integers and floats by averaging
+    if issubclass(data_type, (int, float)):
+        return sum(data) / len(data)
+
+    # Handle lists
+    elif issubclass(data_type, (list, tuple)) :
+        max_length=len(data[0])
+        for item in data:
+            max_length=max(len(item),max_length)
+
+        result = []
+        for i in range(max_length):
+            items_at_index = []
+            for item in data:
+                if len(item) > i:
+                    items_at_index.append(item[i])
+            # Recursively merge items at current index
+            merged_item = merge_data(items_at_index)
+            result.append(merged_item)
+        return result
+
+    # Handle dictionaries
+    elif issubclass(data_type, dict):
+        result = {}
+        all_keys = set()
+        for d in data:
+            for key in d.keys():
+                all_keys.add(key)
+        for key in all_keys:
+            values = []
+            for d in data:
+                if key in d:
+                    values.append(d[key])
+            # Recursively merge values for the current key
+            merged_value = merge_data(values)
+            result[key] = merged_value
+        return result
+
+    else:
+        raise ValueError(f"merge_data(): Unsupported data type {data_type}: {data}")
+
+
+
 def merge_states(state_list, name=None):
-    if len(state_list) == 1:  # Case where merge does not need to happen
-        return state_list[0]
-
-    all_keys = set()
-    for d in state_list:
-        state_keys = []
-        for key, value in d.items():
-            if not type(value) == dict:  # Don't use nested state keys
-                state_keys.append(key)
-
-        all_keys.update(state_keys)  # Gather all unique keys
-
-    if len(all_keys) == 0:
-        return {}
-
-    merged_state = {}
-
-    # Find shared values
-    for key in all_keys:
-        key_value = None
-        same = True
-        values = set()
-        for dict_ in state_list:
-            if key in dict_:
-                if key_value is not None:
-                    key_value = dict_[key]
-                else:
-                    if key_value != dict_[key]:
-                        same = False
-                        break
-
-                values.add(dict_[key])  # Gather values for present keys
-
-        if same:  # If all present values are identical
-            merged_state[key] = key_value
-
-    # Find individual values
-    for dict_ in state_list:
-        individual_state = {}
-
-        for key, value in dict_.items():
-            if key != "name" and key not in merged_state:  # Filter for non-shared keys
-                individual_state[key] = value
-
-        if len(individual_state.keys()) > 0:
-            merged_state[dict_["name"]] = individual_state
-
-    if name is not None:
-        merged_state["name"] = name
-    log.info(f"merge_states(): Merged {state_list} to: {merged_state}")
+    for state in state_list :
+        if "name" in state.keys(): del state["name"]
+    merged_state=merge_data(state_list)
+    log.info(f"merged_state: {merged_state}")
     return merged_state
-
 
 def get_state_similarity(state1, state2):
 
@@ -677,6 +710,7 @@ class Area:
 
         for child in self.get_children():
             child_state = child.get_state()
+            log.info(f"Area:get_state(): Child state: {child_state}")
             child_states.append(child_state)
 
         merged = merge_states(child_states, self.name)
@@ -1535,14 +1569,11 @@ class KaufLight:
         self.apply_values(brightness=str(brightness))
 
     def get_brightness(self):
-        brightness = 0
+        brightness = 255
         try:
             brightness = state.get(f"light.{self.name}.brightness")
         except:
-            pass
-
-        if brightness is None:
-            brightness = 0
+            log.warning(f"get_brightness(): Unable to get brightness from {self.name}")
 
         if self.is_on():  # brightness reports as 0 when off
             self.brightness = brightness
