@@ -704,7 +704,7 @@ def load_yaml(path):
 
 
 ### Tracker interface
-def update_tracker(device, args):
+def update_tracker(device, *args):
     tracker_manager=get_tracker_manager()
 
     tracker_manager.add_event(device.get_area().name)
@@ -1760,12 +1760,14 @@ def test_track_manager():
     track_manager.add_event("hallway")
     time.sleep(0.1)
     track_manager.add_event("kitchen")
-    # track_manager.add_event("outside")
-
-    # track_manager.add_event("hallway")
-
-    # track_manager.add_event("office")
-    # track_manager.add_event("laundry_room")
+    time.sleep(0.1)
+    track_manager.add_event("outside")
+    time.sleep(0.1)
+    track_manager.add_event("chair_0")
+    time.sleep(0.1)
+    track_manager.add_event("chair_1")
+    time.sleep(0.1)
+    track_manager.add_event("living_room_back")
     log.info("Getting tracks")
     log.info(track_manager.get_tracks())
     for track in track_manager.tracks:

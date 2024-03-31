@@ -50,7 +50,6 @@ class Event:
         elif self.last_rising_edge_time != self.first_presence_time: # If there have been multiple impulses, return difference
             return self.last_rising_edge_time - self.first_presence_time 
         else : # If only one impulse, duration is 0
-            log.info("Duration is 0")
             return 0
 
     def get_time_since_first_trigger(self) :
@@ -278,10 +277,19 @@ class TrackManager:
 
     def output_stats(self) :
         track_data=""
+        head_data=""
+        head_names=[]
         for track in self.tracks:
-            track_data+=track.get_pretty_string()+"\n"
+            if len(track_data)<250 : # max string length for HA state
+                track_data+=track.get_pretty_string()+"\n"
+
+            head_data+=track.get_head().get_pretty_string()+"\n"
+            head_names.append(track.get_head().get_area())
         log.info(f"track_data: {track_data}")
-        state.set("pyscript.last_heads", track_data)
+        state.set("pyscript.last_heads", head_data[:254])
+        state.set("pyscript.last_tracks", track_data[:254])
+
+        self.graph_manager.visualize_graph(head_names)
 
 
     def cleanup_tracks(self):
@@ -365,10 +373,10 @@ class GraphManager:
         graph.add_edges_from(connection_pairs)
         return graph
 
-    def visualize_graph(self, output_file="pyscript/graph2.png"):
+    def visualize_graph(self, areas_to_highlight=None, output_file="pyscript/graph2.png"):
         log.info(f"graph: {self.graph}")
         if self.graph is not None:
-            self._visualize_graph(self.graph, self.tracks, filename=output_file)
+            self._visualize_graph(self.graph, areas_to_highlight, filename=output_file)
         else:
             log.info("No graph to visualize")
 
@@ -380,12 +388,12 @@ class GraphManager:
 
     # Function to visualize the graph
     #TODO: Make it so the graph is labeled with the names of the nodes
-    def _visualize_graph(self, graph, tracks=None, filename="pyscript/graph2.png", **kwargs,):
+    def _visualize_graph(self, graph, areas_to_highlight=None, filename="pyscript/graph2.png", **kwargs,):
         pos = nx.kamada_kawai_layout(graph, scale=50)
 
         colors = []
         for node in graph.nodes:
-            if node=="hallway":
+            if areas_to_highlight is not None and node in areas_to_highlight:
                 colors.append("cyan")
             else:
                 colors.append("white")
