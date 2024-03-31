@@ -241,9 +241,27 @@ class Track:
 
 
     def get_area(self):
+        """
+        Returns the area of the head of the object if it exists, otherwise returns None.
+
+        :return: The area of the head of the object, or None if the head does not exist.
+        :rtype: int or None
+        """
         head=self.get_head()
         if head is None: return None
         return head.get_area()
+
+    def get_previous_event(self, offset=1) :
+        """
+        Get the previous event from the track list.
+        Parameters:
+            offset (int): The offset from the current event index. Defaults to 1.
+        Returns:
+            Any: The previous event from the track list, or None if the track list is empty.
+        """
+        if len(self.get_track_list()) <= offset:
+            return None
+        return self.get_track_list()[offset]
 
     def get_pretty_string(self):
         string="⚬"
@@ -360,7 +378,7 @@ class TrackManager:
             track_string+=track.get_pretty_string()+"\n"
 
         return track_string
-        
+
 
 class GraphManager:
     def __init__(self, connection_config):

@@ -408,7 +408,24 @@ def get_last_set_state(device, scope, *args):
 
 def get_last_track_state(device, scope, *args):
     log.info("Getting last track state")
-    log.info(f"Scope: {scope} - device: {device} - args: {args}")
+    tracker_manager=get_tracker_manager()
+    area_tree=get_area_tree()
+    device_area = device.get_area().name
+
+    log.info(f"looking for {device_area} in {tracker_manager.get_pretty_string()}")
+
+    for track in tracker_manager.tracks:
+        if track.get_area() == device_area:
+            log.info(f"Found track: {track.get_pretty_string()} with head in {device_area}")
+            previous_event=track.get_previous_event(1) # Get the event before the current one
+            if previous_event is not None:
+                previous_area=previous_event.get_area()
+                log.info(f"Last event was in {previous_area}")
+                last_track_state=area_tree.get_state(previous_area)
+                log.info(f"Last track state is {last_track_state}")
+                return last_track_state
+    return None
+
 
 
 def toggle_status(device, scope, *args):
