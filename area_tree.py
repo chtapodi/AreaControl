@@ -151,19 +151,20 @@ def get_function_by_name(function_name, func_object=None):
 
     if func is None:
         log.warning(f"Function {function_name} not found")
-    else:
-        log.info(f"Function {function_name} found")
+    # else:
+    #     # log.info(f"Function {function_name} found")
     return func
 
 
 def combine_states(state_list, strategy="last"):
     final_state = {}
+    log.info(f"Combining states with strategy {strategy}: {state_list}")
 
     if strategy=="first_state" : # Uses the first valid state in the list 
-        state_list.reverse()
+        # state_list.reverse()
         for state in state_list:
-            if len(state) > 0:
-                print(f"First valid state is {state}")
+            if state is not None and len(state) > 0:
+                log.info(f"Found first state: {state}")
                 return state
 
     if strategy == "first": # Combine, first is least likely to be overwritten
@@ -421,7 +422,9 @@ def get_last_track_state(device, scope, *args):
             if previous_event is not None:
                 previous_area=previous_event.get_area()
                 log.info(f"Last event was in {previous_area}")
-                last_track_state=area_tree.get_state(previous_area)
+                last_track_state=summarize_state(area_tree.get_state(previous_area))
+                if "name" in last_track_state:
+                    del last_track_state["name"] 
                 log.info(f"Last track state is {last_track_state}")
                 return last_track_state
     return None
@@ -831,7 +834,7 @@ class EventManager:
     def execute_rule(self, event_data, rule):
         device_name = event_data["device_name"]
 
-        log.info(f"EVENT {event_data}")
+        log.info(f"execute_rule(): {event_data}")
         device = self.get_area_tree().get_device(device_name)
 
 
@@ -871,32 +874,44 @@ class EventManager:
             if scope is None:
                 scope = get_local_scope(device, device_area)
 
+            scope_names=[]
+            for area in scope:
+                scope_names.append(area.name)
+            
+            log.info(f"Event scope is {scope_names}")
+
             function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
                 for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
                         function = get_function_by_name(function_name)
-                        # If function exitst, run it
+                        # If function exists, run it
                         if function is not None:
                             function_state = function(device, scope, args)
                             # Adds the states to a list to be combined
+                            log.info(f"Function {function_name} provided: {function_state}")
                             function_states.append(function_state)
 
 
             # Add state_list to event_state
-            state_list = [rule_state]
+            state_list = []
             if "state" in event_data:
-                log.info(f"Event data is {event_data}")
+                #Add manual state list to state options. TODO: Should this get priority?
                 state_list.append(event_data["state"])
 
             state_list.extend(function_states)
+            state_list.append(rule_state) #TODO: Also rethink the priority of this.
+
+
             strategy="average"
             if "combination_strategy" in rule:
                 strategy = rule["combination_strategy"]
             final_state = combine_states(
                 state_list, strategy=strategy
             )
+
+            log.info(f"Event state is {final_state}")
 
             if get_verbose_mode():
                 # event state
@@ -916,12 +931,9 @@ class EventManager:
                             args=self.expand_args(args, event_data, final_state)
                             if not function(device, args) :
                                 log.info(f"Fuction '{function_name}' failed, not running rule.")
-                                return False    
-
-            if get_verbose_mode():
-                for area in scope:
-                    log.info(f"Scope is {area.name}")
-
+                                return False
+            log.info("Event passed all functions")
+            log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
             for areas in scope:
                 areas.set_state(final_state)
 
