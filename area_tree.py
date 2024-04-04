@@ -950,7 +950,7 @@ class EventManager:
                         # If function exists, run it
                         if function is not None:
                             args=self.expand_args(args, event_data, final_state)
-                            if not function(device, args) :
+                            if not function(device, *args) :
                                 log.info(f"Fuction '{function_name}' failed, not running rule.")
                                 return False
             log.info("EventManager:execute_rule(): Event passed all functions")
@@ -1270,7 +1270,8 @@ class Device:
         return state
 
     def fillout_state_from_cache(self, state):
-        if self.cached_state is not None:
+        if self.cached_state is not None and type(self.cached_state)==dict:
+            log.info(f"why is cached state a list? {self.cached_state}")
             for key, val in self.cached_state.items():
                 if key not in state.keys():
                     state[key] = val
