@@ -6,6 +6,10 @@ from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
 from tracker import TrackManager, Track, Event
+import unittest
+
+
+
 
 STATE_VALUES = {
     "input": {
@@ -157,8 +161,26 @@ def get_function_by_name(function_name, func_object=None):
 
 
 def combine_states(state_list, strategy="last"):
+    """
+    A function that combines a list of states using a specified strategy and returns the final combined state. 
+
+    Args:
+        state_list (list): A list of states to be combined.
+        strategy (str, optional): The strategy to be used for combining the states. Defaults to "last".
+
+        Strategies are :
+
+        - "first_state" : Uses the first valid state in the list
+        - "last" : The last state in the list
+        - "first" : The first state in the list
+        - "average" : Averages all of the states
+
+    Returns:
+        dict: The final combined state.
+    """
     final_state = {}
     log.info(f"Combining states with strategy {strategy}: {state_list}")
+    state_list=copy.deepcopy(state_list)
 
     if strategy=="first_state" : # Uses the first valid state in the list 
         # state_list.reverse()
@@ -167,10 +189,13 @@ def combine_states(state_list, strategy="last"):
                 log.info(f"Found first state: {state}")
                 return state
 
-    if strategy == "first": # Combine, first is least likely to be overwritten
-        state_list.reverse()
+
 
     if strategy == "last" or strategy == "first":
+        if strategy == "first": # Combine, first is least likely to be overwritten
+            state_list.reverse()
+
+        log.info(f"COMBINING states with strategy {strategy}: {state_list}")
         for state in state_list:
             if state is not None:
                 final_state.update(state)  # Update overwrites previous value
@@ -190,6 +215,7 @@ def combine_states(state_list, strategy="last"):
                             new_value = []
                             for i in range(len(value)):
                                 new_value.append((value[i] + final_state[key][i]) / 2)
+                            final_state[key] = tuple(new_value)
                         else:
                             final_state[key] = (value + int(final_state[key])) / 2
                     else:
@@ -600,6 +626,10 @@ def merge_states(state_list, name=None):
     for state in state_list :
         if "name" in state.keys(): del state["name"]
     merged_state=merge_data(state_list)
+    if "status" in merged_state and merged_state["status"]>0:
+        merged_state["status"]=1 
+    else:
+        merged_state["status"]=0
     log.info(f"merged_state: {merged_state}")
     return merged_state
 
@@ -712,7 +742,7 @@ class Area:
             child_state = child.get_state()
             log.info(f"Area:get_state(): Child state: {child_state}")
             child_states.append(child_state)
-
+        log.info(f"merging states: {child_states}")
         merged = merge_states(child_states, self.name)
 
         return merged
@@ -1538,8 +1568,9 @@ class KaufLight:
 
     def is_on(self):
         status = self.get_status()
-        if status is None or "off" in status or "unknown" in status:
+        if status is None or "off" in status or "unknown" in status or "unavailable" in status:
             return False
+        log.info(f"KaufLight<{self.name}>:is_on(): Returning True: {status}")
         return True
 
     # RGB (color)
@@ -1690,7 +1721,7 @@ class KaufLight:
 
         else:  # Turn on
             try:
-                log.info(f"KaufLight<{self.name}>:apply_values():  {self.name} {new_args}")
+                log.info(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
 
@@ -1727,6 +1758,8 @@ class KaufLight:
 
 @service
 def test_event():
+    log.info("TEST")
+    unittest.main()
     # reset()
     # log.info(get_event_manager().area_tree.get_pretty_string())
     log.info("STARTING TEST EVENT")
@@ -1743,8 +1776,119 @@ def test_event():
     event_manager.create_event(event)
 
 
-init()
 
+
+
+class TestManager():
+
+    def __init__(self) :
+        self.default_test_room="laundry_room"
+        self.event_manager = get_event_manager()
+        self.area_tree = get_area_tree()
+        self.default_test_area=self.area_tree.get_area(self.default_test_room)
+
+    def run_tests(self) :
+        tests_run=0
+        tests_passed=0
+        failed_tests=[]
+        # get all methods in this class and check if their name starts with "test"
+        log.info(dir(self))
+        for method_name in dir(self):
+            if method_name.startswith("test"):
+                log.info(f"Running test: {method_name}")
+                if getattr(self, method_name)() :
+                    tests_passed+=1
+                else :
+                    failed_tests.append(method_name)
+                tests_run+=1
+
+        log.info(f"Tests passed: {tests_passed}/{tests_run}")
+
+        if len(failed_tests) > 0 :
+            log.info(f"Failed tests: {failed_tests}")
+            return False
+        
+
+    def test_set_setting_status(self):
+        """
+        A test function to check setting status functionality by turning on and off from different initial states.
+        """
+        log.info("STARTING TEST SETTING STATUS")
+        initial_state=self.default_test_area.get_state()
+        # turn on from unknown default state
+        self.default_test_area.set_state({"status": 1})
+        time.sleep(.1)
+        current_state=self.default_test_area.get_state()
+        if not current_state["status"] :
+            log.info(f"Failed to turn on from initial state {initial_state}")
+            return False
+        # Turn off from on
+        self.default_test_area.set_state({"status": 0})
+        time.sleep(.1)
+        current_state=self.default_test_area.get_state()
+        if current_state["status"] :
+            log.info(f"Failed to turn off from on")
+            return False
+
+        # Turn on from off
+        self.default_test_area.set_state({"status": 1})
+        time.sleep(.1)
+        current_state=self.default_test_area.get_state()
+        if not current_state["status"] :
+            log.info(f"Failed to turn on from off")
+            return False
+
+        return True
+
+
+    # Test helper functions
+
+    # Test combine states
+    def test_combine_states(self):
+        log.info("STARTING TEST COMBINE STATES")
+        states = [
+            {"status": 1, "brightness": 255, "rgb_color": [255, 255, 0]},
+            {"status": 1, "rgb_color": [255, 0, 0]},
+            {"status": 0, "brightness": 100, "rgb_color": [0, 255, 255]},
+        ]
+        fist_expected_state = {"status": 1, "brightness": 255, "rgb_color": [255, 255, 0]}
+        first_state_result = combine_states(states, strategy="first")
+
+        if first_state_result != fist_expected_state:
+            log.info(f"Expected first state to be {fist_expected_state} but was {first_state_result}")
+            return False
+        
+        last_expected_state = {"status": 0, "brightness": 100, "rgb_color": [0, 255, 255]}
+        last_state_result = combine_states(states, strategy="last")
+
+        if last_state_result != last_expected_state:
+            log.info(f"Expected last state to be {last_expected_state} but was {last_state_result}")
+            return False
+        
+        average_expected_state = {"status": 1, "brightness": 177.5, "rgb_color": [170, 170, 85]}
+        average_state_result = combine_states(states, strategy="average")
+
+        if average_state_result != average_expected_state:
+            log.info(f"Expected average state to be {average_expected_state} but was {average_state_result}")
+            return False
+
+        return True
+        
+
+
+
+@service 
+def run_tests() :
+    log.info("TEST")
+    test_manager=TestManager()
+    test_manager.run_tests()
+    
+
+
+
+
+init()
+run_tests()
 
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_service_calls(**kwargs):
@@ -1795,39 +1939,15 @@ def monitor_external_state_setting(**kwargs):
                             # device.set_state(state)
 
 
-
-# @service
-# def test_track_manager():
-#     log.info("STARTING TEST TRACK MANAGER")
-#     track_manager = TrackManager()
-#     track_manager.add_event("laundry_room")
-#     time.sleep(0.1)
-#     track_manager.add_event("office")
-#     time.sleep(0.1)
-
-#     track_manager.add_event("hallway")
-#     time.sleep(0.1)
-#     track_manager.add_event("kitchen")
-#     time.sleep(0.1)
-#     track_manager.add_event("outside")
-#     time.sleep(0.1)
-#     track_manager.add_event("chair_0")
-#     time.sleep(0.1)
-#     track_manager.add_event("chair_1")
-#     time.sleep(0.1)
-#     track_manager.add_event("living_room_back")
-#     log.info("Getting tracks")
-#     log.info(track_manager.get_tracks())
-#     for track in track_manager.tracks:
-#         log.info(f"Track: {track.get_pretty_string()}")
+### Tests ###
 
 
-    
-
-# test_track_manager()
+# Test if motion sensor sets state correctly
 
 
 
+
+@service
 def test_tracks() :
     log.info("STARTING TEST TRACKS")
     event_manager = get_event_manager()
@@ -1853,4 +1973,4 @@ def test_tracks() :
 
     log.info(tracker_manager.get_pretty_string())
 
-test_tracks()
+#test_tracks()
