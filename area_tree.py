@@ -1886,7 +1886,49 @@ class TestManager():
 
         return True
 
-    
+    def test_set_and_get_color(self):
+        log.info("STARTING TEST SETTING AND GETTING COLOR")
+        # Set to off as default
+        self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
+        time.sleep(.1)
+        state=self.default_test_area.get_state()
+        if state["rgb_color"] != [0, 0, 0] or state["status"] != 0:
+            log.info(f"Test set and get color: Failed to set to off {state}")
+            return False
+
+        # Set color while off
+        self.default_test_area.set_state({"rgb_color": [255, 255, 255]})
+        time.sleep(.1)
+        state=self.default_test_area.get_state()
+        if state["rgb_color"] != [255, 255, 255] :
+            log.info(f"Test set and get color: Failed to set color while off {state}")
+            return False
+        if state["status"] != 0:
+            log.info(f"Test set and get color: Failed to stay off when setting color {state}")
+
+        # turn on 
+        self.default_test_area.set_state({"status":1})
+        time.sleep(.1)
+        state=self.default_test_area.get_state()
+        if state["status"] != 1:
+            log.info(f"Test set and get color: Failed to turn on {state}")
+            return False
+
+        if state["rgb_color"] != [255, 255, 255]:
+            log.info(f"Test set and get color: Failed to keep color that was set while off {state}")
+            return False
+
+        # Change color while on 
+        self.default_test_area.set_state({"rgb_color": [0, 255, 0]})
+        time.sleep(.1)
+        state=self.default_test_area.get_state()
+        if state["rgb_color"] != [0, 255, 0] or state["status"] != 1:
+            log.info(f"Test set and get color: Failed to change color while on {state}")
+            return False
+            
+        
+        log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
+        return True
 
     # TODO:
     # Test setting state, both while on and off
