@@ -1318,7 +1318,9 @@ class Device:
         self.locked = value
 
     def get_state(self):
+        
         state = self.driver.get_state()
+        log.info(f"Device:get_state(): Getting state for {self.name}: {state}")
         state["name"] = self.name
         self.cached_state = state #Update cached state to that of driver
         return state
@@ -1703,7 +1705,7 @@ class KaufLight:
             color_temp = self.get_temperature()
             if color_temp is not None:
                 state["color_temp"] = color_temp
-
+        log.info(f"KaufLight<{self.name}>:get_state(): Returning state: {state}")
         return state
 
     # Apply values
@@ -1928,6 +1930,16 @@ class TestManager():
             
         
         log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
+
+        self.default_test_area.set_state({"rgb_color": [255, 195, 50]})
+        time.sleep(.1)
+        self.default_test_area.set_state({"status": 0})
+        time.sleep(.1)
+        self.default_test_area.set_state({"status": 1})
+        time.sleep(.1)
+        state=self.default_test_area.get_state()
+        if state["rgb_color"] != [255, 195, 50] or state["status"] != 1:
+            log.info(f"Test set and get color: Failed to persist through toggle {state}")
         return True
 
     # TODO:
