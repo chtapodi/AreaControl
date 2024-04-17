@@ -1384,6 +1384,9 @@ class Device:
     def get_tags(self):
         return self.tags
 
+    def get_name(self):
+        return self.name
+
     def get_pretty_string(self, indent=1, is_direct_child=False, show_state=False):
         string_rep = (
             " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
@@ -1817,6 +1820,12 @@ class TestManager():
         self.event_manager = get_event_manager()
         self.area_tree = get_area_tree()
         self.default_test_area=self.area_tree.get_area(self.default_test_room)
+        self.default_motion_sensor = self._find_motion_sensor()
+
+    def _find_motion_sensor(self) :
+        for device in self.default_test_area.get_devices() :
+            if device.get_name().startswith("motion_sensor") :
+                return device
 
     def run_tests(self) :
         tests_run=0
@@ -1859,7 +1868,10 @@ class TestManager():
         # Turn off from on
         self.default_test_area.set_state({"status": 0})
         time.sleep(.1)
+        log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
+        
         current_state=self.default_test_area.get_state()
+        log.info(f"current state: { current_state['status']}")
         if current_state["status"] :
             log.info(f"Failed to turn off from on")
             return False
@@ -1873,6 +1885,8 @@ class TestManager():
             return False
 
         return True
+
+    
 
     # TODO:
     # Test setting state, both while on and off
@@ -1915,7 +1929,31 @@ class TestManager():
         return True
         
 
+    def test_motion_sensor(self) :
+        log.info("STARTING TEST MOTION SENSOR")
 
+        # Test motion sensor.
+        # When motion sensor is triggered, the area should be turned on.
+        log.info(f"Motion test: starting: Area {self.default_test_area}")
+        initial_state=self.default_test_area.get_state()
+        log.info(f"Motion test: initial state: {initial_state}")
+        # turn off from unknown default state
+        self.default_test_area.set_state({"status": 0})
+        time.sleep(1)
+        log.info(f"Motion test: state after off: {self.default_test_area.get_state()}")
+
+
+        event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
+
+        time.sleep(2)
+        # Check if  area is on
+        state=self.default_test_area.get_state()
+        log.info(f"Motion test: state after motion: {state}")
+        if state['status'] != 1:
+            log.info(f"Expected area to be on after motion sensor trigger but was {self.default_test_area.get_state()}")
+            return False
+
+        return True
 
 @service 
 def run_tests() :
