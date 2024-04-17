@@ -59,8 +59,8 @@ motion_on:
   state:
     status: 1
   state_functions:
-    - get_last_track_state: []
-    - get_last_set_state: []
+    # - get_last_track_state: []
+    # - get_last_set_state: []
     - get_time_based_state: []
   combination_strategy: "first_state"
 
@@ -88,7 +88,7 @@ living_room_zones_on:
   state:
     status: 1
   state_functions:
-    - get_last_set_state: []
+    # - get_last_set_state: []
     - get_time_based_state: []
   combination_strategy: "first_state"
 
