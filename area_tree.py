@@ -220,7 +220,6 @@ def combine_states(state_list, strategy="last"):
                                 count_dict[key].append(0)
 
                         for i in range(len(value)):
-                            log.info(f"KYE {key} SUMDICT {sum_dict} COUNTDICT {count_dict}")
                             sum_dict[key][i] += value[i]
                             count_dict[key][i] += 1
 
@@ -251,8 +250,9 @@ def combine_states(state_list, strategy="last"):
         if "status" in final_state.keys() and final_state["status"] > 0:
             final_state["status"] = 1
         
+        log.info(f"FINAL STATE {final_state}")
 
-    else:
+    else :
         log.warning(f"Strategy {strategy} not found")
     if get_verbose_mode():
         log.info(f"combined states {state_list} into {final_state}")
