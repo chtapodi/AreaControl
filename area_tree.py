@@ -201,25 +201,57 @@ def combine_states(state_list, strategy="last"):
                 final_state.update(state)  # Update overwrites previous value
 
     elif strategy == "average":
+        sum_dict={}
+        count_dict={}
+
+        # This is to deal with the iterables within the dict and making sure they are all properly averaged. Its a pain. 
+        # The first section sums up all of the values in the dict and keeps count, and the second half divides total by the count
         for state in state_list:
             if state is not None:
                 for key, value in state.items():
-                    if key in final_state.keys():
-                        if key == "status":  # being on overrides being off
-                            if value or final_state[key]:
-                                final_state[key] = True
-                        elif (
-                            isinstance(final_state[key], (tuple, list))
-                            or final_state[key].__class__.__name__ == "TupleWrapper"
+                    if (isinstance(value, (tuple, list))
+                            or value.__class__.__name__ == "TupleWrapper"
                         ):
-                            new_value = []
+                        if key not in sum_dict.keys():
+                            sum_dict[key]=[]
+                            count_dict[key]=[]
                             for i in range(len(value)):
-                                new_value.append((value[i] + final_state[key][i]) / 2)
-                            final_state[key] = tuple(new_value)
-                        else:
-                            final_state[key] = (value + int(final_state[key])) / 2
+                                sum_dict[key].append(0)
+                                count_dict[key].append(0)
+
+                        for i in range(len(value)):
+                            log.info(f"KYE {key} SUMDICT {sum_dict} COUNTDICT {count_dict}")
+                            sum_dict[key][i] += value[i]
+                            count_dict[key][i] += 1
+
                     else:
-                        final_state[key] = value
+                        if key not in sum_dict.keys():
+                            sum_dict[key] = 0
+                            count_dict[key] = 0
+
+                        sum_dict[key] += value
+                        count_dict[key] += 1
+
+        log.info(f"SUMDICT {sum_dict} COUNTDICT {count_dict}")
+        for key, value in sum_dict.items():
+            # if iterable 
+            
+            if (isinstance(value, (tuple, list))
+                            or value.__class__.__name__ == "TupleWrapper"
+                        ):
+                if key not in final_state.keys():
+                    final_state[key]=[]
+                    for i in range(len(value)):
+                        final_state[key].append(0)
+                for i in range(len(value)):
+                    final_state[key][i] = value[i] / count_dict[key][i]
+            
+            elif count_dict[key] > 0:
+                final_state[key] = value / count_dict[key]
+        if "status" in final_state.keys() and final_state["status"] > 0:
+            final_state["status"] = 1
+        
+
     else:
         log.warning(f"Strategy {strategy} not found")
     if get_verbose_mode():
@@ -812,7 +844,6 @@ class EventManager:
         log.info(f"EventManager: New event: {event}")
 
         result = self.check_event(event)
-        log.info(f"EventManager: created event")
 
     def check_event(self, event):
         matching_rules = []
@@ -1795,10 +1826,13 @@ class TestManager():
         log.info(dir(self))
         for method_name in dir(self):
             if method_name.startswith("test"):
-                log.info(f"Running test: {method_name}")
                 if getattr(self, method_name)() :
+                    log.info(f"Test {tests_run+1}: {method_name} PASSED")
+
                     tests_passed+=1
                 else :
+                    log.info(f"Test {tests_run+1}: {method_name} FAILED")
+
                     failed_tests.append(method_name)
                 tests_run+=1
 
@@ -1840,6 +1874,12 @@ class TestManager():
 
         return True
 
+    # TODO:
+    # Test setting state, both while on and off
+    # Test setting brightness
+    # Test motion sensor activation and deactivation
+    # test buttons
+    # test motion sensor mode
 
     # Test helper functions
 
