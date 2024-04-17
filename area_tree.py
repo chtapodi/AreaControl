@@ -1994,11 +1994,14 @@ class TestManager():
 
         # Test motion sensor.
         set_motion_sensor_mode("on")
-        # When motion sensor is triggered, the area should be turned on.
+        # When motion sensor is triggered, the area should be turned off.
         log.info(f"Motion test: starting: Area {self.default_test_area}")
         initial_state=self.default_test_area.get_state()
         log.info(f"Motion test: initial state: {initial_state}")
-        # turn off from unknown default state
+        # Set to known initial state
+        self.default_test_area.set_state({"status": 1, "brightness": 255, "rgb_color": [255, 72, 35]})
+        time.sleep(.1)
+        # Set to off
         self.default_test_area.set_state({"status": 0})
         time.sleep(.1)
         log.info(f"Motion test: state after off: {self.default_test_area.get_state()}")
@@ -2010,8 +2013,8 @@ class TestManager():
         # Check if  area is on
         state=self.default_test_area.get_state()
         log.info(f"Motion test: state after motion: {state}")
-        if state['status'] != 1:
-            log.info(f"Expected area to be on after motion sensor trigger but was {self.default_test_area.get_state()}")
+        if state['status'] != 1 or state['brightness'] != 255 or state['rgb_color'] != [255, 72, 35]:
+            log.info(f"Expected area to be on after motion sensor trigger but was {state}")
             return False
 
 
@@ -2026,6 +2029,8 @@ class TestManager():
         if state['status'] != 0:
             log.info(f"Expected area to be off after motion sensor deactivation but was {self.default_test_area.get_state()}")
             return False
+
+
 
         return True
 
