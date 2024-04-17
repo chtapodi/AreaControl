@@ -156,7 +156,7 @@ def get_function_by_name(function_name, func_object=None):
     if func is None:
         log.warning(f"Function {function_name} not found")
     # else:
-    #     # log.info(f"Function {function_name} found")
+    log.info(f"Function {function_name} found")
     return func
 
 
@@ -312,6 +312,12 @@ def check_sleep(
 def motion_sensor_mode(*args, **kwargs):
     log.info(f"motion_sensor_mode {input_boolean.motion_sensor_mode}")
     return input_boolean.motion_sensor_mode == "on"
+
+def set_motion_sensor_mode(state):
+    log.info(f"set_motion_sensor_mode {input_boolean.motion_sensor_mode}")
+    input_boolean.motion_sensor_mode = state
+    log.info(f"set_motion_sensor_mode is now {input_boolean.motion_sensor_mode}")
+
 
 
 ### Scope functions
@@ -969,6 +975,7 @@ class EventManager:
             function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
+                log.info(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
                 for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
                         function = get_function_by_name(function_name)
@@ -979,7 +986,7 @@ class EventManager:
                             log.info(f"EventManager:execute_rule(): Function {function_name} provided: {function_state}")
                             function_states.append(function_state)
 
-
+                log.info(f"EventManager:execute_rule(): Function states: {rule['state_functions']} provided  {function_states}")
             # Add state_list to event_state
             state_list = []
             if "state" in event_data:
@@ -988,7 +995,6 @@ class EventManager:
 
             state_list.extend(function_states)
             state_list.append(rule_state) #TODO: Also rethink the priority of this.
-
 
             strategy="average"
             if "combination_strategy" in rule:
@@ -1987,24 +1993,38 @@ class TestManager():
         log.info("STARTING TEST MOTION SENSOR")
 
         # Test motion sensor.
+        set_motion_sensor_mode("on")
         # When motion sensor is triggered, the area should be turned on.
         log.info(f"Motion test: starting: Area {self.default_test_area}")
         initial_state=self.default_test_area.get_state()
         log.info(f"Motion test: initial state: {initial_state}")
         # turn off from unknown default state
         self.default_test_area.set_state({"status": 0})
-        time.sleep(1)
+        time.sleep(.1)
         log.info(f"Motion test: state after off: {self.default_test_area.get_state()}")
 
-
+        log.info(f"Motion test: CREATING MOTION EVENT")
         event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
-
-        time.sleep(2)
+        log.info(f"Motion test: MOTION EVENT COMPLETE")
+        time.sleep(.2)
         # Check if  area is on
         state=self.default_test_area.get_state()
         log.info(f"Motion test: state after motion: {state}")
         if state['status'] != 1:
             log.info(f"Expected area to be on after motion sensor trigger but was {self.default_test_area.get_state()}")
+            return False
+
+
+        # Test motion sensor deactivation
+        self.default_test_area.set_state({"status": 0})
+        set_motion_sensor_mode("off")
+        time.sleep(.2)
+        event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
+
+        time.sleep(.2)
+        state=self.default_test_area.get_state()
+        if state['status'] != 0:
+            log.info(f"Expected area to be off after motion sensor deactivation but was {self.default_test_area.get_state()}")
             return False
 
         return True
