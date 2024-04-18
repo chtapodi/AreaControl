@@ -722,7 +722,9 @@ def rgb_to_hsl(r, g, b):
 
 
 def hs_to_rgb(h, s):
-    return Color(hsl=[h, s, 50]).rgb
+    r,g,b=Color(hsl=[h, s, 50]).rgb
+
+    return [r,g,b]
 
 
 def k_to_rgb(k):
@@ -1328,7 +1330,9 @@ class Device:
         state = self.driver.get_state()
         log.info(f"Device:get_state(): Getting state for {self.name}: {state}")
         state["name"] = self.name
-        self.cached_state = state #Update cached state to that of driver
+        # self.cached_state = state #Update cached state to that of driver
+        state=self.fillout_state_from_cache(state)
+        log.info(f"Device:get_state(): filled out state: {state}")
         return state
 
     def get_last_state(self):
@@ -1340,19 +1344,30 @@ class Device:
 
     def fillout_state_from_cache(self, state):
         if self.cached_state is not None and type(self.cached_state)==dict:
-            log.info(f"why is cached state a list? {self.cached_state}")
+            log.info(f"Device:fillout_state_from_cache(): Filling out state {state} from cache: {self.cached_state}")
             for key, val in self.cached_state.items():
+
                 if key not in state.keys():
                     state[key] = val
         return state
 
-    def add_to_cache(self, state):
-        log.info(f"Device:add_to_cache(): Adding to cache: state:{state}")
-        log.info(f"Device:add_to_cache(): last_state was {self.last_state}")
-        log.info(f"Device:add_to_cache(): cached_state was {self.cached_state}")
+    def filter_state(self, state) :
+        return self.driver.filter_state(state)
 
-        self.last_state = self.cached_state
-        self.cached_state = copy.deepcopy(state)
+
+    def add_to_cache(self, state):
+        # Remove keys that don't apply to driver (buttons don't have rgb color etc...)
+        if state is not None :
+            state=self.filter_state(state)
+
+            self.last_state = self.cached_state
+            new_state=copy.deepcopy(self.cached_state) # Set cached state as old state
+            if new_state is None :
+                new_state = {}
+            for key, val in state.items():
+                new_state[key] = copy.deepcopy(val) #update with new values
+            self.cached_state = new_state
+            log.info(f"add_to_cache: Added {state} to {self.last_state} to create Cached state: {self.cached_state}")
 
     def input_trigger(self, tags):
         global event_manager
@@ -1363,16 +1378,20 @@ class Device:
         event_manager.create_event(event)
 
     def set_state(self, state):
-
+        log.info(f"Setting state: {state} on {self.name}")
         if not self.locked:
-            self.add_to_cache(state)
+            
             state = copy.deepcopy(state)
             if hasattr(self.driver, "set_state"):
                 state = self.fillout_state_from_cache(state) #TODO: rethink how this is done in relation to add_to_cache
+                log.info(f"filled out state from cache: {state}")
                 if get_verbose_mode():
                     log.info(f"Setting state: {state} on {self.name}")
 
-                self.driver.set_state(state)
+                applied_state=self.driver.set_state(state)
+                log.info(f"Applied state: {applied_state}")
+                self.add_to_cache(applied_state)
+                log.info(f"Updated cache: {self.cached_state}")
         else :
             if get_verbose_mode():
                 log.info(f"Device {self.name} is locked, not setting state {state}")
@@ -1429,6 +1448,10 @@ class MotionSensorDriver:
         state = self.last_state
         state["name"] = self.name
         return state
+    def get_valid_state_keys(self):
+        return ["status"]
+
+        
 
     def trigger_state(self, **kwargs):
         log.info(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
@@ -1513,6 +1536,9 @@ class ServiceDriver:
 
     def get_state(self):
         return {"name": self.name}
+    
+    def get_valid_state_keys(self):
+        return []
 
 
 class PresenceSensorDriver:
@@ -1545,6 +1571,9 @@ class PresenceSensorDriver:
             state = {}
         state["name"] = self.name
         return state
+
+    def get_valid_state_keys(self):
+        return ["presence"]
 
     def trigger_state(self, **kwargs):
         log.info(f"Triggering Presence Sensor: {self.name} with value: {kwargs}")
@@ -1599,14 +1628,32 @@ class KaufLight:
 
     def get_status(self):
         """Gets status"""
-
+        status="unavailable"
         try:
             status = state.get(f"light.{self.name}")
 
-            return status
+            log.info(f"KaufLight<{self.name}>:get_status(): Getting status {status}")
         except:
             pass
-        return "unknown"
+
+        if status is None or status == "unavailable":
+            log.warning(f"KaufLight<{self.name}>:get_status(): Unable to get status- Returning unknown")
+        return status
+
+    def get_valid_state_keys(self):
+        return ["status", "off", "rgb_color", "brightness", "color_temp", "hs_color"]
+
+    def filter_state(self, state):
+        valid_keys=self.get_valid_state_keys()
+        filtered_state={}
+        
+        for key, val in state.items():
+            if key in valid_keys:
+                filtered_state[key]=val
+        if "off" in filtered_state and filtered_state["off"]:
+            filtered_state["status"]=0
+            del filtered_state["off"]
+        return filtered_state
 
     def is_on(self):
         status = self.get_status()
@@ -1623,18 +1670,15 @@ class KaufLight:
             self.apply_values(rgb_color=self.color)
 
     def get_rgb(self):
+        """ If this is unable to get color, should return None"""
         color = None
         try:
             color = state.get(f"light.{self.name}.rgb_color")
         except:
             log.warning(f"Unable to get rgb_color from {self.name}")
 
-        if color is None or color == "null":
-            if self.rgb_color is not None:
-                log.info(f"KaufLight<{self.name}>:get_rgb(): Color is {color}. Getting cached rgb_color")
-                color = self.rgb_color
-        else:
-            self.rgb_color = color
+        self.rgb_color = color
+
 
         return color if color != "null" else None
 
@@ -1689,7 +1733,7 @@ class KaufLight:
             if not self.is_on():  # if already on, apply values
                 state["off"] = 1
 
-        self.apply_values(**state)
+        return self.apply_values(**state)
 
     def get_state(self):
         state = {}
@@ -1774,6 +1818,8 @@ class KaufLight:
                 light.turn_on(entity_id=f"light.{self.name}")
                 self.last_state = {"on": True}
 
+        return self.last_state
+
 
 # def test_toggle(area_name="kitchen") :
 #     event_manager=get_event_manager()
@@ -1828,12 +1874,21 @@ class TestManager():
         self.event_manager = get_event_manager()
         self.area_tree = get_area_tree()
         self.default_test_area=self.area_tree.get_area(self.default_test_room)
+        log.info(f"AREA DEVICES: {self.default_test_area.get_devices()}")
+        self.default_test_light = self._find_light()
         self.default_motion_sensor = self._find_motion_sensor()
 
     def _find_motion_sensor(self) :
         for device in self.default_test_area.get_devices() :
             if device.get_name().startswith("motion_sensor") :
                 return device
+
+    def _find_light(self) :
+        # for device in self.default_test_area.get_devices() :
+        #     log.info(f"LIGHT: {device.get_name()}")
+        #     if device.get_name().startswith("kauf") :
+        #         return device
+        return self.area_tree.get_device("kauf_laundry_room_2")
 
     def run_tests(self) :
         tests_run=0
@@ -1894,36 +1949,56 @@ class TestManager():
 
         return True
 
+    def test_setting_cache(self) :
+        log.info("STARTING TEST SETTING CACHE")
+        self.default_test_light.set_state({"status": 1, "rgb_color": [255, 255, 255]})
+        time.sleep(.1)
+        self.default_test_light.set_state({"status": 0})
+        time.sleep(.1)
+        state=self.default_test_light.get_state()
+        if state["status"] != 0 or state["rgb_color"] != [255, 255, 255] :
+            log.info(f"test_setting_cache: Failed to set to off {state}")
+            return False
+        log.info("test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}")
+        self.default_test_light.add_to_cache({"rgb_color": [255, 0, 255]})
+        time.sleep(.1)
+        state=self.default_test_light.get_state()
+        if state["status"] != 0 or state["rgb_color"] != [255, 0, 255] :
+            log.info(f"test_setting_cache: Failed to update cache {state}")
+            return False
+
+        return True
+
     def test_set_and_get_color(self):
         log.info("STARTING TEST SETTING AND GETTING COLOR")
         # Set to off as default
         self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
         time.sleep(.1)
         state=self.default_test_area.get_state()
-        if state["rgb_color"] != [0, 0, 0] or state["status"] != 0:
-            log.warning(f"Test set and get color: Failed to set to off {state}")
+        if "rgb_color" in state and state["rgb_color"] != [0, 0, 0] or state["status"] != 0:
+            log.warning(f"test_set_and_get_color: Failed to set to off {state}")
             return False
 
         # Set color while off
         self.default_test_area.set_state({"rgb_color": [255, 255, 255]})
         time.sleep(.1)
         state=self.default_test_area.get_state()
-        if state["rgb_color"] != [255, 255, 255] :
-            log.warning(f"Test set and get color: Failed to set color while off {state}")
+        if "rgb_color" in state and state["rgb_color"] != [255, 255, 255] :
+            log.warning(f"test_set_and_get_color: Failed to set color while off {state}")
             return False
         if state["status"] != 0:
-            log.warning(f"Test set and get color: Failed to stay off when setting color {state}")
+            log.warning(f"test_set_and_get_color: Failed to stay off when setting color {state}")
 
         # turn on 
         self.default_test_area.set_state({"status":1})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["status"] != 1:
-            log.warning(f"Test set and get color: Failed to turn on {state}")
+            log.warning(f"test_set_and_get_color: Failed to turn on {state}")
             return False
 
         if state["rgb_color"] != [255, 255, 255]:
-            log.warning(f"Test set and get color: Failed to keep color that was set while off {state}")
+            log.warning(f"test_set_and_get_color: Failed to keep color that was set while off {state}")
             return False
 
         # Change color while on 
@@ -1931,7 +2006,7 @@ class TestManager():
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [0, 255, 0] or state["status"] != 1:
-            log.warning(f"Test set and get color: Failed to change color while on {state}")
+            log.warning(f"test_set_and_get_color: Failed to change color while on {state}")
             return False
             
         
@@ -1945,13 +2020,13 @@ class TestManager():
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [255, 195, 50] or state["status"] != 1:
-            log.warning(f"Test set and get color: Failed to persist through toggle {state}")
+            log.warning(f"test_set_and_get_color: Failed to persist through toggle {state}")
         return True
 
     # TODO:
-    # Test setting state, both while on and off
     # Test setting brightness
     # test buttons
+    # Test tracks
 
     # Test helper functions
 
@@ -2083,6 +2158,8 @@ def monitor_external_state_setting(**kwargs):
                 state["color_temp"]=data["color_temp"]
             if "rgb_color" in data:
                 state["rgb_color"]=data["rgb_color"]
+            if "hs_color" in data:
+                state["rgb_color"]=hs_to_rgb(data["hs_color"][0], data["hs_color"][1])
 
             if state == {}:
                 state["status"]=False
