@@ -1650,9 +1650,10 @@ class KaufLight:
         for key, val in state.items():
             if key in valid_keys:
                 filtered_state[key]=val
-        if "off" in filtered_state and filtered_state["off"]:
-            filtered_state["status"]=0
+        if "off" in filtered_state:
             del filtered_state["off"]
+        if "status" in filtered_state:
+            del filtered_state["status"]
         return filtered_state
 
     def is_on(self):
@@ -1771,18 +1772,18 @@ class KaufLight:
         # If rgb_color is present: save 
         if "rgb_color" in new_args.keys():
             self.rgb_color = new_args["rgb_color"] #TODO: Make setting states and caching their values more consistent and a seperate process
-            log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} rgb_color to {self.rgb_color }")
+            # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} rgb_color to {self.rgb_color }")
             self.color_type = "rgb"
-            log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
+            # log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
 
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
-            log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} color_temp to {self.color_temp }")
+            # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} color_temp to {self.color_temp }")
             self.color_type = "temp"
-            log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
+            # log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
 
         else:
-            log.info(f"KaufLight<{self.name}>:apply_values(): Neither rgb_color nor color_temp in {new_args}")
+            # log.info(f"KaufLight<{self.name}>:apply_values(): Neither rgb_color nor color_temp in {new_args}")
 
             log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
             if self.color_type == "rgb":
@@ -1804,8 +1805,15 @@ class KaufLight:
         ):  # If "off" : True is present, turn off
             self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
+            new_args["status"] = 0
+            del new_args["off"]
+            return new_args
+
+        
 
         else:  # Turn on
+
+                
             try:
                 log.info(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
@@ -1956,9 +1964,14 @@ class TestManager():
         self.default_test_light.set_state({"status": 0})
         time.sleep(.1)
         state=self.default_test_light.get_state()
-        if state["status"] != 0 or state["rgb_color"] != [255, 255, 255] :
+        if state["status"] != 0 :
             log.info(f"test_setting_cache: Failed to set to off {state}")
             return False
+        
+        if  state["rgb_color"] != [255, 255, 255] :
+            log.info(f"test_setting_cache: Failed to keep rgb_color {state}")
+            return False
+
         log.info("test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}")
         self.default_test_light.add_to_cache({"rgb_color": [255, 0, 255]})
         time.sleep(.1)
@@ -1975,8 +1988,13 @@ class TestManager():
         self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
         time.sleep(.1)
         state=self.default_test_area.get_state()
-        if "rgb_color" in state and state["rgb_color"] != [0, 0, 0] or state["status"] != 0:
+
+        if state["status"] != 0:
             log.warning(f"test_set_and_get_color: Failed to set to off {state}")
+            return False
+
+        if "rgb_color" in state and state["rgb_color"] != [0, 0, 0] :
+            log.warning(f"Failed to set color while setting off {state}")
             return False
 
         # Set color while off
