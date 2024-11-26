@@ -352,6 +352,28 @@ def get_area_local_scope(device, device_area, *args):
 ### State functions
 # Functions that return a state based on some value
 def get_time_based_state(device, scope, *args):
+    """
+    Determines and returns a time-based state for devices within a given scope.
+
+    This function calculates the desired state for devices based on the current
+    hour of the day. The state includes attributes like brightness, RGB color,
+    and color temperature. The state is intended to reflect common lighting
+    preferences for different times of the day, such as early morning, midday,
+    evening, etc.
+
+    Args:
+        device: The device for which the state is being determined.
+        scope: A list of areas containing devices whose states are to be
+               considered.
+        *args: Additional arguments that may be required by the function.
+
+    Returns:
+        dict: A dictionary representing the desired state, including keys for:
+              - "status": Integer, represents the on/off state (1 for on).
+              - "brightness": Integer (optional), represents the brightness level.
+              - "rgb_color": List of integers (optional), represents the RGB color.
+              - "color_temp": Integer (optional), represents the color temperature.
+    """
     now = time.localtime().tm_hour
     states = {}
     for area in scope:
@@ -1328,7 +1350,7 @@ class Device:
     def get_state(self):
         
         state = self.driver.get_state()
-        log.info(f"Device:get_state(): Getting state for {self.name}: {state}")
+        log.info(f"Device:get_state(): Getting state for {self.name} state:{state}")
         state["name"] = self.name
         # self.cached_state = state #Update cached state to that of driver
         state=self.fillout_state_from_cache(state)
@@ -1380,13 +1402,27 @@ class Device:
     def set_state(self, state):
         log.info(f"Setting state: {state} on {self.name}")
         if not self.locked:
+            #TODO: FIXME this is a hack, should be done on driver side
+            color_type=None
+            if "rgb_color" in state:
+                color_type="rgb"
+            elif "color_temp" in state:
+                color_type="temp"
+
             
             state = copy.deepcopy(state)
             if hasattr(self.driver, "set_state"):
-                state = self.fillout_state_from_cache(state) #TODO: rethink how this is done in relation to add_to_cache
-                log.info(f"filled out state from cache: {state}")
+                # I want this here so color/temp can be filled out when it is off
+                # state = self.fillout_state_from_cache(state) #TODO: rethink how this is done in relation to add_to_cache
                 if get_verbose_mode():
                     log.info(f"Setting state: {state} on {self.name}")
+                #THIS IS A HACK, FIXME
+                if color_type is not None:
+                    if color_type == "rgb" and "color_temp" in state:
+                        del state["color_temp"]
+                    elif color_type == "temp" and "rgb_color" in state:
+                        del state["rgb_color"]
+                log.info(f"filled out state from cache: {state}")
 
                 applied_state=self.driver.set_state(state)
                 log.info(f"Applied state: {applied_state}")
@@ -1922,6 +1958,46 @@ class TestManager():
             log.info(f"Failed tests: {failed_tests}")
             return False
         
+    # Test methods for merge_data
+    def test_merge_data_empty_list(self):
+        try:
+            merge_data([])
+            return False
+        except ValueError:
+            return True
+
+    def test_merge_data_integers(self):
+        return merge_data([1, 2, 3, 4, 5]) == 3.0
+
+    def test_merge_data_floats(self):
+        return merge_data([1.5, 2.5, 3.5]) == 2.5
+
+    def test_merge_data_mixed_numbers(self):
+        return merge_data([1, 2.5, 3]) == 2.1666666666666665
+
+    def test_merge_data_lists(self):
+        return merge_data([[1, 2], [3, 4], [5, 6]]) == [3.0, 4.0]
+
+    def test_merge_data_lists_with_different_lengths(self):
+        result = merge_data([[1, 2], [3, 4, 5], [6]])
+        return result == [3.3333333333333335, 3.0, 5.0]
+
+    def test_merge_data_dicts(self):
+        data = [{"a": 1, "b": 2}, {"a": 3, "b": 4}, {"a": 5}]
+        expected = {"a": 3.0, "b": 3.0}
+        return merge_data(data) == expected
+
+    # Test methods for merge_states
+    def test_merge_states(self):
+        states = [{"status": 0}, {"status": 1}, {"status": 1}]
+        result = merge_states(states)
+        return result["status"] == 1
+
+    def test_merge_states_no_status(self):
+        states = [{"other": 5}, {"other": 10}]
+        result = merge_states(states)
+        return "status" in result and result["status"] == 0
+
 
     def test_set_setting_status(self):
         """
@@ -1968,7 +2044,7 @@ class TestManager():
             log.info(f"test_setting_cache: Failed to set to off {state}")
             return False
         
-        if  state["rgb_color"] != [255, 255, 255] :
+        if state["rgb_color"] != [255, 255, 255] and state["rgb_color"] != (255, 255, 255) :
             log.info(f"test_setting_cache: Failed to keep rgb_color {state}")
             return False
 
@@ -1983,8 +2059,9 @@ class TestManager():
         return True
 
     def test_set_and_get_color(self):
-        log.info("STARTING TEST SETTING AND GETTING COLOR")
+        log.info("TEST SETTING AND GETTING COLOR")
         # Set to off as default
+        log.info("TEST: setting status 0 and rgb 000")
         self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
         time.sleep(.1)
         state=self.default_test_area.get_state()
@@ -1997,38 +2074,43 @@ class TestManager():
             log.warning(f"Failed to set color while setting off {state}")
             return False
 
+
+        log.info("TEST: setting rgb while off")
         # Set color while off
         self.default_test_area.set_state({"rgb_color": [255, 255, 255]})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if "rgb_color" in state and state["rgb_color"] != [255, 255, 255] :
-            log.warning(f"test_set_and_get_color: Failed to set color while off {state}")
+            log.warning(f"TEST: Failed to set color while off {state}")
             return False
         if state["status"] != 0:
-            log.warning(f"test_set_and_get_color: Failed to stay off when setting color {state}")
+            log.warning(f"TEST: Failed to stay off when setting color {state}")
 
+        log.info("TEST: turning on")
         # turn on 
         self.default_test_area.set_state({"status":1})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["status"] != 1:
-            log.warning(f"test_set_and_get_color: Failed to turn on {state}")
+            log.warning(f"TEST: Failed to turn on {state}")
             return False
 
         if state["rgb_color"] != [255, 255, 255]:
-            log.warning(f"test_set_and_get_color: Failed to keep color that was set while off {state}")
+            log.warning(f"TEST: Failed to keep color that was set while off {state}")
             return False
+
+        log.info("TEST: setting rgb while on")
 
         # Change color while on 
         self.default_test_area.set_state({"rgb_color": [0, 255, 0]})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [0, 255, 0] or state["status"] != 1:
-            log.warning(f"test_set_and_get_color: Failed to change color while on {state}")
+            log.warning(f"TEST: Failed to change color while on {state}")
             return False
             
         
-        log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
+        log.info(f"TEST: current state: {self.default_test_area.get_state()}")
 
         self.default_test_area.set_state({"rgb_color": [255, 195, 50]})
         time.sleep(.1)
@@ -2045,7 +2127,8 @@ class TestManager():
     # Test setting brightness
     # test buttons
     # Test tracks
-
+    # Add tests for setting via service driver
+    # FIgure out how to handle reading from cache with both rgb color and temp
     # Test helper functions
 
     # Test combine states
@@ -2081,10 +2164,6 @@ class TestManager():
         
 
     def test_motion_sensor(self) :
-        log.info("STARTING TEST MOTION SENSOR")
-
-        # Test motion sensor.
-        set_motion_sensor_mode("on")
         # When motion sensor is triggered, the area should be turned off.
         log.info(f"test_motion_sensor: starting: Area {self.default_test_area}")
         initial_state=self.default_test_area.get_state()
@@ -2186,14 +2265,17 @@ def monitor_external_state_setting(**kwargs):
 
             devices=[]
             for device_name in device_names:
+                log.info(f"ATTEMPTING TO SET DEVICE {device_name} TO {state}")
                 device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
                 if device is not None:
                     devices.append(device)
                     device_state=device.get_state()
                     if device_state is not None:
                         if get_state_similarity(device_state, state)<=0.5: 
-                            log.info(f"monitor_external_state_setting(): (not active){device_name} thinks it is {device_state} - Setting to {state}")
+                            log.info(f"SETTING DEVICE {device_name} TO {state}")
                             # device.set_state(state)
+                else :
+                    log.info(f"DEVICE {device_name} NOT FOUND")
 
 
 ### Tests ###
