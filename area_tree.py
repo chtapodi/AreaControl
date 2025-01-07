@@ -1851,6 +1851,7 @@ class KaufLight:
 
                 
             try:
+                new_args["effect"]="script_driven"
                 log.info(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
