@@ -107,6 +107,8 @@ the full implementations.
   is associated with.
 - **`TelevisionDriver`** – Controls televisions through a `media_player` entity
   and reports the currently playing media.
+- **`HueLight`** – Light driver for Philips Hue bulbs. Uses color calibration so
+  lights with different hardware show consistent colors.
 
 ## Event and Rule Workflow
 
@@ -179,6 +181,9 @@ Key principles:
 * **Color does not imply power.** Changing `rgb_color` or `color_temp` merely
   updates the color; it does not affect the `status` flag. This prevents color
   adjustments from accidentally turning lights on or off.
+* **Color calibration.** Light drivers can apply per-device calibration
+  profiles so that the same RGB values appear consistent across different
+  hardware.
 * **Function-based scopes.** Scope and state logic is delegated to functions
   referenced by name, letting complex behavior live in Python while YAML stays
   declarative.

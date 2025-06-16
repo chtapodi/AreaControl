@@ -37,6 +37,12 @@ def load_area_tree():
         sys.modules['homeassistant'] = types.ModuleType('homeassistant')
         sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
         sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
+        util_mod = types.ModuleType('homeassistant.util')
+        color_mod = types.ModuleType('homeassistant.util.color')
+        color_mod.color_temperature_to_rgb = lambda x: (0, 0, 0)
+        util_mod.color = color_mod
+        sys.modules['homeassistant.util'] = util_mod
+        sys.modules['homeassistant.util.color'] = color_mod
 
     tracker_mod = types.ModuleType('tracker')
     tracker_mod.TrackManager = object

@@ -41,6 +41,25 @@ BLIND_HEIGHTS = {
     "blind_bedroom_window": 100,
 }
 
+# Per-device color calibration profiles.
+# Each entry maps a driver keyword to RGB multipliers that correct
+# differences between physical lights so they appear the same color.
+COLOR_PROFILES = {
+    "kauf": [1.0, 1.0, 1.0],  # default no-op profile
+    "hue": [1.0, 1.0, 1.0],
+}
+
+def calibrate_rgb(rgb, profile):
+    """Apply a color calibration profile to an RGB value."""
+    if rgb is None or profile is None:
+        return rgb
+    result = []
+    for comp, factor in zip(rgb, profile):
+        val = int(comp * factor)
+        val = max(0, min(255, val))
+        result.append(val)
+    return result
+
 # Registry of driver factories for outputs and inputs
 OUTPUT_DRIVERS = {}
 INPUT_DRIVERS = {}
@@ -1732,9 +1751,9 @@ class PresenceSensorDriver:
         return triggers
 
 class KaufLight:
-    """Light driver for kauf bulbs"""
+    """Light driver for Kauf bulbs."""
 
-    def __init__(self, name):
+    def __init__(self, name, color_profile=None):
         self.name = name
         self.last_state = {}
         # These values are cached on the driver, whereas the whole state is cached on the device
@@ -1743,6 +1762,10 @@ class KaufLight:
         self.temperature = None
         self.default_color = None
         self.color_type = "rgb"
+        self.color_profile = color_profile or COLOR_PROFILES.get("kauf")
+
+    def calibrate_color(self, rgb):
+        return calibrate_rgb(rgb, self.color_profile)
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -1893,9 +1916,10 @@ class KaufLight:
                 new_args[k] = v
 
 
-        # If rgb_color is present: save 
+        # If rgb_color is present: save and calibrate
         if "rgb_color" in new_args.keys():
-            self.rgb_color = new_args["rgb_color"] #TODO: Make setting states and caching their values more consistent and a seperate process
+            self.rgb_color = new_args["rgb_color"]  # cache raw value
+            new_args["rgb_color"] = self.calibrate_color(new_args["rgb_color"])
             # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} rgb_color to {self.rgb_color }")
             self.color_type = "rgb"
             # log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
@@ -1915,7 +1939,7 @@ class KaufLight:
 
                 log.info(f"KaufLight<{self.name}>:apply_values(): rgb_color not in new_args. self rgb is {rgb}")
                 if rgb is not None:
-                    new_args["rgb_color"] = rgb
+                    new_args["rgb_color"] = self.calibrate_color(rgb)
                     log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting rgb_color to {rgb}")
             else:
                 temp = self.get_temperature()
@@ -1953,8 +1977,16 @@ class KaufLight:
         return self.last_state
 
 
+class HueLight(KaufLight):
+    """Light driver for Philips Hue bulbs using color calibration."""
+
+    def __init__(self, name):
+        super().__init__(name, color_profile=COLOR_PROFILES.get("hue"))
+
+
 # Register built-in drivers using keyword heuristics
 register_output_driver('kauf', lambda name: KaufLight(name))
+register_output_driver('hue', lambda name: HueLight(name))
 register_output_driver('blind', lambda name: BlindDriver(name, BLIND_HEIGHTS.get(name, 100)))
 register_output_driver('speaker', lambda name: SpeakerDriver(name))
 register_output_driver('google_home', lambda name: SpeakerDriver(name))
