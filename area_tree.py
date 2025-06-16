@@ -4,13 +4,15 @@ import copy
 import time
 from homeassistant.const import EVENT_CALL_SERVICE
 import inspect
-#from pyscript import task
+from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
-from advanced_tracker import init_from_yaml, MultiPersonTracker
+# Import from the modules package so tests can easily stub the tracker
+from modules.advanced_tracker import init_from_yaml, MultiPersonTracker
 from homeassistant.util import color as color_util
 from tracker import TrackManager, Track, Event
-from adaptive_learning import get_learner
+# Adaptive learning utilities live under modules for easier testing
+from modules.adaptive_learning import get_learner
 import os
 import unittest
 
