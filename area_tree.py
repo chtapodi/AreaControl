@@ -2,11 +2,15 @@ import yaml
 from collections import defaultdict
 import copy
 import time
+import inspect
+from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
-from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
+from modules.advanced_tracker import init_from_yaml, MultiPersonTracker
+from homeassistant.util import color as color_util
 from tracker import TrackManager, Track, Event
 from modules.adaptive_learning import get_learner
+import os
 import unittest
 
 
@@ -37,6 +41,20 @@ BLIND_HEIGHTS = {
     "blind_bedroom_window": 100,
 }
 
+# Registry of driver factories for outputs and inputs
+OUTPUT_DRIVERS = {}
+INPUT_DRIVERS = {}
+
+
+def register_output_driver(keyword, factory):
+    """Register a factory function for creating output drivers."""
+    OUTPUT_DRIVERS[keyword] = factory
+
+
+def register_input_driver(keyword, factory):
+    """Register a factory function for creating input drivers."""
+    INPUT_DRIVERS[keyword] = factory
+
 
 @service
 def reset():
@@ -62,7 +80,9 @@ def init():
     global_triggers = []
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
-    tracker_manager = TrackManager()
+    tracker_manager = init_from_yaml(
+        "./pyscript/connections.yml", debug=True, debug_dir="pyscript/tracker_debug"
+    )
 
 
 def get_global_triggers():
@@ -770,22 +790,22 @@ def get_state_similarity(state1, state2):
 
 
 def rgb_to_hsl(r, g, b):
-    h, s, l = Color(rgb=[r, g, b]).hsl
-    l_range = 50 - 100
-    s_range = 100
-    s = ((l - 100) * s_range) / l_range
+    """Convert RGB to HSL using Home Assistant helpers."""
+    h, s = color_util.color_RGB_to_hs(r, g, b)
+    # Home Assistant does not provide luminance; assume 50 for consistency.
+    l = 50
     return h, s, l
 
 
 def hs_to_rgb(h, s):
-    r,g,b=Color(hsl=[h, s, 50]).rgb
-
-    return [r,g,b]
+    """Convert HS color to RGB using Home Assistant helpers."""
+    r, g, b = color_util.color_hs_to_RGB(h, s)
+    return [r, g, b]
 
 
 def k_to_rgb(k):
-    """Convert a kelvin temperature into an RGB colour tuple."""
-    r, g, b = convert_K_to_RGB(k)
+    """Convert a kelvin temperature into an RGB color tuple."""
+    r, g, b = color_util.color_temperature_to_rgb(k)
     return [r, g, b]
 
 
@@ -914,17 +934,18 @@ def load_yaml(path):
 
 ### Tracker interface
 def update_tracker(device, *args):
-    tracker_manager=get_tracker_manager()
-
-    tracker_manager.add_event(device.get_area().name)
+    tracker_manager = get_tracker_manager()
+    room = device.get_area().name
+    tracker_manager.process_event("p1", room)
+    image_path = os.path.join(
+        tracker_manager.debug_dir,
+        f"frame_{tracker_manager._debug_counter-1:06d}.png",
+    )
+    log.info(f"update_tracker: image saved to {image_path}")
     try:
-        get_learner().record_presence(device.get_area().name)
+        get_learner().record_presence(room)
     except Exception as e:
         log.warning(f"AdaptiveLearner failed to record presence: {e}")
-
-    log.info(f"update_tracker: Current tracks")
-    for track in tracker_manager.tracks:
-        log.info(f"update_tracker: {track.get_pretty_string()}")
 
     return True
 
@@ -1335,32 +1356,18 @@ class AreaTree:
                 # Add outputs as children
                 if "outputs" in area_data and area_data["outputs"] is not None:
                     for output in area_data.get("outputs", []):
-                        if output is not None:
-                            if "kauf" in output:
-                                new_light = KaufLight(output)
-                                new_device = Device(new_light)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
-                            elif "blind" in output:
-                                height = BLIND_HEIGHTS.get(output, 100)
-                                new_blind = BlindDriver(output, height)
-                                new_device = Device(new_blind)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
-                            elif "speaker" in output or "google_home" in output:
-                                new_speaker = SpeakerDriver(output)
-                                new_device = Device(new_speaker)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
+                        if output is None:
+                            continue
+                        driver = None
+                        for key, factory in OUTPUT_DRIVERS.items():
+                            if key in output:
+                                driver = factory(output)
+                                break
+                        if driver is not None:
+                            new_device = Device(driver)
+                            area.add_device(new_device)
+                            new_device.set_area(area)
+                            area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1377,35 +1384,20 @@ class AreaTree:
                                 for device_id in device_id_list:
                                     if device_id is not None:
                                         new_input = None
-                                        if "motion" in device_id:
-                                            log.info(f"lumi: {device_id}")
-                                            new_input = MotionSensorDriver(
-                                                input_type, device_id
-                                            )
-                                        elif "presence" in device_id:
-                                            log.info(
-                                                f"Creating presence device: {device_id}"
-                                            )
-                                            new_input = PresenceSensorDriver(
-                                                input_type, device_id
-                                            )
-                                        elif "service" in device_id:
-                                            log.info(
-                                                f"Creating service device: {device_id}"
-                                            )
-                                            new_input = ServiceDriver(
-                                                input_type, device_id
-                                            )
-                                        else:
-                                            log.warning(
-                                                f"Input has no driver: {device_id}"
-                                            )
+                                        for key, factory in INPUT_DRIVERS.items():
+                                            if key in device_id:
+                                                new_input = factory(input_type, device_id)
+                                                log.info(f"Creating input device: {device_id} using {key}")
+                                                break
+                                        if new_input is None:
+                                            log.warning(f"Input has no driver: {device_id}")
 
                                         if new_input is not None:
                                             new_device = Device(new_input)
-                                            new_input.add_callback(
-                                                new_device.input_trigger
-                                            )
+                                            if hasattr(new_input, 'add_callback'):
+                                                new_input.add_callback(
+                                                    new_device.input_trigger
+                                                )
 
                                             area.add_device(new_device)
                                             new_device.set_area(area)
@@ -1961,6 +1953,23 @@ class KaufLight:
         return self.last_state
 
 
+# Register built-in drivers using keyword heuristics
+register_output_driver('kauf', lambda name: KaufLight(name))
+register_output_driver('blind', lambda name: BlindDriver(name, BLIND_HEIGHTS.get(name, 100)))
+register_output_driver('speaker', lambda name: SpeakerDriver(name))
+register_output_driver('google_home', lambda name: SpeakerDriver(name))
+register_output_driver('plug', lambda name: PlugDriver(name))
+register_output_driver('fan', lambda name: FanDriver(name))
+register_output_driver('tv', lambda name: TelevisionDriver(name))
+register_output_driver('television', lambda name: TelevisionDriver(name))
+
+register_input_driver('motion', lambda t, d: MotionSensorDriver(t, d))
+register_input_driver('presence', lambda t, d: PresenceSensorDriver(t, d))
+register_input_driver('service', lambda t, d: ServiceDriver(t, d))
+register_input_driver('window', lambda t, d: ContactSensorDriver(t, d))
+register_input_driver('door', lambda t, d: ContactSensorDriver(t, d))
+
+
 class BlindDriver:
     """Driver for smart blinds controllable by percent closed or height."""
 
@@ -2052,6 +2061,161 @@ class SpeakerDriver:
         return self.last_state
 
 
+class PlugDriver:
+    """Driver for simple smart plugs/switches."""
+
+    def __init__(self, name, power_sensor=None):
+        self.name = name
+        self.power_sensor = power_sensor
+        self.last_state = {"status": 0}
+
+    def get_valid_state_keys(self):
+        keys = ["status"]
+        if self.power_sensor:
+            keys.append("power")
+        return keys
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"switch.{self.name}")
+        except Exception:
+            pass
+        on = 1 if status in ("on", 1, True) else 0
+        result = {"status": on}
+        if self.power_sensor:
+            power = None
+            try:
+                power = state.get(self.power_sensor)
+            except Exception:
+                pass
+            result["power"] = power
+        self.last_state = result
+        return result
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    switch.turn_on(entity_id=f"switch.{self.name}")
+                else:
+                    switch.turn_off(entity_id=f"switch.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set plug {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
+        return self.last_state
+
+
+class ContactSensorDriver:
+    """Driver for window/door sensors."""
+
+    def __init__(self, input_type, device_id):
+        self.name = device_id if input_type in device_id else f"{input_type}_{device_id}"
+        self.last_state = None
+        self.callback = None
+        self.trigger = self.setup_service_triggers(device_id)
+
+    def add_callback(self, callback):
+        self.callback = callback
+
+    def get_state(self):
+        state_val = None
+        try:
+            state_val = state.get(f"binary_sensor.{self.name}")
+        except Exception:
+            pass
+        open_val = 1 if state_val in ("on", "open", True) else 0
+        self.last_state = {"open": open_val}
+        return {"name": self.name, "open": open_val}
+
+    def get_valid_state_keys(self):
+        return ["open"]
+
+    def trigger_state(self, **kwargs):
+        if self.callback is not None:
+            tags = kwargs.get("tags")
+            if tags:
+                self.callback(tags)
+
+    def setup_service_triggers(self, device_id):
+        values = ["on", "off"]
+        triggers = []
+        for value in values:
+            tag = "open" if value == "on" else "closed"
+            triggers.append(
+                generate_state_trigger(
+                    f"binary_sensor.{device_id} == '{value}'",
+                    self.trigger_state,
+                    {"tags": [tag]},
+                )
+            )
+        return triggers
+
+
+class FanDriver(PlugDriver):
+    """Driver wrapping a plug to control a fan."""
+
+    def __init__(self, name, window=None):
+        super().__init__(name)
+        self.window = window
+
+    def get_state(self):
+        state = super().get_state()
+        state["window"] = self.window
+        return state
+
+
+class TelevisionDriver:
+    """Driver for televisions controlled via media_player."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"status": 0, "media": None}
+
+    def get_valid_state_keys(self):
+        return ["status"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        media = None
+        try:
+            status = state.get(f"media_player.{self.name}.state")
+        except Exception:
+            pass
+        on = 0
+        if status not in (None, "off", "standby", "idle"):
+            on = 1
+            try:
+                media = state.get(f"media_player.{self.name}.media_title")
+            except Exception:
+                pass
+        self.last_state = {"status": on, "media": media}
+        return self.last_state
+
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    media_player.turn_on(entity_id=f"media_player.{self.name}")
+                else:
+                    media_player.turn_off(entity_id=f"media_player.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set television {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
+        return self.last_state
+
+
 # def test_toggle(area_name="kitchen") :
 #     event_manager=get_event_manager()
 
@@ -2121,23 +2285,26 @@ class TestManager():
         #         return device
         return self.area_tree.get_device("kauf_laundry_room_2")
 
-    def run_tests(self) :
-        tests_run=0
-        tests_passed=0
-        failed_tests=[]
+    async def run_tests(self) :
+        tests_run = 0
+        tests_passed = 0
+        failed_tests = []
         # get all methods in this class and check if their name starts with "test"
         log.info(dir(self))
         for method_name in dir(self):
             if method_name.startswith("test"):
-                if getattr(self, method_name)() :
+                method = getattr(self, method_name)
+                if inspect.iscoroutinefunction(method):
+                    result = await method()
+                else:
+                    result = method()
+                if result:
                     log.info(f"Test {tests_run+1}: {method_name} PASSED")
-
-                    tests_passed+=1
-                else :
+                    tests_passed += 1
+                else:
                     log.info(f"Test {tests_run+1}: {method_name} FAILED")
-
                     failed_tests.append(method_name)
-                tests_run+=1
+                tests_run += 1
 
         log.info(f"Tests passed: {tests_passed}/{tests_run}")
 
@@ -2186,7 +2353,7 @@ class TestManager():
         return "status" in result and result["status"] == 0
 
 
-    def test_set_setting_status(self):
+    async def test_set_setting_status(self):
         """
         A test function to check setting status functionality by turning on and off from different initial states.
         """
@@ -2194,14 +2361,14 @@ class TestManager():
         initial_state=self.default_test_area.get_state()
         # turn on from unknown default state
         self.default_test_area.set_state({"status": 1})
-        time.sleep(.1)
+        await task.sleep(.1)
         current_state=self.default_test_area.get_state()
         if not current_state["status"] :
             log.info(f"Failed to turn on from initial state {initial_state}")
             return False
         # Turn off from on
         self.default_test_area.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
         
         current_state=self.default_test_area.get_state()
@@ -2212,7 +2379,7 @@ class TestManager():
 
         # Turn on from off
         self.default_test_area.set_state({"status": 1})
-        time.sleep(.1)
+        await task.sleep(.1)
         current_state=self.default_test_area.get_state()
         if not current_state["status"] :
             log.info(f"Failed to turn on from off")
@@ -2220,12 +2387,12 @@ class TestManager():
 
         return True
 
-    def test_setting_cache(self) :
+    async def test_setting_cache(self) :
         log.info("STARTING TEST SETTING CACHE")
         self.default_test_light.set_state({"status": 1, "rgb_color": [255, 255, 255]})
-        time.sleep(.1)
+        await task.sleep(.1)
         self.default_test_light.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_light.get_state()
         if state["status"] != 0 :
             log.info(f"test_setting_cache: Failed to set to off {state}")
@@ -2237,7 +2404,7 @@ class TestManager():
 
         log.info("test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}")
         self.default_test_light.add_to_cache({"rgb_color": [255, 0, 255]})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_light.get_state()
         if state["status"] != 0 or state["rgb_color"] != [255, 0, 255] :
             log.info(f"test_setting_cache: Failed to update cache {state}")
@@ -2245,12 +2412,12 @@ class TestManager():
 
         return True
 
-    def test_set_and_get_color(self):
+    async def test_set_and_get_color(self):
         log.info("TEST SETTING AND GETTING COLOR")
         # Set to off as default
         log.info("TEST: setting status 0 and rgb 000")
         self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
 
         if state["status"] != 0:
@@ -2265,7 +2432,7 @@ class TestManager():
         log.info("TEST: setting rgb while off")
         # Set color while off
         self.default_test_area.set_state({"rgb_color": [255, 255, 255]})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if "rgb_color" in state and state["rgb_color"] != [255, 255, 255] :
             log.warning(f"TEST: Failed to set color while off {state}")
@@ -2276,7 +2443,7 @@ class TestManager():
         log.info("TEST: turning on")
         # turn on 
         self.default_test_area.set_state({"status":1})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if state["status"] != 1:
             log.warning(f"TEST: Failed to turn on {state}")
@@ -2290,7 +2457,7 @@ class TestManager():
 
         # Change color while on 
         self.default_test_area.set_state({"rgb_color": [0, 255, 0]})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [0, 255, 0] or state["status"] != 1:
             log.warning(f"TEST: Failed to change color while on {state}")
@@ -2300,11 +2467,11 @@ class TestManager():
         log.info(f"TEST: current state: {self.default_test_area.get_state()}")
 
         self.default_test_area.set_state({"rgb_color": [255, 195, 50]})
-        time.sleep(.1)
+        await task.sleep(.1)
         self.default_test_area.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         self.default_test_area.set_state({"status": 1})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [255, 195, 50] or state["status"] != 1:
             log.warning(f"test_set_and_get_color: Failed to persist through toggle {state}")
@@ -2350,7 +2517,7 @@ class TestManager():
         return True
         
 
-    def test_motion_sensor(self) :
+    async def test_motion_sensor(self) :
         # When motion sensor is triggered, the area should be turned off.
         log.info(f"test_motion_sensor: starting: Area {self.default_test_area}")
         initial_state=self.default_test_area.get_state()
@@ -2358,14 +2525,14 @@ class TestManager():
         # Set to known initial state
         #TODO: Enable a way of testing this with various state rules. currently most of state us not checkable
         self.default_test_area.set_state({"status": 1, "brightness": 255, "rgb_color": [255, 72, 35]})
-        time.sleep(.1)
+        await task.sleep(.1)
         # Set to off
         self.default_test_area.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         log.info(f"test_motion_sensor: state after off: {self.default_test_area.get_state()}")
 
         event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
-        time.sleep(.2)
+        await task.sleep(.2)
         # Check if area is on
         state=self.default_test_area.get_state()
         log.info(f"test_motion_sensor: state after motion: {state}")
@@ -2385,10 +2552,10 @@ class TestManager():
         # Test motion sensor deactivation
         self.default_test_area.set_state({"status": 0})
         set_motion_sensor_mode("off")
-        time.sleep(.2)
+        await task.sleep(.2)
         event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
 
-        time.sleep(.2)
+        await task.sleep(.2)
         state=self.default_test_area.get_state()
         if state['status'] != 0:
             log.warning(f"Expected area to be off after motion sensor deactivation but was {self.default_test_area.get_state()}")
@@ -2398,18 +2565,18 @@ class TestManager():
         set_motion_sensor_mode("on")
         return True
 
-@service 
-def run_tests() :
+@service
+async def run_tests() :
     log.info("TEST")
-    test_manager=TestManager()
-    test_manager.run_tests()
+    test_manager = TestManager()
+    await test_manager.run_tests()
     
 
 
 
 
 init()
-run_tests()
+task.create_task(run_tests())
 
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_service_calls(**kwargs):
@@ -2474,20 +2641,20 @@ def monitor_external_state_setting(**kwargs):
 
 
 @service
-def test_tracks() :
+async def test_tracks() :
     log.info("STARTING TEST TRACKS")
     event_manager = get_event_manager()
     tracker_manager=get_tracker_manager()
     event_manager.create_event({'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
     event_manager.create_event({'device_name': 'motion_sensor_office', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
 
     event_manager.create_event({'device_name': 'motion_sensor_hallway', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
 
     event_manager.create_event({'device_name': 'motion_sensor_kitchen', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
 
     # event_manager.create_event({'device_name': 'motion_sensor_outside', 'tags': ['on', 'motion_occupancy']})
 
