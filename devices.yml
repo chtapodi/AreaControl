@@ -155,3 +155,29 @@ google_home_speaker:
     - speaker
     - google_home
 
+# Example additional device types
+example_smart_plug:
+  type: plug
+  filters:
+    - plug
+
+example_window_sensor:
+  type: contact_sensor
+  filters:
+    - window_sensor
+
+example_door_sensor:
+  type: contact_sensor
+  filters:
+    - door_sensor
+
+example_fan:
+  type: fan
+  filters:
+    - fan
+
+example_television:
+  type: television
+  filters:
+    - tv
+

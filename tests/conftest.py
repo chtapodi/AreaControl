@@ -29,12 +29,24 @@ def load_area_tree():
     pyscript_mod.service = _stub_decorator
     pyscript_mod.event_trigger = _stub_decorator
     pyscript_mod.pyscript_compile = _stub_decorator
+    class DummyTask:
+        async def sleep(self, *_args, **_kwargs):
+            pass
+
+        def create_task(self, coro):
+            return coro
+
+    pyscript_mod.task = DummyTask()
     sys.modules['pyscript'] = pyscript_mod
     sys.modules['pyscript.k_to_rgb'] = pyscript_mod.k_to_rgb
 
-    sys.modules['homeassistant'] = types.ModuleType('homeassistant')
-    sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
-    sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
+    # Use the real Home Assistant modules if available
+    try:
+        import homeassistant.const  # noqa: F401
+    except Exception:
+        sys.modules['homeassistant'] = types.ModuleType('homeassistant')
+        sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
+        sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
 
     adv_mod = types.ModuleType('modules.advanced_tracker')
     class DummyTracker:
@@ -76,6 +88,14 @@ def load_tracker():
     pyscript_mod.service = _stub_decorator
     pyscript_mod.event_trigger = _stub_decorator
     pyscript_mod.pyscript_compile = _stub_decorator
+    class DummyTask:
+        async def sleep(self, *_args, **_kwargs):
+            pass
+
+        def create_task(self, coro):
+            return coro
+
+    pyscript_mod.task = DummyTask()
     sys.modules['pyscript'] = pyscript_mod
 
     class DummyState:
