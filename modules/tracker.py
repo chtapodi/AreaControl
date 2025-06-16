@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 import copy
+import os
 
 
 
@@ -441,9 +442,10 @@ class GraphManager:
             "edgecolors": "black",
             "linewidths": 2,
             "width": 1,
-            "with_labels":True,
+            "with_labels": False,
         }
         nx.draw_networkx(graph, pos, **options)
+        nx.draw_networkx_labels(graph, pos)
 
         plt.axis("off")
         log.info(f"Saving graph to {filename}")
@@ -469,7 +471,13 @@ example_track = [
 def plot_graph():
     log.info(f"STARTING")
     graph_manager = GraphManager("./pyscript/connections.yml")
-    graph_manager.visualize_graph()
+    output = "pyscript/graph2.png"
+    graph_manager.visualize_graph(output_file=output)
+    try:
+        size = os.path.getsize(output)
+        log.info(f"Graph saved to {output} ({size} bytes)")
+    except OSError as exc:
+        log.error(f"Could not verify graph output: {exc}")
 
 
 plot_graph()
