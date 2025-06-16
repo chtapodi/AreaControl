@@ -3,8 +3,8 @@ from collections import defaultdict
 import copy
 import time
 from pyscript.k_to_rgb import convert_K_to_RGB
-from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
+from homeassistant.util import color as color_util
 from tracker import TrackManager, Track, Event
 import unittest
 
@@ -769,22 +769,22 @@ def get_state_similarity(state1, state2):
 
 
 def rgb_to_hsl(r, g, b):
-    h, s, l = Color(rgb=[r, g, b]).hsl
-    l_range = 50 - 100
-    s_range = 100
-    s = ((l - 100) * s_range) / l_range
+    """Convert RGB to HSL using Home Assistant helpers."""
+    h, s = color_util.color_RGB_to_hs(r, g, b)
+    # Home Assistant does not provide luminance; assume 50 for consistency.
+    l = 50
     return h, s, l
 
 
 def hs_to_rgb(h, s):
-    r,g,b=Color(hsl=[h, s, 50]).rgb
-
-    return [r,g,b]
+    """Convert HS color to RGB using Home Assistant helpers."""
+    r, g, b = color_util.color_hs_to_RGB(h, s)
+    return [r, g, b]
 
 
 def k_to_rgb(k):
-    """Convert a kelvin temperature into an RGB colour tuple."""
-    r, g, b = convert_K_to_RGB(k)
+    """Convert a kelvin temperature into an RGB color tuple."""
+    r, g, b = color_util.color_temperature_to_rgb(k)
     return [r, g, b]
 
 
