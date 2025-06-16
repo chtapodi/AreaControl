@@ -7,6 +7,7 @@ from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
 from tracker import TrackManager, Track, Event
 import unittest
+from color_calibration import ColorCalibrator, LightCalibrationMixin
 
 
 
@@ -76,6 +77,44 @@ def get_total_average_state(key=None):
         else:
             return None
     return state
+
+
+@service
+def calibrate_light(name, samples, color_type="rgb"):
+    """Apply color calibration to a light device.
+
+    ``samples`` should be a list of dictionaries with ``truth`` and ``actual``
+    keys representing the desired color and the raw value required to achieve
+    it. Colors may be provided in RGB or HSL depending on ``color_type``.
+    """
+
+    event_manager = get_event_manager()
+    device = event_manager.area_tree.get_device(name)
+    if device is None:
+        log.warning(f"calibrate_light: device {name} not found")
+        return False
+
+    rgb_pairs = []
+    input_dim = None
+    for sample in samples:
+        truth = sample.get("truth")
+        actual = sample.get("actual")
+        if truth is None or actual is None:
+            continue
+        if color_type == "hsl":
+            truth = hs_to_rgb(truth[0], truth[1])
+            actual = hs_to_rgb(actual[0], actual[1])
+        if input_dim is None:
+            input_dim = len(truth)
+        rgb_pairs.append((truth, actual))
+
+    if not rgb_pairs:
+        log.warning("calibrate_light: no valid samples provided")
+        return False
+
+    device.driver.calibrate(rgb_pairs, input_dim=input_dim)
+    log.info(f"calibrate_light: calibration applied to {name}")
+    return True
 
 
 def get_event_manager():
@@ -1645,10 +1684,11 @@ class PresenceSensorDriver:
 
         return triggers
 
-class KaufLight:
+class KaufLight(LightCalibrationMixin):
     """Light driver for kauf bulbs"""
 
     def __init__(self, name):
+        super().__init__()
         self.name = name
         self.last_state = {}
         # These values are cached on the driver, whereas the whole state is cached on the device
@@ -1809,10 +1849,17 @@ class KaufLight:
 
         # If rgb_color is present: save 
         if "rgb_color" in new_args.keys():
-            self.rgb_color = new_args["rgb_color"] #TODO: Make setting states and caching their values more consistent and a seperate process
-            # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} rgb_color to {self.rgb_color }")
+            self.rgb_color = new_args["rgb_color"]  # cache raw color
             self.color_type = "rgb"
-            # log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
+            calibrated = self.apply_calibration(new_args["rgb_color"])
+            if len(calibrated) == 3:
+                new_args["rgb_color"] = calibrated
+            elif len(calibrated) == 4:
+                new_args["rgbw_color"] = calibrated
+                del new_args["rgb_color"]
+            elif len(calibrated) == 5:
+                new_args["rgbww_color"] = calibrated
+                del new_args["rgb_color"]
 
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
@@ -1829,7 +1876,13 @@ class KaufLight:
 
                 log.info(f"KaufLight<{self.name}>:apply_values(): rgb_color not in new_args. self rgb is {rgb}")
                 if rgb is not None:
-                    new_args["rgb_color"] = rgb
+                    calibrated = self.apply_calibration(rgb)
+                    if len(calibrated) == 3:
+                        new_args["rgb_color"] = calibrated
+                    elif len(calibrated) == 4:
+                        new_args["rgbw_color"] = calibrated
+                    elif len(calibrated) == 5:
+                        new_args["rgbww_color"] = calibrated
                     log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting rgb_color to {rgb}")
             else:
                 temp = self.get_temperature()
