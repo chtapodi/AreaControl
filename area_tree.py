@@ -2,9 +2,9 @@ import yaml
 from collections import defaultdict
 import copy
 import time
-from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
+from homeassistant.util import color as color_util
 from tracker import TrackManager, Track, Event
 from modules.adaptive_learning import get_learner
 import unittest
@@ -778,14 +778,13 @@ def rgb_to_hsl(r, g, b):
 
 
 def hs_to_rgb(h, s):
-    r,g,b=Color(hsl=[h, s, 50]).rgb
-
-    return [r,g,b]
+    r, g, b = color_util.color_hs_to_RGB(h, s)
+    return [r, g, b]
 
 
 def k_to_rgb(k):
     """Convert a kelvin temperature into an RGB colour tuple."""
-    r, g, b = convert_K_to_RGB(k)
+    r, g, b = color_util.color_temperature_to_rgb(k)
     return [r, g, b]
 
 
