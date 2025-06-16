@@ -2,6 +2,7 @@ import yaml
 from collections import defaultdict
 import copy
 import time
+import datetime
 from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
@@ -29,6 +30,24 @@ tracker_manager=None
 verbose_mode = False
 
 last_set_state={}
+
+# Lighting schedule used by `get_time_based_state`. Each tuple defines a start
+# hour, an end hour and the lighting parameters for that period. Brightness and
+# color settings may be constant or interpolated between a pair of values.
+TIME_LIGHT_SETTINGS = [
+    # Night
+    (0, 6, {"brightness": 40, "rgb_color": [255, 80, 0]}),
+    # Dawn transition
+    (6, 8, {"brightness": (40, 255), "rgb_color": ([255, 80, 0], [255, 200, 185])}),
+    # Daytime
+    (8, 18, {"brightness": 255, "color_temp": 350}),
+    # Evening transition
+    (18, 20, {"brightness": 255, "rgb_color": ([255, 200, 185], [255, 172, 89])}),
+    # Late evening
+    (20, 22, {"brightness": (255, 150), "rgb_color": ([255, 172, 89], [255, 80, 0])}),
+    # Late night
+    (22, 24, {"brightness": 40, "rgb_color": [255, 80, 0]}),
+]
 
 
 @service
@@ -297,6 +316,16 @@ def combine_colors(color_one, color_two, strategy="add"):
     return color
 
 
+def _lerp(a, b, ratio):
+    """Linear interpolation helper."""
+    return a + (b - a) * ratio
+
+
+def _blend_colors(c1, c2, ratio):
+    """Return a color between ``c1`` and ``c2`` using ``ratio``."""
+    return [int(_lerp(c1[i], c2[i], ratio)) for i in range(3)]
+
+
 ## RULES ##
 # These must have an interface that mathes the following and returns boolean
 
@@ -352,139 +381,49 @@ def get_area_local_scope(device, device_area, *args):
 ### State functions
 # Functions that return a state based on some value
 def get_time_based_state(device, scope, *args):
-    """
-    Determines and returns a time-based state for devices within a given scope.
+    """Return a lighting state based on the current time of day."""
 
-    This function calculates the desired state for devices based on the current
-    hour of the day. The state includes attributes like brightness, RGB color,
-    and color temperature. The state is intended to reflect common lighting
-    preferences for different times of the day, such as early morning, midday,
-    evening, etc.
+    now = datetime.datetime.now()
+    current_hour = now.hour + now.minute / 60
 
-    Args:
-        device: The device for which the state is being determined.
-        scope: A list of areas containing devices whose states are to be
-               considered.
-        *args: Additional arguments that may be required by the function.
-
-    Returns:
-        dict: A dictionary representing the desired state, including keys for:
-              - "status": Integer, represents the on/off state (1 for on).
-              - "brightness": Integer (optional), represents the brightness level.
-              - "rgb_color": List of integers (optional), represents the RGB color.
-              - "color_temp": Integer (optional), represents the color temperature.
-    """
-    now = time.localtime().tm_hour
-    states = {}
-    for area in scope:
-        states[area.name] = area.get_state()
+    # Gather existing state for the scope so we can blend colours if needed
+    states = {area.name: area.get_state() for area in scope}
     scope_state = summarize_state(states)
 
-    step_increment = 20
+    # Find the active rule for this hour
+    active_rule = TIME_LIGHT_SETTINGS[-1]
+    for start, end, rule in TIME_LIGHT_SETTINGS:
+        if start <= current_hour < end:
+            active_rule = (start, end, rule)
+            break
 
-    state = {}
+    start, end, rule = active_rule
+    ratio = 0 if end == start else (current_hour - start) / (end - start)
 
-    state["status"] = 1  # want to turn on for all of them
+    state = {"status": 1}
 
-    # using now, have if statements for times of day: early morning, morning, midday, afternoon, evening, night, late night
+    brightness = rule.get("brightness")
+    if isinstance(brightness, (list, tuple)):
+        state["brightness"] = int(_lerp(brightness[0], brightness[1], ratio))
+    elif brightness is not None:
+        state["brightness"] = brightness
 
-    if now > 0 and now < 5:
-        log.info("it is late_night")
-
-        state["brightness"] = 50
-        state["rgb_color"] = [255, 0, 0]
-
-    elif now >= 5 and now < 7:
-        log.info("it is dawn")
-        state["rgb_color"] = [255, 0, 0]
-
-    elif now >= 7 and now < 8:
-        log.info("it is early morning")
-        state["brightness"] = 255
-
-        goal_color = [255, 200, 185]
+    if "color_temp" in rule:
+        state["color_temp"] = rule["color_temp"]
+    elif "rgb_color" in rule:
+        color_val = rule["rgb_color"]
+        if isinstance(color_val, (list, tuple)) and isinstance(color_val[0], (list, tuple)):
+            blended = _blend_colors(color_val[0], color_val[1], ratio)
+        else:
+            blended = color_val
         if "rgb_color" in scope_state:
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )  # scope_state["rgb_color"]
+            state["rgb_color"] = combine_colors(scope_state["rgb_color"], blended, strategy="average")
         else:
-            state["rgb_color"] = goal_color
+            state["rgb_color"] = blended
 
-    elif now >= 8 and now < 11:
-        log.info("it is morning")
-        state["brightness"] = 255
-        state["color_temp"] = 350
-
-    elif now >= 11 and now < 14:  # 11-2
-        log.info("it is midday")
-        state["brightness"] = 255
-        state["color_temp"] = 350
-
-    elif now >= 14 and now < 18:  # 2-6
-        log.info("it is afternoon")
-        state["brightness"] = 255
-        state["color_temp"] = 350
-
-
-    elif now >= 18 and now < 20:  # 6-8
-        log.info("it is evening")
-        goal_color = [255, 200, 185]
-        if "rgb_color" in scope_state:
-            log.info(f"combining {scope_state['rgb_color']} with {goal_color}")
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )  # scope_state["rgb_color"]
-        else:
-            log.info("just setting the color")
-            state["rgb_color"] = goal_color
-
-    elif now >= 20 and now < 22:  # 8-10
-        log.info("it is late evening")
-
-        goal_color = [255, 172, 89]
-        if "rgb_color" in scope_state:
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )  # scope_state["rgb_color"]
-        else:
-            state["rgb_color"] = goal_color
-
-    elif now >= 22:  # 10-11
-        log.info("it is night")
-
-        if "rgb_color" in scope_state:
-            log.info("Light is off, darkening color")
-            redder_state = combine_colors(
-                scope_state["rgb_color"],
-                [+step_increment, -step_increment, -step_increment],
-                "add",
-            )
-            state["rgb_color"] = redder_state
-        else:
-            state["rgb_color"] = [255, 80, 0]
-
-    elif now >= 23:  # 23-0
-        if scope_state["status"] == 0:
-            log.info("it is late-ish_night")
-            state["rgb_color"] = [255, 0, 0]
-        else:
-            if "brightness" in scope_state:
-                current_brightness = scope_state["brightness"]
-                if current_brightness > 50:
-                    state["brightess"] = current_brightness - 5
-            else:
-                state["brightess"] = 50
-
-    if "status" in scope_state:
-        if scope_state["status"]:
-            # if the light is on, don't apply rgb_color or temp
-            if "rgb_color" in state:
-                del state["rgb_color"]
-
-            if "color_temp" in state:
-                del state["color_temp"]
-    else:
-        log.warning("Status is not in scope_state")
+    if scope_state.get("status"):
+        state.pop("rgb_color", None)
+        state.pop("color_temp", None)
 
     log.info(f"Time based state is {state}")
     return state
@@ -1841,11 +1780,11 @@ class KaufLight:
         if (
             "off" in new_args and new_args["off"]
         ):  # If "off" : True is present, turn off
-            self.last_state = {"off": True}
             light.turn_off(entity_id=f"light.{self.name}")
-            new_args["status"] = 0
             del new_args["off"]
-            return new_args
+            new_args["status"] = 0
+            self.last_state = copy.deepcopy(new_args)
+            return self.last_state
 
         
 
@@ -1855,7 +1794,8 @@ class KaufLight:
             try:
                 log.info(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
-                self.last_state = new_args
+                new_args["status"] = 1
+                self.last_state = copy.deepcopy(new_args)
 
             except Exception as e:
                 log.warning(
