@@ -525,9 +525,9 @@ def get_time_based_state(device, scope, *args):
             if "brightness" in scope_state:
                 current_brightness = scope_state["brightness"]
                 if current_brightness > 50:
-                    state["brightess"] = current_brightness - 5
+                    state["brightness"] = current_brightness - 5
             else:
-                state["brightess"] = 50
+                state["brightness"] = 50
 
     if "status" in scope_state:
         if scope_state["status"]:
