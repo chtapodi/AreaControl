@@ -19,7 +19,7 @@ def are_events_same(event1, event2):
 
 
 class Event:
-    def __init__(self, area, inpulse=True):
+    def __init__(self, area, impulse=True):
         """
         Creates a new event starting at now.
         An Event is an impulse if there is no status on ongoing presence.
@@ -29,12 +29,12 @@ class Event:
 
         Parameters:
             area (str): The area associated with the event.
-            inpulse (bool, optional): Determines if the Event is ongoing or not.
+            impulse (bool, optional): Determines if the Event is ongoing or not.
         """
         self.first_presence_time=time.time()
         self.area = area
         self.last_rising_edge_time=self.first_presence_time
-        if not inpulse:
+        if not impulse:
             self.last_falling_edge_time=self.first_presence_time
         else :
             self.last_falling_edge_time=None
