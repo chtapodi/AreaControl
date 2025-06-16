@@ -98,6 +98,14 @@ the full implementations.
   configured blind height.
 - **`SpeakerDriver`** – Controls media speakers like Google Home. Tracks volume
   and what is currently playing, and allows adjusting volume via `set_state()`.
+- **`PlugDriver`** – Operates smart plugs or switches to turn devices on or off
+  and can report power usage if a sensor is available.
+- **`ContactSensorDriver`** – Wraps door or window sensors providing open/closed
+  events.
+- **`FanDriver`** – Extends `PlugDriver` for fans and can store which window it
+  is associated with.
+- **`TelevisionDriver`** – Controls televisions through a `media_player` entity
+  and reports the currently playing media.
 
 ## Event and Rule Workflow
 
