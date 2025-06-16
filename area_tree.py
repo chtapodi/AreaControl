@@ -148,6 +148,28 @@ def create_event(**kwargs):
         log.warning(f"No devic_name in serice created event {kwargs}")
 
 
+@service
+def freeze_area(area_name, recursive=True):
+    """Freeze an area so its lights ignore future state changes."""
+    area = get_area_tree().get_area(area_name)
+    if area is None:
+        log.warning(f"freeze_area: area {area_name} not found")
+        return False
+    area.freeze(propagate=recursive)
+    return True
+
+
+@service
+def unfreeze_area(area_name, recursive=True):
+    """Unfreeze a previously frozen area."""
+    area = get_area_tree().get_area(area_name)
+    if area is None:
+        log.warning(f"unfreeze_area: area {area_name} not found")
+        return False
+    area.unfreeze(propagate=recursive)
+    return True
+
+
 def get_function_by_name(function_name, func_object=None):
     func = None
     if func_object is None:
@@ -768,6 +790,7 @@ class Area:
         self.direct_children = []
         self.devices = []
         self.parent = None
+        self.frozen = False
 
     def add_parent(self, parent):
         self.parent = parent
@@ -800,7 +823,31 @@ class Area:
     def has_children(self, exclude_devices=False):
         return len(self.get_children(exclude_devices)) > 0
 
+    def freeze(self, propagate=True):
+        """Freeze this area so state changes are ignored."""
+        self.frozen = True
+        for child in self.get_children(exclude_devices=False):
+            if isinstance(child, Area) and propagate:
+                child.freeze(propagate=True)
+            elif isinstance(child, Device):
+                child.lock(True)
+
+    def unfreeze(self, propagate=True):
+        """Unfreeze this area allowing state changes again."""
+        self.frozen = False
+        for child in self.get_children(exclude_devices=False):
+            if isinstance(child, Area) and propagate:
+                child.unfreeze(propagate=True)
+            elif isinstance(child, Device):
+                child.lock(False)
+
+    def is_frozen(self):
+        return self.frozen
+
     def set_state(self, state):
+        if self.frozen:
+            log.info(f"Area {self.name} is frozen; skipping state change {state}")
+            return
         for child in self.get_children():
             child.set_state(copy.deepcopy(state))
 

@@ -160,6 +160,7 @@ pip install -r requirements.txt
 ```
 
 Copy the YAML files and Python modules into your Home Assistant `pyscript` directory. After reloading Pyscript, call the `init` service to build the area tree and start processing events. Services like `create_event` can be used to simulate button presses or other triggers.
+The new `freeze_area` and `unfreeze_area` services allow you to temporarily lock an area so lights ignore any events until unfrozen.
 
 Refer back to [Event and Rule Workflow](#event-and-rule-workflow) to understand how a service call becomes an action inside an area.
 
