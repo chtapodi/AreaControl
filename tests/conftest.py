@@ -40,9 +40,13 @@ def load_area_tree():
     sys.modules['pyscript'] = pyscript_mod
     sys.modules['pyscript.k_to_rgb'] = pyscript_mod.k_to_rgb
 
-    sys.modules['homeassistant'] = types.ModuleType('homeassistant')
-    sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
-    sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
+    # Use the real Home Assistant modules if available
+    try:
+        import homeassistant.const  # noqa: F401
+    except Exception:
+        sys.modules['homeassistant'] = types.ModuleType('homeassistant')
+        sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
+        sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
 
     tracker_mod = types.ModuleType('tracker')
     tracker_mod.TrackManager = object
