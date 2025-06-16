@@ -37,6 +37,7 @@ connections:
   - dining_room_2: outside
   - dining_room_0: kitchen
   - dining_room_hallway: kitchen
+  - bedroom_window: outside
 
 
 

@@ -114,10 +114,18 @@ back:
 
 bedroom:
   children:
+    - bedroom_window
   devices:
     - kauf_bedroom_0
     - kauf_bedroom_1
-    - 
+    -
+  oconnects:
+  tconnects:
+
+bedroom_window:
+  children:
+  devices:
+    - bedroom_window_fan
   oconnects:
   tconnects:
 

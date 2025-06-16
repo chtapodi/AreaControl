@@ -140,6 +140,11 @@ living_room_lamp:
     - light
     - hue
 
+bedroom_window_fan:
+  type: fan
+  filters:
+    - fan
+
 
 # Outputs
 

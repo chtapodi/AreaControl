@@ -1272,6 +1272,14 @@ class AreaTree:
                                 new_device.set_area(area)
 
                                 area_tree[output] = new_device
+                            elif "fan" in output:
+                                new_fan = FanDriver(output)
+                                new_device = Device(new_fan)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1865,6 +1873,46 @@ class KaufLight:
                 self.last_state = {"on": True}
 
         return self.last_state
+
+
+class FanDriver:
+    """Simple driver for fan devices using Home Assistant fan domain"""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {}
+
+    def get_valid_state_keys(self):
+        return ["status", "speed"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def is_on(self):
+        try:
+            status = state.get(f"fan.{self.name}")
+        except Exception:
+            status = None
+        if status is None or "off" in str(status) or "unavailable" in str(status) or "unknown" in str(status):
+            return False
+        return True
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state and not state["status"]:
+            fan.turn_off(entity_id=f"fan.{self.name}")
+            self.last_state = {"status": 0}
+            return self.last_state
+
+        args = {k: v for k, v in state.items() if k != "status"}
+        fan.turn_on(entity_id=f"fan.{self.name}", **args)
+        self.last_state = {"status": 1}
+        self.last_state.update(args)
+        return self.last_state
+
+    def get_state(self):
+        return {"status": 1 if self.is_on() else 0}
 
 
 # def test_toggle(area_name="kitchen") :
