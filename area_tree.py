@@ -66,6 +66,31 @@ OUTPUT_DRIVERS = {}
 INPUT_DRIVERS = {}
 
 
+def _unwrap_callable(obj, max_depth=5):
+    """Return the underlying callable from wrapped PyScript objects."""
+    depth = 0
+    seen = set()
+    while obj is not None and depth < max_depth and id(obj) not in seen:
+        if callable(obj):
+            break
+        seen.add(id(obj))
+        candidate = None
+        if hasattr(obj, "get"):
+            try:
+                candidate = obj.get()
+            except Exception:
+                candidate = None
+        if candidate is None and hasattr(obj, "value"):
+            candidate = getattr(obj, "value")
+        if candidate is None and hasattr(obj, "func"):
+            candidate = getattr(obj, "func")
+        if candidate is None or candidate is obj:
+            break
+        obj = candidate
+        depth += 1
+    return obj
+
+
 def register_output_driver(keyword, factory):
     """Register a factory function for creating output drivers."""
     OUTPUT_DRIVERS[keyword] = factory
@@ -73,6 +98,9 @@ def register_output_driver(keyword, factory):
 
 def register_input_driver(keyword, factory):
     """Register a factory function for creating input drivers."""
+    # PyScript can wrap functions inside EvalLocalVar or similar wrappers.
+    # Unwrap these so only plain callables are stored.
+    factory = _unwrap_callable(factory)
     INPUT_DRIVERS[keyword] = factory
 
 
@@ -1376,7 +1404,11 @@ class AreaTree:
                         driver = None
                         for key, factory in OUTPUT_DRIVERS.items():
                             if key in output:
-                                driver = factory(output)
+                                factory = _unwrap_callable(factory)
+                                if callable(factory):
+                                    driver = factory(output)
+                                else:
+                                    log.warning(f"Output driver for {key} is not callable")
                                 break
                         if driver is not None:
                             new_device = Device(driver)
@@ -1401,8 +1433,16 @@ class AreaTree:
                                         new_input = None
                                         for key, factory in INPUT_DRIVERS.items():
                                             if key in device_id:
-                                                new_input = factory(input_type, device_id)
-                                                log.info(f"Creating input device: {device_id} using {key}")
+                                                factory = _unwrap_callable(factory)
+                                                if callable(factory):
+                                                    new_input = factory(input_type, device_id)
+                                                    log.info(
+                                                        f"Creating input device: {device_id} using {key}"
+                                                    )
+                                                else:
+                                                    log.warning(
+                                                        f"Input driver for {key} is not callable"
+                                                    )
                                                 break
                                         if new_input is None:
                                             log.warning(f"Input has no driver: {device_id}")
