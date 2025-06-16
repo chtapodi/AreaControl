@@ -149,3 +149,9 @@ blind_bedroom_window:
 
 # Outputs
 
+google_home_speaker:
+  type: speaker
+  filters:
+    - speaker
+    - google_home
+

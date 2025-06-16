@@ -96,6 +96,8 @@ the full implementations.
 - **`BlindDriver`** – Handles smart blinds that accept either a percentage
   closed or a physical height. Heights are converted to percentages using the
   configured blind height.
+- **`SpeakerDriver`** – Controls media speakers like Google Home. Tracks volume
+  and what is currently playing, and allows adjusting volume via `set_state()`.
 
 ## Event and Rule Workflow
 
