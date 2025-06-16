@@ -30,6 +30,12 @@ verbose_mode = False
 
 last_set_state={}
 
+# Default heights for smart blinds (in the same units used when setting height).
+# These values allow converting between physical height and percentage closed.
+BLIND_HEIGHTS = {
+    "blind_bedroom_window": 100,
+}
+
 
 @service
 def reset():
@@ -103,12 +109,17 @@ def get_verbose_mode():
 
 def get_cached_last_set_state():
     global last_set_state
-    return last_set_state
+    if last_set_state is None:
+        return None
+    return copy.deepcopy(last_set_state)
 
 def set_cached_last_set_state(device,state):
     global last_set_state
     log.info(f"set global last set state to {state}")
-    last_set_state = state
+    if state is None:
+        last_set_state = None
+    else:
+        last_set_state = copy.deepcopy(state)
     return True
 
 @service
@@ -140,6 +151,28 @@ def create_event(**kwargs):
 
     else:
         log.warning(f"No devic_name in serice created event {kwargs}")
+
+
+@service
+def freeze_area(area_name, recursive=True):
+    """Freeze an area so its lights ignore future state changes."""
+    area = get_area_tree().get_area(area_name)
+    if area is None:
+        log.warning(f"freeze_area: area {area_name} not found")
+        return False
+    area.freeze(propagate=recursive)
+    return True
+
+
+@service
+def unfreeze_area(area_name, recursive=True):
+    """Unfreeze a previously frozen area."""
+    area = get_area_tree().get_area(area_name)
+    if area is None:
+        log.warning(f"unfreeze_area: area {area_name} not found")
+        return False
+    area.unfreeze(propagate=recursive)
+    return True
 
 
 def get_function_by_name(function_name, func_object=None):
@@ -762,6 +795,7 @@ class Area:
         self.direct_children = []
         self.devices = []
         self.parent = None
+        self.frozen = False
 
     def add_parent(self, parent):
         self.parent = parent
@@ -794,7 +828,31 @@ class Area:
     def has_children(self, exclude_devices=False):
         return len(self.get_children(exclude_devices)) > 0
 
+    def freeze(self, propagate=True):
+        """Freeze this area so state changes are ignored."""
+        self.frozen = True
+        for child in self.get_children(exclude_devices=False):
+            if isinstance(child, Area) and propagate:
+                child.freeze(propagate=True)
+            elif isinstance(child, Device):
+                child.lock(True)
+
+    def unfreeze(self, propagate=True):
+        """Unfreeze this area allowing state changes again."""
+        self.frozen = False
+        for child in self.get_children(exclude_devices=False):
+            if isinstance(child, Area) and propagate:
+                child.unfreeze(propagate=True)
+            elif isinstance(child, Device):
+                child.lock(False)
+
+    def is_frozen(self):
+        return self.frozen
+
     def set_state(self, state):
+        if self.frozen:
+            log.info(f"Area {self.name} is frozen; skipping state change {state}")
+            return
         for child in self.get_children():
             child.set_state(copy.deepcopy(state))
 
@@ -1272,6 +1330,15 @@ class AreaTree:
                                 new_device.set_area(area)
 
                                 area_tree[output] = new_device
+                            elif "blind" in output:
+                                height = BLIND_HEIGHTS.get(output, 100)
+                                new_blind = BlindDriver(output, height)
+                                new_device = Device(new_blind)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1360,7 +1427,10 @@ class Device:
         return state
 
     def get_last_state(self):
-        state = self.last_state
+        if self.last_state is None:
+            state = {} if self.cached_state is None else copy.deepcopy(self.cached_state)
+        else:
+            state = copy.deepcopy(self.last_state)
         state["name"] = self.name
         self.last_state = state
         log.info(f"Device:get_last_state(): Last state: {state}")
@@ -1435,7 +1505,9 @@ class Device:
                 log.info(f"Device {self.name} is locked, not setting state {state}")
 
     def get(self, value):
-        return self.cached_state[value]
+        if self.cached_state is None:
+            return None
+        return self.cached_state.get(value)
 
     def set_area(self, area):
         self.area = area
@@ -1864,6 +1936,56 @@ class KaufLight:
                 light.turn_on(entity_id=f"light.{self.name}")
                 self.last_state = {"on": True}
 
+        return self.last_state
+
+
+class BlindDriver:
+    """Driver for smart blinds controllable by percent closed or height."""
+
+    def __init__(self, name, height=100):
+        self.name = name
+        self.height = height
+        self.last_state = {"closed_percent": 0}
+
+    def get_valid_state_keys(self):
+        return ["closed_percent", "height"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        position = None
+        try:
+            position = state.get(f"cover.{self.name}.current_position")
+        except Exception:
+            pass
+        if position is None:
+            position = 100 - self.last_state.get("closed_percent", 0)
+        closed = 100 - int(position)
+        result = {"closed_percent": closed}
+        if self.height:
+            result["height"] = self.height * (100 - closed) / 100
+        self.last_state = result
+        return result
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        percent = None
+        if "height" in state and self.height:
+            percent = 100 - int((state["height"] / self.height) * 100)
+        elif "closed_percent" in state:
+            percent = state["closed_percent"]
+
+        if percent is not None:
+            position = max(0, min(100, 100 - percent))
+            try:
+                cover.set_cover_position(entity_id=f"cover.{self.name}", position=position)
+            except Exception as e:
+                log.warning(f"Failed to set blind {self.name} to {position}% open: {e}")
+            self.last_state = {"closed_percent": percent}
+            if self.height:
+                self.last_state["height"] = self.height * (100 - percent) / 100
         return self.last_state
 
 

@@ -1,0 +1,10 @@
+connections: tests/scenarios/simple_connections.yml
+persons:
+  - id: p1
+    events:
+      - time: 0
+        room: bedroom
+      - time: 600
+        room: hallway
+expected_final:
+  p1: hallway

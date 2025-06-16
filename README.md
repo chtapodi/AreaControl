@@ -55,6 +55,11 @@ These files are loaded at startup and are referenced throughout the code.
 
 [`area_tree.py`](area_tree.py) builds the hierarchy of `Area` objects and wraps hardware in `Device` objects. The [`AreaTree` class](area_tree.py) exposes helpers to query or modify the tree. Each device tracks a cached state and forwards updates to its underlying driver.
 
+Outputs whose names contain `blind` are automatically treated as smart blinds.
+They can be controlled by specifying a `closed_percent` or providing a physical
+`height` value, which is translated into the correct percentage using the blind
+height configured in `area_tree.py`.
+
 Service functions such as `init()` and `reset()` (see the top of [`area_tree.py`](area_tree.py)) create global managers for the tree, event handling and the tracker.
 
 ## Major Classes
@@ -88,6 +93,9 @@ the full implementations.
   [`modules/blind_controller.py`](modules/blind_controller.py) for integrating
   `SunTracker` with blind devices. It uses `BlindDriver` to set positions while
   avoiding frequent or tiny adjustments.
+- **`BlindDriver`** – Handles smart blinds that accept either a percentage
+  closed or a physical height. Heights are converted to percentages using the
+  configured blind height.
 
 ## Event and Rule Workflow
 
@@ -169,6 +177,7 @@ pip install -r requirements.txt
 ```
 
 Copy the YAML files and Python modules into your Home Assistant `pyscript` directory. After reloading Pyscript, call the `init` service to build the area tree and start processing events. Services like `create_event` can be used to simulate button presses or other triggers.
+The new `freeze_area` and `unfreeze_area` services allow you to temporarily lock an area so lights ignore any events until unfrozen.
 
 Refer back to [Event and Rule Workflow](#event-and-rule-workflow) to understand how a service call becomes an action inside an area.
 

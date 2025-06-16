@@ -140,6 +140,12 @@ living_room_lamp:
     - light
     - hue
 
+blind_bedroom_window:
+  type: blind
+  filters:
+    - blind
+  height: 100
+
 
 # Outputs
 
