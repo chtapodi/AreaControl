@@ -4,13 +4,13 @@ import copy
 import time
 from homeassistant.const import EVENT_CALL_SERVICE
 import inspect
-# from pyscript import task
+from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
-from advanced_tracker import init_from_yaml, MultiPersonTracker
+from modules.advanced_tracker import init_from_yaml, MultiPersonTracker
 from homeassistant.util import color as color_util
 from tracker import TrackManager, Track, Event
-from adaptive_learning import get_learner
+from modules.adaptive_learning import get_learner
 import os
 import unittest
 
@@ -61,53 +61,6 @@ def calibrate_rgb(rgb, profile):
         result.append(val)
     return result
 
-# Registry of driver factories for outputs and inputs
-OUTPUT_DRIVERS = {}
-INPUT_DRIVERS = {}
-
-
-def _unwrap_callable(obj, max_depth=5):
-    """Return the underlying callable from wrapped PyScript objects."""
-    depth = 0
-    seen = set()
-    while not callable(obj) and obj is not None and depth < max_depth and obj not in seen:
-        seen.add(obj)
-        if hasattr(obj, "get"):
-            try:
-                candidate = obj.get()
-                if candidate is not obj:
-                    obj = candidate
-                    depth += 1
-                    continue
-            except Exception:
-                candidate = getattr(obj, "get")
-                if callable(candidate):
-                    obj = candidate
-                    depth += 1
-                    continue
-        if hasattr(obj, "value"):
-            candidate = getattr(obj, "value")
-            if callable(candidate):
-                obj = candidate
-            else:
-                obj = candidate
-            depth += 1
-            continue
-        break
-    return obj
-
-
-def register_output_driver(keyword, factory):
-    """Register a factory function for creating output drivers."""
-    OUTPUT_DRIVERS[keyword] = factory
-
-
-def register_input_driver(keyword, factory):
-    """Register a factory function for creating input drivers."""
-    # PyScript can wrap functions inside EvalLocalVar or similar wrappers.
-    # Unwrap these so only plain callables are stored.
-    factory = _unwrap_callable(factory)
-    INPUT_DRIVERS[keyword] = factory
 
 
 @service
@@ -1402,27 +1355,29 @@ class AreaTree:
                             new_area.add_parent(area)
                             area.add_child(new_area, direct=False)
 
-                # Add outputs as children
+                # Add outputs as children using simple heuristics
                 if "outputs" in area_data and area_data["outputs"] is not None:
                     for output in area_data.get("outputs", []):
-                        if output is None:
-                            continue
-                        driver = None
-                        for key, factory in OUTPUT_DRIVERS.items():
-                            if key in output:
-                                factory = _unwrap_callable(factory)
-                                if callable(factory):
-                                    driver = factory(output)
-                                else:
-                                    log.warning(f"Output driver for {key} is not callable")
-                                break
-                        if driver is not None:
-                            new_device = Device(driver)
-                            area.add_device(new_device)
-                            new_device.set_area(area)
-                            area_tree[output] = new_device
+                        if output is not None:
+                            if "kauf" in output:
+                                new_light = KaufLight(output)
+                                new_device = Device(new_light)
 
-                # Add outputs as children
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
+                            elif "blind" in output:
+                                height = BLIND_HEIGHTS.get(output, 100)
+                                new_blind = BlindDriver(output, height)
+                                new_device = Device(new_blind)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
+
+                # Add inputs as children using simple heuristics
                 if "inputs" in area_data:
                     inputs = area_data["inputs"]
                     log.info(f"Inputs: {inputs}")
@@ -1437,28 +1392,35 @@ class AreaTree:
                                 for device_id in device_id_list:
                                     if device_id is not None:
                                         new_input = None
-                                        for key, factory in INPUT_DRIVERS.items():
-                                            if key in device_id:
-                                                factory = _unwrap_callable(factory)
-                                                if callable(factory):
-                                                    new_input = factory(input_type, device_id)
-                                                    log.info(
-                                                        f"Creating input device: {device_id} using {key}"
-                                                    )
-                                                else:
-                                                    log.warning(
-                                                        f"Input driver for {key} is not callable"
-                                                    )
-                                                break
-                                        if new_input is None:
-                                            log.warning(f"Input has no driver: {device_id}")
+                                        if "motion" in device_id:
+                                            log.info(f"lumi: {device_id}")
+                                            new_input = MotionSensorDriver(
+                                                input_type, device_id
+                                            )
+                                        elif "presence" in device_id:
+                                            log.info(
+                                                f"Creating presence device: {device_id}"
+                                            )
+                                            new_input = PresenceSensorDriver(
+                                                input_type, device_id
+                                            )
+                                        elif "service" in device_id:
+                                            log.info(
+                                                f"Creating service device: {device_id}"
+                                            )
+                                            new_input = ServiceDriver(
+                                                input_type, device_id
+                                            )
+                                        else:
+                                            log.warning(
+                                                f"Input has no driver: {device_id}"
+                                            )
 
                                         if new_input is not None:
                                             new_device = Device(new_input)
-                                            if hasattr(new_input, 'add_callback'):
-                                                new_input.add_callback(
-                                                    new_device.input_trigger
-                                                )
+                                            new_input.add_callback(
+                                                new_device.input_trigger
+                                            )
 
                                             area.add_device(new_device)
                                             new_device.set_area(area)
@@ -2027,21 +1989,6 @@ class HueLight(KaufLight):
 
 
 # Register built-in drivers using keyword heuristics
-register_output_driver('kauf', lambda name: KaufLight(name))
-register_output_driver('hue', lambda name: HueLight(name))
-register_output_driver('blind', lambda name: BlindDriver(name, BLIND_HEIGHTS.get(name, 100)))
-register_output_driver('speaker', lambda name: SpeakerDriver(name))
-register_output_driver('google_home', lambda name: SpeakerDriver(name))
-register_output_driver('plug', lambda name: PlugDriver(name))
-register_output_driver('fan', lambda name: FanDriver(name))
-register_output_driver('tv', lambda name: TelevisionDriver(name))
-register_output_driver('television', lambda name: TelevisionDriver(name))
-
-register_input_driver('motion', lambda t, d: MotionSensorDriver(t, d))
-register_input_driver('presence', lambda t, d: PresenceSensorDriver(t, d))
-register_input_driver('service', lambda t, d: ServiceDriver(t, d))
-register_input_driver('window', lambda t, d: ContactSensorDriver(t, d))
-register_input_driver('door', lambda t, d: ContactSensorDriver(t, d))
 
 
 class BlindDriver:
