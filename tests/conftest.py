@@ -36,6 +36,19 @@ def load_area_tree():
     sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
     sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
 
+    adv_mod = types.ModuleType('modules.advanced_tracker')
+    class DummyTracker:
+        def __init__(self, *a, **k):
+            self.debug_dir = 'debug'
+            self._debug_counter = 0
+        def process_event(self, *a, **k):
+            self._debug_counter += 1
+        def step(self):
+            pass
+    adv_mod.init_from_yaml = lambda *a, **k: DummyTracker()
+    adv_mod.MultiPersonTracker = DummyTracker
+    sys.modules['modules.advanced_tracker'] = adv_mod
+
     tracker_mod = types.ModuleType('tracker')
     tracker_mod.TrackManager = object
     tracker_mod.Track = object
