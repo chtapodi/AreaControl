@@ -48,6 +48,8 @@ The repository relies on several YAML files:
   `max_light_distance`—the allowed patch of sunlight on the floor (default is
   roughly one foot). Windows may also define a `device` ID for the blind
   associated with that opening.
+- [`sensor_config.yml`](sensor_config.yml) keeps calibration offsets for
+  thermometers and humidity sensors.
 
 These files are loaded at startup and are referenced throughout the code.
 

@@ -175,6 +175,22 @@ def unfreeze_area(area_name, recursive=True):
     return True
 
 
+@service
+def calibrate_sensor(device_name, offset=0.0):
+    """Calibrate a temperature or humidity sensor."""
+    tree = get_area_tree()
+    device = tree.get_device(device_name)
+    if device is None:
+        log.warning(f"calibrate_sensor: device {device_name} not found")
+        return False
+    driver = device.driver
+    if hasattr(driver, "calibrate"):
+        driver.calibrate(offset)
+        return True
+    log.warning(f"calibrate_sensor: device {device_name} cannot be calibrated")
+    return False
+
+
 def get_function_by_name(function_name, func_object=None):
     func = None
     if func_object is None:
@@ -1367,6 +1383,16 @@ class AreaTree:
                                             new_input = PresenceSensorDriver(
                                                 input_type, device_id
                                             )
+                                        elif "temperature" in device_id or "therm" in device_id:
+                                            log.info(
+                                                f"Creating thermometer device: {device_id}"
+                                            )
+                                            new_input = ThermometerDriver(device_id)
+                                        elif "humidity" in device_id:
+                                            log.info(
+                                                f"Creating humidity device: {device_id}"
+                                            )
+                                            new_input = HumiditySensorDriver(device_id)
                                         elif "service" in device_id:
                                             log.info(
                                                 f"Creating service device: {device_id}"
@@ -1986,6 +2012,118 @@ class BlindDriver:
             self.last_state = {"closed_percent": percent}
             if self.height:
                 self.last_state["height"] = self.height * (100 - percent) / 100
+        return self.last_state
+
+
+class ThermometerDriver:
+    """Driver for simple temperature sensors with calibration."""
+
+    def __init__(self, name, config_path="sensor_config.yml"):
+        self.name = name
+        self.config_path = config_path
+        self.last_state = {}
+        self.calibration = 0.0
+        self.load_calibration()
+
+    def get_valid_state_keys(self):
+        return ["temperature"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def load_calibration(self):
+        try:
+            with open(self.config_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            data = {}
+        self.calibration = data.get("thermometers", {}).get(self.name, 0.0)
+
+    def save_calibration(self):
+        try:
+            with open(self.config_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            data = {}
+        data.setdefault("thermometers", {})[self.name] = self.calibration
+        with open(self.config_path, "w") as f:
+            yaml.safe_dump(data, f)
+
+    def calibrate(self, offset):
+        self.calibration = offset
+        self.save_calibration()
+
+    def get_state(self):
+        value = None
+        try:
+            value = state.get(f"sensor.{self.name}")
+        except Exception:
+            pass
+        if value is None:
+            value = self.last_state.get("temperature")
+        if value is not None:
+            try:
+                value = float(value) + self.calibration
+            except Exception:
+                pass
+        self.last_state = {"temperature": value}
+        return self.last_state
+
+
+class HumiditySensorDriver:
+    """Driver for humidity sensors with calibration support."""
+
+    def __init__(self, name, config_path="sensor_config.yml"):
+        self.name = name
+        self.config_path = config_path
+        self.last_state = {}
+        self.calibration = 0.0
+        self.load_calibration()
+
+    def get_valid_state_keys(self):
+        return ["humidity"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def load_calibration(self):
+        try:
+            with open(self.config_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            data = {}
+        self.calibration = data.get("humidity_sensors", {}).get(self.name, 0.0)
+
+    def save_calibration(self):
+        try:
+            with open(self.config_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            data = {}
+        data.setdefault("humidity_sensors", {})[self.name] = self.calibration
+        with open(self.config_path, "w") as f:
+            yaml.safe_dump(data, f)
+
+    def calibrate(self, offset):
+        self.calibration = offset
+        self.save_calibration()
+
+    def get_state(self):
+        value = None
+        try:
+            value = state.get(f"sensor.{self.name}")
+        except Exception:
+            pass
+        if value is None:
+            value = self.last_state.get("humidity")
+        if value is not None:
+            try:
+                value = float(value) + self.calibration
+            except Exception:
+                pass
+        self.last_state = {"humidity": value}
         return self.last_state
 
 
