@@ -1988,8 +1988,6 @@ class HueLight(KaufLight):
         super().__init__(name, color_profile=COLOR_PROFILES.get("hue"))
 
 
-# Register built-in drivers using keyword heuristics
-
 
 class BlindDriver:
     """Driver for smart blinds controllable by percent closed or height."""
