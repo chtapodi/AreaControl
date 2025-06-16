@@ -39,6 +39,20 @@ BLIND_HEIGHTS = {
     "blind_bedroom_window": 100,
 }
 
+# Registry of driver factories for outputs and inputs
+OUTPUT_DRIVERS = {}
+INPUT_DRIVERS = {}
+
+
+def register_output_driver(keyword, factory):
+    """Register a factory function for creating output drivers."""
+    OUTPUT_DRIVERS[keyword] = factory
+
+
+def register_input_driver(keyword, factory):
+    """Register a factory function for creating input drivers."""
+    INPUT_DRIVERS[keyword] = factory
+
 
 @service
 def reset():
@@ -1337,32 +1351,18 @@ class AreaTree:
                 # Add outputs as children
                 if "outputs" in area_data and area_data["outputs"] is not None:
                     for output in area_data.get("outputs", []):
-                        if output is not None:
-                            if "kauf" in output:
-                                new_light = KaufLight(output)
-                                new_device = Device(new_light)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
-                            elif "blind" in output:
-                                height = BLIND_HEIGHTS.get(output, 100)
-                                new_blind = BlindDriver(output, height)
-                                new_device = Device(new_blind)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
-                            elif "speaker" in output or "google_home" in output:
-                                new_speaker = SpeakerDriver(output)
-                                new_device = Device(new_speaker)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
+                        if output is None:
+                            continue
+                        driver = None
+                        for key, factory in OUTPUT_DRIVERS.items():
+                            if key in output:
+                                driver = factory(output)
+                                break
+                        if driver is not None:
+                            new_device = Device(driver)
+                            area.add_device(new_device)
+                            new_device.set_area(area)
+                            area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1379,35 +1379,20 @@ class AreaTree:
                                 for device_id in device_id_list:
                                     if device_id is not None:
                                         new_input = None
-                                        if "motion" in device_id:
-                                            log.info(f"lumi: {device_id}")
-                                            new_input = MotionSensorDriver(
-                                                input_type, device_id
-                                            )
-                                        elif "presence" in device_id:
-                                            log.info(
-                                                f"Creating presence device: {device_id}"
-                                            )
-                                            new_input = PresenceSensorDriver(
-                                                input_type, device_id
-                                            )
-                                        elif "service" in device_id:
-                                            log.info(
-                                                f"Creating service device: {device_id}"
-                                            )
-                                            new_input = ServiceDriver(
-                                                input_type, device_id
-                                            )
-                                        else:
-                                            log.warning(
-                                                f"Input has no driver: {device_id}"
-                                            )
+                                        for key, factory in INPUT_DRIVERS.items():
+                                            if key in device_id:
+                                                new_input = factory(input_type, device_id)
+                                                log.info(f"Creating input device: {device_id} using {key}")
+                                                break
+                                        if new_input is None:
+                                            log.warning(f"Input has no driver: {device_id}")
 
                                         if new_input is not None:
                                             new_device = Device(new_input)
-                                            new_input.add_callback(
-                                                new_device.input_trigger
-                                            )
+                                            if hasattr(new_input, 'add_callback'):
+                                                new_input.add_callback(
+                                                    new_device.input_trigger
+                                                )
 
                                             area.add_device(new_device)
                                             new_device.set_area(area)
@@ -1963,6 +1948,23 @@ class KaufLight:
         return self.last_state
 
 
+# Register built-in drivers using keyword heuristics
+register_output_driver('kauf', lambda name: KaufLight(name))
+register_output_driver('blind', lambda name: BlindDriver(name, BLIND_HEIGHTS.get(name, 100)))
+register_output_driver('speaker', lambda name: SpeakerDriver(name))
+register_output_driver('google_home', lambda name: SpeakerDriver(name))
+register_output_driver('plug', lambda name: PlugDriver(name))
+register_output_driver('fan', lambda name: FanDriver(name))
+register_output_driver('tv', lambda name: TelevisionDriver(name))
+register_output_driver('television', lambda name: TelevisionDriver(name))
+
+register_input_driver('motion', lambda t, d: MotionSensorDriver(t, d))
+register_input_driver('presence', lambda t, d: PresenceSensorDriver(t, d))
+register_input_driver('service', lambda t, d: ServiceDriver(t, d))
+register_input_driver('window', lambda t, d: ContactSensorDriver(t, d))
+register_input_driver('door', lambda t, d: ContactSensorDriver(t, d))
+
+
 class BlindDriver:
     """Driver for smart blinds controllable by percent closed or height."""
 
@@ -2051,6 +2053,161 @@ class SpeakerDriver:
             except Exception as e:
                 log.warning(f"Failed to set volume for {self.name}: {e}")
         self.last_state.update(state)
+        return self.last_state
+
+
+class PlugDriver:
+    """Driver for simple smart plugs/switches."""
+
+    def __init__(self, name, power_sensor=None):
+        self.name = name
+        self.power_sensor = power_sensor
+        self.last_state = {"status": 0}
+
+    def get_valid_state_keys(self):
+        keys = ["status"]
+        if self.power_sensor:
+            keys.append("power")
+        return keys
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"switch.{self.name}")
+        except Exception:
+            pass
+        on = 1 if status in ("on", 1, True) else 0
+        result = {"status": on}
+        if self.power_sensor:
+            power = None
+            try:
+                power = state.get(self.power_sensor)
+            except Exception:
+                pass
+            result["power"] = power
+        self.last_state = result
+        return result
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    switch.turn_on(entity_id=f"switch.{self.name}")
+                else:
+                    switch.turn_off(entity_id=f"switch.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set plug {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
+        return self.last_state
+
+
+class ContactSensorDriver:
+    """Driver for window/door sensors."""
+
+    def __init__(self, input_type, device_id):
+        self.name = device_id if input_type in device_id else f"{input_type}_{device_id}"
+        self.last_state = None
+        self.callback = None
+        self.trigger = self.setup_service_triggers(device_id)
+
+    def add_callback(self, callback):
+        self.callback = callback
+
+    def get_state(self):
+        state_val = None
+        try:
+            state_val = state.get(f"binary_sensor.{self.name}")
+        except Exception:
+            pass
+        open_val = 1 if state_val in ("on", "open", True) else 0
+        self.last_state = {"open": open_val}
+        return {"name": self.name, "open": open_val}
+
+    def get_valid_state_keys(self):
+        return ["open"]
+
+    def trigger_state(self, **kwargs):
+        if self.callback is not None:
+            tags = kwargs.get("tags")
+            if tags:
+                self.callback(tags)
+
+    def setup_service_triggers(self, device_id):
+        values = ["on", "off"]
+        triggers = []
+        for value in values:
+            tag = "open" if value == "on" else "closed"
+            triggers.append(
+                generate_state_trigger(
+                    f"binary_sensor.{device_id} == '{value}'",
+                    self.trigger_state,
+                    {"tags": [tag]},
+                )
+            )
+        return triggers
+
+
+class FanDriver(PlugDriver):
+    """Driver wrapping a plug to control a fan."""
+
+    def __init__(self, name, window=None):
+        super().__init__(name)
+        self.window = window
+
+    def get_state(self):
+        state = super().get_state()
+        state["window"] = self.window
+        return state
+
+
+class TelevisionDriver:
+    """Driver for televisions controlled via media_player."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"status": 0, "media": None}
+
+    def get_valid_state_keys(self):
+        return ["status"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        media = None
+        try:
+            status = state.get(f"media_player.{self.name}.state")
+        except Exception:
+            pass
+        on = 0
+        if status not in (None, "off", "standby", "idle"):
+            on = 1
+            try:
+                media = state.get(f"media_player.{self.name}.media_title")
+            except Exception:
+                pass
+        self.last_state = {"status": on, "media": media}
+        return self.last_state
+
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    media_player.turn_on(entity_id=f"media_player.{self.name}")
+                else:
+                    media_player.turn_off(entity_id=f"media_player.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set television {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
         return self.last_state
 
 
