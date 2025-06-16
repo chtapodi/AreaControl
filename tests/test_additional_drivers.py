@@ -59,3 +59,60 @@ def test_hue_light_calibration():
     light.apply_values(rgb_color=[100, 100, 100])
     assert calls and calls[0]['rgb_color'] == [50, 100, 100]
 
+
+def test_register_input_driver_unwrap():
+    area_tree = load_area_tree()
+
+    called = []
+
+    def factory(t, d):
+        called.append((t, d))
+        return types.SimpleNamespace(name=d)
+
+    class Wrapper:
+        def __init__(self, value):
+            self.value = value
+
+        def get(self):
+            return self.value
+
+    area_tree.register_input_driver('wrapped', Wrapper(factory))
+
+    assert area_tree.INPUT_DRIVERS['wrapped'] is factory
+    area_tree.INPUT_DRIVERS['wrapped']('type', 'id')
+    assert called == [('type', 'id')]
+
+
+def test_input_driver_unwrap_on_use(tmp_path):
+    area_tree = load_area_tree()
+
+    called = []
+
+    def factory(t, d):
+        called.append((t, d))
+        return types.SimpleNamespace(name=d)
+
+    class Wrapper:
+        def __init__(self, value):
+            self.value = value
+
+        def get(self):
+            return self.value
+
+    area_tree.INPUT_DRIVERS['wrapped2'] = Wrapper(factory)
+
+    test_yaml = {
+        'root': {
+            'inputs': {
+                'wrapped2': ['wrapped2_sensor']
+            }
+        }
+    }
+    yaml_path = tmp_path / 'test.yml'
+    import yaml
+    yaml.safe_dump(test_yaml, yaml_path.open('w'))
+
+    tree_obj = area_tree.AreaTree(str(yaml_path))
+    assert ('wrapped2', 'wrapped2_sensor') in called
+
+
