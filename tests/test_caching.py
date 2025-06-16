@@ -125,3 +125,27 @@ def test_global_cache_copy():
     ret = get_cached_last_set_state()
     ret['status'] = 0
     assert get_cached_last_set_state() == sample
+
+
+def test_add_to_cache_initial_and_merge():
+    d = Device(DummyDriver('light'))
+    d.add_to_cache({'status': 1})
+    assert d.last_state is None
+    assert d.cached_state == {'status': 1}
+
+    d.add_to_cache({'brightness': 50})
+    assert d.last_state == {'status': 1}
+    assert d.cached_state == {'status': 1, 'brightness': 50}
+
+
+def test_get_last_state_after_cache_updates():
+    d = Device(DummyDriver('light'))
+    d.add_to_cache({'status': 1})
+    d.add_to_cache({'status': 0})
+    last = d.get_last_state()
+    assert last == {'name': 'light', 'status': 1}
+
+
+def test_set_cached_last_state_none():
+    set_cached_last_set_state(None, None)
+    assert get_cached_last_set_state() is None
