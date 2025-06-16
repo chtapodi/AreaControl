@@ -1339,6 +1339,22 @@ class AreaTree:
                                 new_device.set_area(area)
 
                                 area_tree[output] = new_device
+                            elif "fan" in output:
+                                new_fan = FanDriver(output)
+                                new_device = Device(new_fan)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
+                            elif "plug" in output:
+                                new_plug = PlugDriver(output)
+                                new_device = Device(new_plug)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1987,6 +2003,83 @@ class BlindDriver:
             if self.height:
                 self.last_state["height"] = self.height * (100 - percent) / 100
         return self.last_state
+
+
+class PlugDriver:
+    """Driver for smart plugs that expose a switch entity and optional power sensors."""
+
+    def __init__(self, name, *, power_sensor=None, current_sensor=None):
+        self.name = name
+        self.power_sensor = power_sensor
+        self.current_sensor = current_sensor
+        self.last_state = {"status": 0}
+
+    def get_valid_state_keys(self):
+        keys = ["status"]
+        if self.power_sensor:
+            keys.append("power")
+        if self.current_sensor:
+            keys.append("current")
+        return keys
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    switch.turn_on(entity_id=f"switch.{self.name}")
+                else:
+                    switch.turn_off(entity_id=f"switch.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set plug {self.name}: {e}")
+            self.last_state["status"] = int(bool(state["status"]))
+        return self.last_state
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"switch.{self.name}")
+        except Exception:
+            pass
+        if status is None:
+            status = self.last_state.get("status", 0)
+        result = {"status": 1 if str(status).lower() in {"on", "true", "1"} else 0}
+        if self.power_sensor:
+            try:
+                result["power"] = state.get(self.power_sensor)
+            except Exception:
+                pass
+        if self.current_sensor:
+            try:
+                result["current"] = state.get(self.current_sensor)
+            except Exception:
+                pass
+        self.last_state = result
+        return result
+
+
+class FanDriver:
+    """Simple fan driver implemented via an underlying PlugDriver."""
+
+    def __init__(self, name, plug_name=None, **kwargs):
+        self.plug = PlugDriver(plug_name or name, **kwargs)
+        self.name = name
+
+    def get_valid_state_keys(self):
+        return self.plug.get_valid_state_keys()
+
+    def filter_state(self, state):
+        return self.plug.filter_state(state)
+
+    def set_state(self, state):
+        return self.plug.set_state(state)
+
+    def get_state(self):
+        return self.plug.get_state()
 
 
 # def test_toggle(area_name="kitchen") :
