@@ -29,6 +29,14 @@ def load_area_tree():
     pyscript_mod.service = _stub_decorator
     pyscript_mod.event_trigger = _stub_decorator
     pyscript_mod.pyscript_compile = _stub_decorator
+    class DummyTask:
+        async def sleep(self, *_args, **_kwargs):
+            pass
+
+        def create_task(self, coro):
+            return coro
+
+    pyscript_mod.task = DummyTask()
     sys.modules['pyscript'] = pyscript_mod
     sys.modules['pyscript.k_to_rgb'] = pyscript_mod.k_to_rgb
 
@@ -63,6 +71,14 @@ def load_tracker():
     pyscript_mod.service = _stub_decorator
     pyscript_mod.event_trigger = _stub_decorator
     pyscript_mod.pyscript_compile = _stub_decorator
+    class DummyTask:
+        async def sleep(self, *_args, **_kwargs):
+            pass
+
+        def create_task(self, coro):
+            return coro
+
+    pyscript_mod.task = DummyTask()
     sys.modules['pyscript'] = pyscript_mod
 
     class DummyState:

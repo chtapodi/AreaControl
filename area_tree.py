@@ -2,6 +2,8 @@ import yaml
 from collections import defaultdict
 import copy
 import time
+import inspect
+from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
@@ -2121,23 +2123,26 @@ class TestManager():
         #         return device
         return self.area_tree.get_device("kauf_laundry_room_2")
 
-    def run_tests(self) :
-        tests_run=0
-        tests_passed=0
-        failed_tests=[]
+    async def run_tests(self) :
+        tests_run = 0
+        tests_passed = 0
+        failed_tests = []
         # get all methods in this class and check if their name starts with "test"
         log.info(dir(self))
         for method_name in dir(self):
             if method_name.startswith("test"):
-                if getattr(self, method_name)() :
+                method = getattr(self, method_name)
+                if inspect.iscoroutinefunction(method):
+                    result = await method()
+                else:
+                    result = method()
+                if result:
                     log.info(f"Test {tests_run+1}: {method_name} PASSED")
-
-                    tests_passed+=1
-                else :
+                    tests_passed += 1
+                else:
                     log.info(f"Test {tests_run+1}: {method_name} FAILED")
-
                     failed_tests.append(method_name)
-                tests_run+=1
+                tests_run += 1
 
         log.info(f"Tests passed: {tests_passed}/{tests_run}")
 
@@ -2186,7 +2191,7 @@ class TestManager():
         return "status" in result and result["status"] == 0
 
 
-    def test_set_setting_status(self):
+    async def test_set_setting_status(self):
         """
         A test function to check setting status functionality by turning on and off from different initial states.
         """
@@ -2194,14 +2199,14 @@ class TestManager():
         initial_state=self.default_test_area.get_state()
         # turn on from unknown default state
         self.default_test_area.set_state({"status": 1})
-        time.sleep(.1)
+        await task.sleep(.1)
         current_state=self.default_test_area.get_state()
         if not current_state["status"] :
             log.info(f"Failed to turn on from initial state {initial_state}")
             return False
         # Turn off from on
         self.default_test_area.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
         
         current_state=self.default_test_area.get_state()
@@ -2212,7 +2217,7 @@ class TestManager():
 
         # Turn on from off
         self.default_test_area.set_state({"status": 1})
-        time.sleep(.1)
+        await task.sleep(.1)
         current_state=self.default_test_area.get_state()
         if not current_state["status"] :
             log.info(f"Failed to turn on from off")
@@ -2220,12 +2225,12 @@ class TestManager():
 
         return True
 
-    def test_setting_cache(self) :
+    async def test_setting_cache(self) :
         log.info("STARTING TEST SETTING CACHE")
         self.default_test_light.set_state({"status": 1, "rgb_color": [255, 255, 255]})
-        time.sleep(.1)
+        await task.sleep(.1)
         self.default_test_light.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_light.get_state()
         if state["status"] != 0 :
             log.info(f"test_setting_cache: Failed to set to off {state}")
@@ -2237,7 +2242,7 @@ class TestManager():
 
         log.info("test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}")
         self.default_test_light.add_to_cache({"rgb_color": [255, 0, 255]})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_light.get_state()
         if state["status"] != 0 or state["rgb_color"] != [255, 0, 255] :
             log.info(f"test_setting_cache: Failed to update cache {state}")
@@ -2245,12 +2250,12 @@ class TestManager():
 
         return True
 
-    def test_set_and_get_color(self):
+    async def test_set_and_get_color(self):
         log.info("TEST SETTING AND GETTING COLOR")
         # Set to off as default
         log.info("TEST: setting status 0 and rgb 000")
         self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
 
         if state["status"] != 0:
@@ -2265,7 +2270,7 @@ class TestManager():
         log.info("TEST: setting rgb while off")
         # Set color while off
         self.default_test_area.set_state({"rgb_color": [255, 255, 255]})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if "rgb_color" in state and state["rgb_color"] != [255, 255, 255] :
             log.warning(f"TEST: Failed to set color while off {state}")
@@ -2276,7 +2281,7 @@ class TestManager():
         log.info("TEST: turning on")
         # turn on 
         self.default_test_area.set_state({"status":1})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if state["status"] != 1:
             log.warning(f"TEST: Failed to turn on {state}")
@@ -2290,7 +2295,7 @@ class TestManager():
 
         # Change color while on 
         self.default_test_area.set_state({"rgb_color": [0, 255, 0]})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [0, 255, 0] or state["status"] != 1:
             log.warning(f"TEST: Failed to change color while on {state}")
@@ -2300,11 +2305,11 @@ class TestManager():
         log.info(f"TEST: current state: {self.default_test_area.get_state()}")
 
         self.default_test_area.set_state({"rgb_color": [255, 195, 50]})
-        time.sleep(.1)
+        await task.sleep(.1)
         self.default_test_area.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         self.default_test_area.set_state({"status": 1})
-        time.sleep(.1)
+        await task.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [255, 195, 50] or state["status"] != 1:
             log.warning(f"test_set_and_get_color: Failed to persist through toggle {state}")
@@ -2350,7 +2355,7 @@ class TestManager():
         return True
         
 
-    def test_motion_sensor(self) :
+    async def test_motion_sensor(self) :
         # When motion sensor is triggered, the area should be turned off.
         log.info(f"test_motion_sensor: starting: Area {self.default_test_area}")
         initial_state=self.default_test_area.get_state()
@@ -2358,14 +2363,14 @@ class TestManager():
         # Set to known initial state
         #TODO: Enable a way of testing this with various state rules. currently most of state us not checkable
         self.default_test_area.set_state({"status": 1, "brightness": 255, "rgb_color": [255, 72, 35]})
-        time.sleep(.1)
+        await task.sleep(.1)
         # Set to off
         self.default_test_area.set_state({"status": 0})
-        time.sleep(.1)
+        await task.sleep(.1)
         log.info(f"test_motion_sensor: state after off: {self.default_test_area.get_state()}")
 
         event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
-        time.sleep(.2)
+        await task.sleep(.2)
         # Check if area is on
         state=self.default_test_area.get_state()
         log.info(f"test_motion_sensor: state after motion: {state}")
@@ -2385,10 +2390,10 @@ class TestManager():
         # Test motion sensor deactivation
         self.default_test_area.set_state({"status": 0})
         set_motion_sensor_mode("off")
-        time.sleep(.2)
+        await task.sleep(.2)
         event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
 
-        time.sleep(.2)
+        await task.sleep(.2)
         state=self.default_test_area.get_state()
         if state['status'] != 0:
             log.warning(f"Expected area to be off after motion sensor deactivation but was {self.default_test_area.get_state()}")
@@ -2398,18 +2403,18 @@ class TestManager():
         set_motion_sensor_mode("on")
         return True
 
-@service 
-def run_tests() :
+@service
+async def run_tests() :
     log.info("TEST")
-    test_manager=TestManager()
-    test_manager.run_tests()
+    test_manager = TestManager()
+    await test_manager.run_tests()
     
 
 
 
 
 init()
-run_tests()
+task.create_task(run_tests())
 
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_service_calls(**kwargs):
@@ -2474,20 +2479,20 @@ def monitor_external_state_setting(**kwargs):
 
 
 @service
-def test_tracks() :
+async def test_tracks() :
     log.info("STARTING TEST TRACKS")
     event_manager = get_event_manager()
     tracker_manager=get_tracker_manager()
     event_manager.create_event({'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
     event_manager.create_event({'device_name': 'motion_sensor_office', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
 
     event_manager.create_event({'device_name': 'motion_sensor_hallway', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
 
     event_manager.create_event({'device_name': 'motion_sensor_kitchen', 'tags': ['on', 'motion_occupancy']})
-    time.sleep(0.2)
+    await task.sleep(0.2)
 
     # event_manager.create_event({'device_name': 'motion_sensor_outside', 'tags': ['on', 'motion_occupancy']})
 
