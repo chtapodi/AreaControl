@@ -148,19 +148,21 @@ class Track:
         """
         
         log.info("Let us merge")
-        new_event_list=[]
-        current_track=self.get_copy()
+        new_event_list = []
+        current_track = self.get_copy()
         log.info(f"Current track: {current_track}")
         # current_track=copy.deepcopy(current_track) #deepcopy not working
 
-        log.info(f"merging {track_to_merge.get_pretty_string()} with {self.get_pretty_string()}")
+        log.info(
+            f"merging {track_to_merge.get_pretty_string()} with {self.get_pretty_string()}"
+        )
 
-        track_to_merge_event_list=track_to_merge.get_copy()
+        track_to_merge_event_list = track_to_merge.get_copy()
 
         if self.get_last_event_time() < track_to_merge.get_first_presence_time():
             # If entire current track is older than entire new track, can just add new track to end of current track
             for event in track_to_merge.get_track_list():
-                if (self.event_list[0].get_duration() == 0) : 
+                if (self.event_list[0].get_duration() == 0) :
                     self.event_list[0].end(event.get_first_presence_time())
                 self.event_list.insert(0,event)
 
@@ -169,33 +171,41 @@ class Track:
         else :
 
             # Start the new track with the first event
-            event_to_add=None
-            if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
-                event_to_add=track_to_merge.pop(0)
-            else :
-                event_to_add=current_track.pop(0)
+            event_to_add = None
+            if (
+                track_to_merge_event_list[0].get_time_since_last_trigger()
+                < current_track[0].get_time_since_last_trigger()
+            ):
+                event_to_add = track_to_merge_event_list.pop(0)
+            else:
+                event_to_add = current_track.pop(0)
 
-            if (new_event_list[0].get_duration() == 0) : 
+            # update previous event duration if necessary
+            if len(new_event_list) > 0 and new_event_list[0].get_duration() == 0:
                 new_event_list[0].end(event_to_add.get_first_presence_time())
-
 
             new_event_list.append(event_to_add)
 
             # Add the rest of the events in order of them happening
             while len(current_track) > 0:
 
-                while len(track_to_merge) > 0:
+                while len(track_to_merge_event_list) > 0:
 
-                    if track_to_merge[0].get_time_since_last_trigger() < current_track[0].get_time_since_last_trigger():
-                        new_event_list[0].end(track_to_merge[0].get_first_presence_time())
-                        new_event_list.append(track_to_merge.pop(0))
-                    else :
+                    if (
+                        track_to_merge_event_list[0].get_time_since_last_trigger()
+                        < current_track[0].get_time_since_last_trigger()
+                    ):
+                        new_event_list[0].end(
+                            track_to_merge_event_list[0].get_first_presence_time()
+                        )
+                        new_event_list.append(track_to_merge_event_list.pop(0))
+                    else:
                         break
 
                 new_event_list.append( current_track.pop(0))
 
-            while len(track_to_merge) > 0:
-                new_event_list.append( track_to_merge.pop(0))
+            while len(track_to_merge_event_list) > 0:
+                new_event_list.append( track_to_merge_event_list.pop(0))
 
             log.info(f"new merged track: {new_event_list}")
             self.event_list=new_event_list

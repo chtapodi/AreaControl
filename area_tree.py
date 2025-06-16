@@ -750,7 +750,9 @@ def hs_to_rgb(h, s):
 
 
 def k_to_rgb(k):
-    r, g, b = convert_K_to_RG
+    """Convert a kelvin temperature into an RGB colour tuple."""
+    r, g, b = convert_K_to_RGB(k)
+    return [r, g, b]
 
 
 class Area:
