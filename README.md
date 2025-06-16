@@ -15,6 +15,7 @@ This README outlines the main pieces of the project and how events flow through 
 - [Event and Rule Workflow](#event-and-rule-workflow)
 - [Presence Tracking](#presence-tracking)
 - [Rule Examples](#rule-examples)
+- [Design Philosophy](#design-philosophy)
 - [Running with Home Assistant](#running-with-home-assistant)
 
 ## Project Layout
@@ -116,6 +117,31 @@ state:
 
 State functions can return partial states which are combined using strategies
 like `first_state` or `merge_state`.
+
+## Design Philosophy
+
+The rule engine aims to make automation **incremental** and **non-destructive**.
+States are merged rather than overwritten so that each rule only adjusts the
+properties it cares about. For example, a rule that only changes `rgb_color`
+does not toggle the light on or off unless `status` is explicitly provided.
+
+Key principles:
+
+* **Partial state updates.** Rules may specify just one or two keys. Any
+  attribute not present in the final state retains its previous value thanks to
+  device caching.
+* **Color does not imply power.** Changing `rgb_color` or `color_temp` merely
+  updates the color; it does not affect the `status` flag. This prevents color
+  adjustments from accidentally turning lights on or off.
+* **Function-based scopes.** Scope and state logic is delegated to functions
+  referenced by name, letting complex behavior live in Python while YAML stays
+  declarative.
+* **Combination strategies.** When multiple state fragments are returned from
+  functions, they are merged according to a strategy (e.g., averaging or using
+  the first non-null value).
+* **Modular events.** Manual state from an incoming event is merged with state
+  functions and the rule's default to create a final result. Additional
+  functions may veto the rule entirely if conditions are not met.
 
 ## Running with Home Assistant
 
