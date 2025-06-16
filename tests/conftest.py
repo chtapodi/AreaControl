@@ -29,6 +29,14 @@ def load_area_tree():
     pyscript_mod.service = _stub_decorator
     pyscript_mod.event_trigger = _stub_decorator
     pyscript_mod.pyscript_compile = _stub_decorator
+    class DummyTask:
+        async def sleep(self, *_args, **_kwargs):
+            pass
+
+        def create_task(self, coro):
+            return coro
+
+    pyscript_mod.task = DummyTask()
     sys.modules['pyscript'] = pyscript_mod
     sys.modules['pyscript.k_to_rgb'] = pyscript_mod.k_to_rgb
 
@@ -42,6 +50,27 @@ def load_area_tree():
     ha_util.color = ha_color
     sys.modules['homeassistant.util'] = ha_util
     sys.modules['homeassistant.util.color'] = ha_color
+    
+    # Use the real Home Assistant modules if available
+    try:
+        import homeassistant.const  # noqa: F401
+    except Exception:
+        sys.modules['homeassistant'] = types.ModuleType('homeassistant')
+        sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
+        sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
+
+    adv_mod = types.ModuleType('modules.advanced_tracker')
+    class DummyTracker:
+        def __init__(self, *a, **k):
+            self.debug_dir = 'debug'
+            self._debug_counter = 0
+        def process_event(self, *a, **k):
+            self._debug_counter += 1
+        def step(self):
+            pass
+    adv_mod.init_from_yaml = lambda *a, **k: DummyTracker()
+    adv_mod.MultiPersonTracker = DummyTracker
+    sys.modules['modules.advanced_tracker'] = adv_mod
 
     tracker_mod = types.ModuleType('tracker')
     tracker_mod.TrackManager = object
@@ -70,6 +99,14 @@ def load_tracker():
     pyscript_mod.service = _stub_decorator
     pyscript_mod.event_trigger = _stub_decorator
     pyscript_mod.pyscript_compile = _stub_decorator
+    class DummyTask:
+        async def sleep(self, *_args, **_kwargs):
+            pass
+
+        def create_task(self, coro):
+            return coro
+
+    pyscript_mod.task = DummyTask()
     sys.modules['pyscript'] = pyscript_mod
 
     class DummyState:
