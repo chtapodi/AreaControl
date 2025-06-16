@@ -85,6 +85,23 @@ class TestAdvancedTracker(unittest.TestCase):
             for pid, room in expected.items():
                 self.assertEqual(result.get(pid), room)
 
+    def test_generic_person_created(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        multi = MultiPersonTracker(graph, sensor_model)
+        multi.process_event(None, 'bedroom', timestamp=0.0)
+        self.assertIn('unknown_0', multi.estimate_locations())
+
+    def test_phone_association(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        multi = MultiPersonTracker(graph, sensor_model)
+        multi.associate_phone('alice', 'phone1')
+        multi.process_phone_data('phone1', location='kitchen', timestamp=0.0)
+        self.assertIn('alice', multi.people)
+        self.assertIsNotNone(multi.people['alice'].phone)
+        self.assertEqual(multi.people['alice'].phone.location, 'kitchen')
+
 
 if __name__ == '__main__':
     unittest.main()

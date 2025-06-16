@@ -146,6 +146,48 @@ class PersonTracker:
         return {room: count / total for room, count in counts.items()}
 
 
+class Phone:
+    """Represents a mobile phone with sensor data."""
+
+    def __init__(self, phone_id: str):
+        self.id = phone_id
+        self.location: Optional[str] = None
+        self.activity: Optional[str] = None
+        self.last_update: float = 0.0
+        self.person: Optional["Person"] = None
+
+    def update(self, *, location: Optional[str] = None, activity: Optional[str] = None, timestamp: Optional[float] = None) -> None:
+        if location is not None:
+            self.location = location
+        if activity is not None:
+            self.activity = activity
+        self.last_update = time.time() if timestamp is None else timestamp
+
+
+class Person:
+    """Wraps a ``PersonTracker`` and optional phone association."""
+
+    def __init__(self, person_id: str, tracker: PersonTracker, *, name: Optional[str] = None, generic: bool = False):
+        self.id = person_id
+        self.name = name
+        self.tracker = tracker
+        self.phone: Optional[Phone] = None
+        self.generic = generic
+
+    def associate_phone(self, phone: Phone) -> None:
+        self.phone = phone
+        phone.person = self
+
+    def update(self, current_time: float, sensor_room: Optional[str] = None) -> None:
+        room = sensor_room
+        if room is None and self.phone and self.phone.location is not None:
+            room = self.phone.location
+        self.tracker.update(current_time, sensor_room=room)
+
+    def estimate(self) -> str:
+        return self.tracker.estimate()
+
+
 class MultiPersonTracker:
     """Manage a set of :class:`PersonTracker` instances.
 
@@ -169,7 +211,9 @@ class MultiPersonTracker:
     def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
-        self.trackers: Dict[str, PersonTracker] = {}
+        self.people: Dict[str, Person] = {}
+        self.phones: Dict[str, Phone] = {}
+        self._generic_counter = 0
         self.debug = debug
         self.debug_dir = debug_dir
         self._debug_counter = 0
@@ -177,25 +221,61 @@ class MultiPersonTracker:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
 
-    def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
-        now = time.time() if timestamp is None else timestamp
-        tracker = self.trackers.get(person_id)
-        if tracker is None:
+    @property
+    def trackers(self) -> Dict[str, PersonTracker]:
+        """Backwards compatibility shim returning underlying trackers."""
+        return {pid: person.tracker for pid, person in self.people.items()}
+
+    def _get_or_create_person(self, person_id: str, *, generic: bool = False) -> Person:
+        person = self.people.get(person_id)
+        if person is None:
             tracker = PersonTracker(self.room_graph, self.sensor_model)
-            self.trackers[person_id] = tracker
-        tracker.update(now, sensor_room=room_id)
+            person = Person(person_id, tracker, generic=generic)
+            self.people[person_id] = person
+        return person
+
+    def create_generic_person(self) -> Person:
+        pid = f"unknown_{self._generic_counter}"
+        self._generic_counter += 1
+        return self._get_or_create_person(pid, generic=True)
+
+    def add_phone(self, phone_id: str) -> Phone:
+        phone = self.phones.get(phone_id)
+        if phone is None:
+            phone = Phone(phone_id)
+            self.phones[phone_id] = phone
+        return phone
+
+    def associate_phone(self, person_id: str, phone_id: str) -> None:
+        phone = self.add_phone(phone_id)
+        person = self._get_or_create_person(person_id)
+        person.associate_phone(phone)
+
+    def process_phone_data(self, phone_id: str, *, location: Optional[str] = None, activity: Optional[str] = None, timestamp: Optional[float] = None) -> None:
+        phone = self.add_phone(phone_id)
+        phone.update(location=location, activity=activity, timestamp=timestamp)
+        if phone.person is not None:
+            phone.person.update(phone.last_update, sensor_room=location)
+
+    def process_event(self, person_id: Optional[str], room_id: str, timestamp: Optional[float] = None) -> None:
+        now = time.time() if timestamp is None else timestamp
+        if person_id is None:
+            person = self.create_generic_person()
+        else:
+            person = self._get_or_create_person(person_id)
+        person.update(now, sensor_room=room_id)
         if self.debug:
             self._visualize(now)
 
     def step(self) -> None:
         now = time.time()
-        for tracker in self.trackers.values():
-            tracker.update(now)
+        for person in self.people.values():
+            person.update(now)
         if self.debug:
             self._visualize(now)
 
     def estimate_locations(self) -> Dict[str, str]:
-        return {pid: tracker.estimate() for pid, tracker in self.trackers.items()}
+        return {pid: person.estimate() for pid, person in self.people.items()}
 
     def dump_state(self, filename: str) -> None:
         """Write current estimates and distributions to ``filename`` as JSON."""
@@ -216,8 +296,8 @@ class MultiPersonTracker:
             1: (0, 1, 0),
             2: (0, 0, 1),
         }
-        for idx, (pid, tracker) in enumerate(self.trackers.items()):
-            dist = tracker.distribution()
+        for idx, (pid, person) in enumerate(self.people.items()):
+            dist = person.tracker.distribution()
             node_colors = []
             for node in self.room_graph.graph.nodes:
                 intensity = dist.get(node, 0.0)
