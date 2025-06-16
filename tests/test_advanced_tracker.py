@@ -36,6 +36,7 @@ class TestAdvancedTracker(unittest.TestCase):
             multi.step()
             files = sorted(os.listdir(tmp))
         self.assertTrue(any(f.startswith('frame_') and f.endswith('.png') for f in files))
+        self.assertTrue(any(f.startswith('state_') and f.endswith('.json') for f in files))
 
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:

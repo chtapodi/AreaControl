@@ -957,11 +957,6 @@ def update_tracker(device, *args):
     tracker_manager = get_tracker_manager()
     room = device.get_area().name
     tracker_manager.process_event("p1", room)
-    image_path = os.path.join(
-        tracker_manager.debug_dir,
-        f"frame_{tracker_manager._debug_counter-1:06d}.png",
-    )
-    log.info(f"update_tracker: image saved to {image_path}")
     try:
         get_learner().record_presence(room)
     except Exception as e:

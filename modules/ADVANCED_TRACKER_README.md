@@ -90,7 +90,10 @@ logging is enabled.
 
 To enable or disable visual logging, pass `debug=True` and specify a
 `debug_dir` when calling `init_from_yaml()`.  Images are written to that
-folder with names like `frame_000001.png`.
+folder with names like `frame_000001.png`.  Each image has a corresponding
+`state_000001.json` file produced by `MultiPersonTracker.dump_state()` which
+contains the current estimates and probability distributions for all tracked
+people.
 
 ## Testing
 
