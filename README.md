@@ -128,6 +128,8 @@ particle-filter based tracker. It follows people through the area graph defined
 in [`connections.yml`](connections.yml) and can output visualization frames. The
 `update_tracker` function in [`area_tree.py`](area_tree.py) feeds motion sensor
 events into the tracker and logs each generated frame.
+For a thorough explanation of the algorithm and code walkthroughs, see
+[the detailed tracker README](modules/ADVANCED_TRACKER_README.md).
 
 When more than one track is close enough to merge with a new event, the manager
 looks at each candidate's last step. It compares the expected next hop along the
