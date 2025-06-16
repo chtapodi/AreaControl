@@ -6,6 +6,7 @@ from pyscript.k_to_rgb import convert_K_to_RGB
 from acrylic import Color
 from homeassistant.const import EVENT_CALL_SERVICE
 from tracker import TrackManager, Track, Event
+from modules.adaptive_learning import get_learner
 import unittest
 
 
@@ -916,6 +917,10 @@ def update_tracker(device, *args):
     tracker_manager=get_tracker_manager()
 
     tracker_manager.add_event(device.get_area().name)
+    try:
+        get_learner().record_presence(device.get_area().name)
+    except Exception as e:
+        log.warning(f"AdaptiveLearner failed to record presence: {e}")
 
     log.info(f"update_tracker: Current tracks")
     for track in tracker_manager.tracks:
@@ -989,7 +994,7 @@ class EventManager:
         for rule_name in matching_rules:
             rule = copy.deepcopy(self.rules[rule_name])
             log.info(f"EventManager:check_event():  Rule: {rule}")
-            results.append(self.execute_rule(event, rule))
+            results.append(self.execute_rule(event, rule, rule_name))
 
         if results is not None:
             return results
@@ -1007,7 +1012,7 @@ class EventManager:
                         args.append(state)
         return args
 
-    def execute_rule(self, event_data, rule):
+    def execute_rule(self, event_data, rule, rule_name=None):
         device_name = event_data["device_name"]
 
         log.info(f"EventManager:execute_rule(): {event_data}")
@@ -1108,6 +1113,15 @@ class EventManager:
             log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
             for areas in scope:
                 areas.set_state(final_state)
+            try:
+                get_learner().collect_event({
+                    "device_name": device_name,
+                    "rule_name": rule_name,
+                    "final_state": final_state,
+                    "area": device_area.name if device_area else None,
+                })
+            except Exception as e:
+                log.warning(f"AdaptiveLearner failed to record rule: {e}")
 
             return True
         else:
