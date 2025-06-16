@@ -6,9 +6,11 @@ import inspect
 from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
+from modules.advanced_tracker import init_from_yaml, MultiPersonTracker
 from homeassistant.util import color as color_util
 from tracker import TrackManager, Track, Event
 from modules.adaptive_learning import get_learner
+import os
 import unittest
 
 
@@ -78,7 +80,9 @@ def init():
     global_triggers = []
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
-    tracker_manager = TrackManager()
+    tracker_manager = init_from_yaml(
+        "./pyscript/connections.yml", debug=True, debug_dir="pyscript/tracker_debug"
+    )
 
 
 def get_global_triggers():
@@ -930,17 +934,18 @@ def load_yaml(path):
 
 ### Tracker interface
 def update_tracker(device, *args):
-    tracker_manager=get_tracker_manager()
-
-    tracker_manager.add_event(device.get_area().name)
+    tracker_manager = get_tracker_manager()
+    room = device.get_area().name
+    tracker_manager.process_event("p1", room)
+    image_path = os.path.join(
+        tracker_manager.debug_dir,
+        f"frame_{tracker_manager._debug_counter-1:06d}.png",
+    )
+    log.info(f"update_tracker: image saved to {image_path}")
     try:
-        get_learner().record_presence(device.get_area().name)
+        get_learner().record_presence(room)
     except Exception as e:
         log.warning(f"AdaptiveLearner failed to record presence: {e}")
-
-    log.info(f"update_tracker: Current tracks")
-    for track in tracker_manager.tracks:
-        log.info(f"update_tracker: {track.get_pretty_string()}")
 
     return True
 

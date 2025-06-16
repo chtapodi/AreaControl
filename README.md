@@ -81,9 +81,10 @@ the full implementations.
 - **`EventManager`** – Reads `rules.yml`, watches for events, and executes rules
   using `execute_rule()`. It handles scope resolution, state combination and
   running any additional functions defined by a rule.
-- **`TrackManager`, `Track` and `Event`** – Found in
-  [`modules/tracker.py`](modules/tracker.py). These classes maintain a sequence
-  of presence events and can merge tracks or visualize area transitions.
+- **`MultiPersonTracker`**, **`PersonTracker`**, and related helpers – Implemented
+  in [`modules/advanced_tracker.py`](modules/advanced_tracker.py). This tracker
+  uses a particle filter to follow people through connected areas and can
+  visualize its belief state.
 - **`SunTracker`** – See [`modules/sun_tracker.py`](modules/sun_tracker.py) for
   calculating the sun's position and determining whether an area faces the sun.
   The class also provides `recommended_blind_closure()` to compute how far to
@@ -121,7 +122,12 @@ See the [`execute_rule`](area_tree.py) method for the full logic.
 
 ## Presence Tracking
 
-[`modules/tracker.py`](modules/tracker.py) maintains a history of movement between areas using a connection graph from [`connections.yml`](connections.yml). The `TrackManager` collects events, merges tracks, and can visualize the graph of recent locations. Functions such as `update_tracker` in [`area_tree.py`](area_tree.py) feed sensor events into the tracker.
+
+[`modules/advanced_tracker.py`](modules/advanced_tracker.py) implements a
+particle-filter based tracker. It follows people through the area graph defined
+in [`connections.yml`](connections.yml) and can output visualization frames. The
+`update_tracker` function in [`area_tree.py`](area_tree.py) feeds motion sensor
+events into the tracker and logs each generated frame.
 
 When more than one track is close enough to merge with a new event, the manager
 looks at each candidate's last step. It compares the expected next hop along the
