@@ -1355,6 +1355,14 @@ class AreaTree:
                                 new_device.set_area(area)
 
                                 area_tree[output] = new_device
+                            elif "speaker" in output or "google_home" in output:
+                                new_speaker = SpeakerDriver(output)
+                                new_device = Device(new_speaker)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -2005,8 +2013,9 @@ class BlindDriver:
         return self.last_state
 
 
+# PlugDriver exposes on/off control and optional power/current sensors
 class PlugDriver:
-    """Driver for smart plugs that expose a switch entity and optional power sensors."""
+    """Driver for smart plugs that expose a switch entity and optional sensors."""
 
     def __init__(self, name, *, power_sensor=None, current_sensor=None):
         self.name = name
@@ -2062,6 +2071,49 @@ class PlugDriver:
         return result
 
 
+# SpeakerDriver exposes volume and playback information
+class SpeakerDriver:
+    """Driver for smart speakers such as Google Home."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"volume": None, "playing": None}
+
+    def get_valid_state_keys(self):
+        return ["volume"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        volume = None
+        playing = None
+        try:
+            volume = state.get(f"media_player.{self.name}.volume_level")
+        except Exception:
+            pass
+        try:
+            status = state.get(f"media_player.{self.name}.state")
+            if status == "playing":
+                playing = state.get(f"media_player.{self.name}.media_title")
+        except Exception:
+            pass
+        self.last_state = {"volume": volume, "playing": playing}
+        return self.last_state
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "volume" in state and state["volume"] is not None:
+            try:
+                media_player.volume_set(entity_id=f"media_player.{self.name}", volume_level=state["volume"])
+            except Exception as e:
+                log.warning(f"Failed to set volume for {self.name}: {e}")
+        self.last_state.update(state)
+        return self.last_state
+
+
+# Simple fan driver built using an underlying PlugDriver
 class FanDriver:
     """Simple fan driver implemented via an underlying PlugDriver."""
 

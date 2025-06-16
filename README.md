@@ -100,6 +100,8 @@ the full implementations.
   `current` readings.
 - **`FanDriver`** – Wraps a `PlugDriver` so fans can be treated like any other
   device while using a plug under the hood.
+- **`SpeakerDriver`** – Controls media speakers like Google Home. Tracks volume
+  and what is currently playing, and allows adjusting volume via `set_state()`.
 
 ## Event and Rule Workflow
 
