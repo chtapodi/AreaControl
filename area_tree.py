@@ -109,12 +109,17 @@ def get_verbose_mode():
 
 def get_cached_last_set_state():
     global last_set_state
-    return last_set_state
+    if last_set_state is None:
+        return None
+    return copy.deepcopy(last_set_state)
 
 def set_cached_last_set_state(device,state):
     global last_set_state
     log.info(f"set global last set state to {state}")
-    last_set_state = state
+    if state is None:
+        last_set_state = None
+    else:
+        last_set_state = copy.deepcopy(state)
     return True
 
 @service
@@ -1422,7 +1427,10 @@ class Device:
         return state
 
     def get_last_state(self):
-        state = self.last_state
+        if self.last_state is None:
+            state = {} if self.cached_state is None else copy.deepcopy(self.cached_state)
+        else:
+            state = copy.deepcopy(self.last_state)
         state["name"] = self.name
         self.last_state = state
         log.info(f"Device:get_last_state(): Last state: {state}")
@@ -1497,7 +1505,9 @@ class Device:
                 log.info(f"Device {self.name} is locked, not setting state {state}")
 
     def get(self, value):
-        return self.cached_state[value]
+        if self.cached_state is None:
+            return None
+        return self.cached_state.get(value)
 
     def set_area(self, area):
         self.area = area
