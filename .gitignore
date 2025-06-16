@@ -2,7 +2,6 @@ __pycache__/
 automation.py
 home-assistant.log
 k_to_rgb.py
-layout.yml
 light_config.yml
 light_interface.bak
 light_interface.py
