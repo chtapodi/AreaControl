@@ -45,7 +45,7 @@ living_room:
       - "presence_sensor_living_room"
 
   outputs:
-    -
+    - google_home_speaker
 
 living_room_chairs:
   direct_sub_areas:
