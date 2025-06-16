@@ -2,6 +2,7 @@ import yaml
 from collections import defaultdict
 import copy
 import time
+from homeassistant.const import EVENT_CALL_SERVICE
 import inspect
 from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
