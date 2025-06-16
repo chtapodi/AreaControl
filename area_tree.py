@@ -1401,13 +1401,16 @@ class AreaTree:
                                         new_input = None
                                         for key, factory in INPUT_DRIVERS.items():
                                             if key in device_id:
-                                                if not callable(factory) and hasattr(factory, 'get'):
-                                                    try:
-                                                        tmp_factory = factory.get()
-                                                        if callable(tmp_factory):
-                                                            factory = tmp_factory
-                                                    except Exception:
-                                                        pass
+                                                if not callable(factory):
+                                                    for attr in ("get", "value"):
+                                                        if hasattr(factory, attr):
+                                                            try:
+                                                                candidate = getattr(factory, attr)()
+                                                            except Exception:
+                                                                candidate = getattr(factory, attr)
+                                                            if callable(candidate):
+                                                                factory = candidate
+                                                                break
                                                 new_input = factory(input_type, device_id)
                                                 log.info(f"Creating input device: {device_id} using {key}")
                                                 break
