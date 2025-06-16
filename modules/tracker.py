@@ -336,42 +336,75 @@ class TrackManager:
 
 
     def try_associate_track(self, new_track):
+        """Attempt to merge ``new_track`` with an existing track.
+
+        In addition to the shortest path distance, this method now considers the
+        recent direction and speed of each candidate track.  When multiple tracks
+        are close enough, the one whose last movement best predicts the new
+        event's location and timing is selected.
+        """
+
         log.info(
             f"trying to associate track: {new_track.get_track_list()} with {self.get_tracks()}"
         )
-        if len(self.get_tracks() )> 0:
-            track_scores = []
 
+        if len(self.get_tracks()) > 0:
             area = new_track.get_area()
+            event_time = new_track.get_head().get_first_presence_time()
+
+            metrics = []
             for track in self.tracks:
-                score = self.graph_manager.get_distance(track.get_area(), area)
-                log.info(f"{track.get_area()}->{area} = {score}")
-                track_scores.append((track, score))
+                last_area = track.get_area()
+                base_score = self.graph_manager.get_distance(last_area, area)
+                prev_ev = track.get_previous_event()
 
-            # get track with lowest score
-            track, score = min(track_scores, key=lambda x: x[1])
-            best_tracks=[]
-            best_score=None
+                track_velocity = None
+                alignment = False
+                if prev_ev is not None:
+                    dt = track.get_head().get_first_presence_time() - prev_ev.get_first_presence_time()
+                    if dt > 0:
+                        dist = self.graph_manager.get_distance(prev_ev.get_area(), last_area)
+                        track_velocity = dist / dt
+                    try:
+                        path = nx.shortest_path(self.graph_manager.graph, prev_ev.get_area(), area)
+                        if len(path) > 1 and path[1] == last_area:
+                            alignment = True
+                    except nx.NetworkXNoPath:
+                        alignment = False
 
-            for track, score in track_scores:
-                if score < self.score_threshold:
-                    if best_score is None or score < best_score:
-                        best_tracks=[track]
-                        best_score = score
-                    elif score == best_score :
-                        best_tracks.append(track)
+                dt_new = event_time - track.get_head().get_first_presence_time()
+                new_velocity = None
+                if dt_new > 0:
+                    new_velocity = base_score / dt_new
 
-            if len(best_tracks) > 1: #TODO: pick best track based on velocity, COG
-                log.warning(f"MULTIPLE best tracks: {best_tracks}")
+                if new_velocity is not None and track_velocity is not None:
+                    speed_diff = abs(new_velocity - track_velocity)
+                else:
+                    speed_diff = float("inf")
 
-            if len(best_tracks) > 0:
-                best_track=best_tracks[0] 
+                metrics.append((track, base_score, alignment, speed_diff))
+
+            # choose best candidate
+            candidates = [m for m in metrics if m[1] < self.score_threshold]
+
+            best = None
+            for m in candidates:
+                if m[2]:  # alignment
+                    if best is None or m[3] < best[3]:
+                        best = m
+
+            if best is None and candidates:
+                # fall back to closest track
+                best = min(candidates, key=lambda x: x[1])
+
+            if best is not None:
+                best_track = best[0]
                 log.info(f"Merging {best_track.get_track_list()}")
                 best_track.merge_tracks(new_track)
-            else :
+            else:
                 log.info("All tracks out of range, adding new track")
                 self.tracks.append(new_track)
-        else :
+        else:
             log.info("First, Adding new track")
             self.tracks.append(new_track)
 
