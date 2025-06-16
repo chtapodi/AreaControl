@@ -4,3 +4,5 @@ requests
 networkx
 matplotlib
 scipy
+astral
+pytz
