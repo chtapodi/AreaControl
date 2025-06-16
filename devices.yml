@@ -149,3 +149,19 @@ blind_bedroom_window:
 
 # Outputs
 
+smart_plug_example:
+  type: plug
+  filters:
+    - plug
+
+living_room_fan:
+  type: fan
+  filters:
+    - fan
+    - plug
+google_home_speaker:
+  type: speaker
+  filters:
+    - speaker
+    - google_home
+
