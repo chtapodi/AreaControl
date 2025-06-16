@@ -12,6 +12,7 @@ import random
 from collections import defaultdict
 from typing import Dict, List, Optional
 import os
+import json
 import yaml
 import matplotlib
 matplotlib.use("Agg")
@@ -146,6 +147,25 @@ class PersonTracker:
 
 
 class MultiPersonTracker:
+    """Manage a set of :class:`PersonTracker` instances.
+
+    When ``debug`` is enabled a PNG frame and matching JSON state dump are
+    written for every call to :meth:`process_event` and :meth:`step`.  Files are
+    saved in ``debug_dir`` with names ``frame_XXXXXX.png`` and
+    ``state_XXXXXX.json`` where ``XXXXXX`` is a monotonically increasing
+    counter.  The JSON structure looks like::
+
+        {
+            "estimates": {"p1": "bedroom"},
+            "distributions": {
+                "p1": {"bedroom": 0.8, "hallway": 0.2}
+            }
+        }
+
+    ``dump_state()`` can be called manually to write the same information to a
+    custom path.
+    """
+
     def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
@@ -177,6 +197,15 @@ class MultiPersonTracker:
     def estimate_locations(self) -> Dict[str, str]:
         return {pid: tracker.estimate() for pid, tracker in self.trackers.items()}
 
+    def dump_state(self, filename: str) -> None:
+        """Write current estimates and distributions to ``filename`` as JSON."""
+        state = {
+            "estimates": self.estimate_locations(),
+            "distributions": {pid: tracker.distribution() for pid, tracker in self.trackers.items()},
+        }
+        with open(filename, "w") as f:
+            json.dump(state, f)
+
     def _visualize(self, current_time: float) -> None:
         plt.clf()
         fig, ax = plt.subplots(figsize=(6, 4))
@@ -204,9 +233,11 @@ class MultiPersonTracker:
             )
         ax.set_title(f"t={current_time:.1f}")
         ax.axis('off')
-        filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
-        plt.savefig(filename)
+        frame_file = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
+        state_file = os.path.join(self.debug_dir, f"state_{self._debug_counter:06d}.json")
+        plt.savefig(frame_file)
         plt.close(fig)
+        self.dump_state(state_file)
         self._debug_counter += 1
 
 
