@@ -191,7 +191,7 @@ def create_event(**kwargs):
         event_manager.create_event(event)
 
     else:
-        log.warning(f"No devic_name in serice created event {kwargs}")
+        log.warning(f"No device_name in service-created event {kwargs}")
 
 
 @service
