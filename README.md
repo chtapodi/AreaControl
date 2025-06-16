@@ -113,7 +113,14 @@ See the [`execute_rule`](area_tree.py) method for the full logic.
 
 ## Presence Tracking
 
-[`modules/tracker.py`](modules/tracker.py) maintains a history of movement between areas using a connection graph from [`connections.yml`](connections.yml). The `TrackManager` collects events, merges tracks, and can visualize the graph of recent locations. Functions such as `update_tracker` in [`area_tree.py`](area_tree.py) feed sensor events into the tracker.
+
+[`modules/advanced_tracker.py`](modules/advanced_tracker.py) implements a
+particle-filter based tracker. It follows people through the area graph defined
+in [`connections.yml`](connections.yml) and can output visualization frames. The
+`update_tracker` function in [`area_tree.py`](area_tree.py) feeds motion sensor
+events into the tracker and logs each generated frame.
+For a thorough explanation of the algorithm and code walkthroughs, see
+[the detailed tracker README](modules/ADVANCED_TRACKER_README.md).
 
 When more than one track is close enough to merge with a new event, the manager
 looks at each candidate's last step. It compares the expected next hop along the
