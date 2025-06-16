@@ -266,6 +266,7 @@ bedroom:
   outputs:
     - kauf_bedroom_0
     - kauf_bedroom_1
+    - blind_bedroom_window
 
 outside:
   sub_areas:
