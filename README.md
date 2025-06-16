@@ -96,6 +96,10 @@ the full implementations.
 - **`BlindDriver`** – Handles smart blinds that accept either a percentage
   closed or a physical height. Heights are converted to percentages using the
   configured blind height.
+- **`PlugDriver`** – Controls smart plugs and can report optional `power` and
+  `current` readings.
+- **`FanDriver`** – Wraps a `PlugDriver` so fans can be treated like any other
+  device while using a plug under the hood.
 
 ## Event and Rule Workflow
 
