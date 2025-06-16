@@ -99,3 +99,19 @@ living_room_zones_on:
 #     - lesser_siblings: []
 #   state:
 #     status: 0
+
+tv_power_on:
+  trigger_prefix: "living_room_tv"
+  required_tags: ["on"]
+  scope_functions:
+    - get_area_local_scope: []
+  state:
+    status: 1
+
+tv_power_off:
+  trigger_prefix: "living_room_tv"
+  required_tags: ["off"]
+  scope_functions:
+    - get_area_local_scope: []
+  state:
+    status: 0

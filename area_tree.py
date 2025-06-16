@@ -1339,6 +1339,15 @@ class AreaTree:
                                 new_device.set_area(area)
 
                                 area_tree[output] = new_device
+                            elif "tv" in output:
+                                new_tv = TelevisionDriver(output)
+                                new_device = Device(new_tv)
+                                new_tv.add_callback(new_device.input_trigger)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1986,6 +1995,73 @@ class BlindDriver:
             self.last_state = {"closed_percent": percent}
             if self.height:
                 self.last_state["height"] = self.height * (100 - percent) / 100
+        return self.last_state
+
+
+class TelevisionDriver:
+    """Driver for televisions controlled via media_player."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"status": 0}
+        self.callback = None
+        self.trigger = self.setup_service_triggers(name)
+
+    def add_callback(self, callback):
+        self.callback = callback
+
+    def get_valid_state_keys(self):
+        return ["status"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status_val = None
+        try:
+            status_val = state.get(f"media_player.{self.name}")
+        except Exception:
+            pass
+        if isinstance(status_val, str):
+            status = 0 if status_val in ["off", "standby", "unavailable"] else 1
+        elif status_val is None:
+            status = self.last_state.get("status", 0)
+        else:
+            status = int(bool(status_val))
+        self.last_state = {"status": status}
+        return self.last_state
+
+    def setup_service_triggers(self, device_id):
+        values = ["on", "off"]
+        triggers = []
+        for value in values:
+            triggers.append(
+                generate_state_trigger(
+                    f"media_player.{device_id} == '{value}'",
+                    self.trigger_state,
+                    {"tags": [value]},
+                )
+            )
+        return triggers
+
+    def trigger_state(self, **kwargs):
+        log.info(f"Triggering Television: {self.name} with value: {kwargs}")
+        if self.callback is not None:
+            tags = kwargs.get("tags", [])
+            self.callback(tags)
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    media_player.turn_on(entity_id=f"media_player.{self.name}")
+                else:
+                    media_player.turn_off(entity_id=f"media_player.{self.name}")
+            except Exception as e:
+                log.warning(f"TelevisionDriver<{self.name}> failed to set state: {e}")
+            self.last_state = {"status": int(bool(state["status"]))}
         return self.last_state
 
 

@@ -102,7 +102,7 @@ living_room_middle:
       - "presence_sensor_living_room_middle"
 
   outputs:
-    -
+    - living_room_tv
 
 living_room_couch:
   sub_areas:

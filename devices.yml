@@ -149,3 +149,8 @@ blind_bedroom_window:
 
 # Outputs
 
+living_room_tv:
+  type: tv
+  filters:
+    - tv
+
