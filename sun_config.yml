@@ -1,0 +1,13 @@
+location:
+  latitude: 0.0
+  longitude: 0.0
+max_light_distance: 0.3048  # meters, about one foot
+areas:
+  living_room_window:
+    bearing: 90
+    window_height: 1.2
+    device: living_room_blind
+  kitchen_window:
+    bearing: 135
+    window_height: 1.2
+    device: kitchen_blind

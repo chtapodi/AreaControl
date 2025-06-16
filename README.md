@@ -23,6 +23,8 @@ This README outlines the main pieces of the project and how events flow through 
 ```
 area_tree.py          # Core classes and services
 modules/tracker.py    # Presence tracking utilities
+modules/sun_tracker.py # Sun position utilities
+modules/blind_controller.py # Smart blind control helpers
 layout.yml            # Area hierarchy definition
 devices.yml           # Device types and tags
 connections.yml       # Allowed area transitions for tracking
@@ -40,6 +42,12 @@ The repository relies on several YAML files:
 - [`devices.yml`](devices.yml) lists device definitions and filters.
 - [`connections.yml`](connections.yml) describes which areas are considered connected for presence tracking.
 - [`rules.yml`](rules.yml) holds automation rules that pair events with actions.
+- [`sun_config.yml`](sun_config.yml) stores location information and the
+  orientation of windows or areas used by the sun tracker. Each window entry can
+  specify a `window_height` in meters. The file also defines
+  `max_light_distance`—the allowed patch of sunlight on the floor (default is
+  roughly one foot). Windows may also define a `device` ID for the blind
+  associated with that opening.
 
 These files are loaded at startup and are referenced throughout the code.
 
@@ -71,6 +79,15 @@ the full implementations.
 - **`TrackManager`, `Track` and `Event`** – Found in
   [`modules/tracker.py`](modules/tracker.py). These classes maintain a sequence
   of presence events and can merge tracks or visualize area transitions.
+- **`SunTracker`** – See [`modules/sun_tracker.py`](modules/sun_tracker.py) for
+  calculating the sun's position and determining whether an area faces the sun.
+  The class also provides `recommended_blind_closure()` to compute how far to
+  close smart blinds so that direct light does not extend past a configurable
+  distance onto the floor.
+- **`BlindController`** – Provided in
+  [`modules/blind_controller.py`](modules/blind_controller.py) for integrating
+  `SunTracker` with blind devices. It uses `BlindDriver` to set positions while
+  avoiding frequent or tiny adjustments.
 
 ## Event and Rule Workflow
 
