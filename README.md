@@ -115,6 +115,11 @@ See the [`execute_rule`](area_tree.py) method for the full logic.
 
 [`modules/tracker.py`](modules/tracker.py) maintains a history of movement between areas using a connection graph from [`connections.yml`](connections.yml). The `TrackManager` collects events, merges tracks, and can visualize the graph of recent locations. Functions such as `update_tracker` in [`area_tree.py`](area_tree.py) feed sensor events into the tracker.
 
+When more than one track is close enough to merge with a new event, the manager
+looks at each candidate's last step. It compares the expected next hop along the
+shortest path and the estimated speed between the previous two events. The track
+whose direction and velocity best match the new observation is selected.
+
 ## Rule Examples
 
 Rules live in [`rules.yml`](rules.yml). Each rule links a trigger prefix to a
