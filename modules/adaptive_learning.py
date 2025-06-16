@@ -7,6 +7,12 @@ from collections import defaultdict
 import yaml
 
 try:
+    pyscript_compile
+except NameError:  # pragma: no cover - running outside Pyscript
+    def pyscript_compile(func):
+        return func
+
+try:
     service
 except NameError:
     def service(func):
@@ -27,6 +33,7 @@ class AdaptiveLearner:
         self.history = []
         self._load()
 
+    @pyscript_compile
     def _load(self):
         if os.path.exists(self.history_file):
             with open(self.history_file, "r") as f:
@@ -34,6 +41,7 @@ class AdaptiveLearner:
         else:
             self.history = []
 
+    @pyscript_compile
     def _save(self):
         with open(self.history_file, "w") as f:
             yaml.safe_dump(self.history, f)

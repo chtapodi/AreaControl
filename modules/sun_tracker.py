@@ -5,6 +5,12 @@ from astral.sun import azimuth, elevation
 import pytz
 import math
 
+try:
+    pyscript_compile
+except NameError:  # pragma: no cover - running outside Pyscript
+    def pyscript_compile(func):
+        return func
+
 
 class SunTracker:
     """Track the sun position and determine if areas face the sun."""
@@ -13,6 +19,7 @@ class SunTracker:
         self.config_path = config_path
         self.reload_config()
 
+    @pyscript_compile
     def reload_config(self):
         with open(self.config_path, "r") as f:
             self.config = yaml.safe_load(f) or {}

@@ -20,6 +20,12 @@ import matplotlib.pyplot as plt
 
 import networkx as nx
 
+try:
+    pyscript_compile
+except NameError:  # pragma: no cover - when running outside pyscript
+    def pyscript_compile(func):
+        return func
+
 
 class RoomGraph:
     """Graph describing connectivity between rooms."""
@@ -34,6 +40,7 @@ class RoomGraph:
         return list(self.graph.neighbors(room_id))
 
 
+@pyscript_compile
 def load_room_graph_from_yaml(path: str) -> RoomGraph:
     with open(path, "r") as f:
         data = yaml.safe_load(f)
