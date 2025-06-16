@@ -30,6 +30,12 @@ verbose_mode = False
 
 last_set_state={}
 
+# Default heights for smart blinds (in the same units used when setting height).
+# These values allow converting between physical height and percentage closed.
+BLIND_HEIGHTS = {
+    "blind_bedroom_window": 100,
+}
+
 
 @service
 def reset():
@@ -1272,6 +1278,15 @@ class AreaTree:
                                 new_device.set_area(area)
 
                                 area_tree[output] = new_device
+                            elif "blind" in output:
+                                height = BLIND_HEIGHTS.get(output, 100)
+                                new_blind = BlindDriver(output, height)
+                                new_device = Device(new_blind)
+
+                                area.add_device(new_device)
+                                new_device.set_area(area)
+
+                                area_tree[output] = new_device
 
                 # Add outputs as children
                 if "inputs" in area_data:
@@ -1864,6 +1879,56 @@ class KaufLight:
                 light.turn_on(entity_id=f"light.{self.name}")
                 self.last_state = {"on": True}
 
+        return self.last_state
+
+
+class BlindDriver:
+    """Driver for smart blinds controllable by percent closed or height."""
+
+    def __init__(self, name, height=100):
+        self.name = name
+        self.height = height
+        self.last_state = {"closed_percent": 0}
+
+    def get_valid_state_keys(self):
+        return ["closed_percent", "height"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        position = None
+        try:
+            position = state.get(f"cover.{self.name}.current_position")
+        except Exception:
+            pass
+        if position is None:
+            position = 100 - self.last_state.get("closed_percent", 0)
+        closed = 100 - int(position)
+        result = {"closed_percent": closed}
+        if self.height:
+            result["height"] = self.height * (100 - closed) / 100
+        self.last_state = result
+        return result
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        percent = None
+        if "height" in state and self.height:
+            percent = 100 - int((state["height"] / self.height) * 100)
+        elif "closed_percent" in state:
+            percent = state["closed_percent"]
+
+        if percent is not None:
+            position = max(0, min(100, 100 - percent))
+            try:
+                cover.set_cover_position(entity_id=f"cover.{self.name}", position=position)
+            except Exception as e:
+                log.warning(f"Failed to set blind {self.name} to {position}% open: {e}")
+            self.last_state = {"closed_percent": percent}
+            if self.height:
+                self.last_state["height"] = self.height * (100 - percent) / 100
         return self.last_state
 
 
