@@ -53,6 +53,24 @@ BLIND_HEIGHTS = {
     "blind_bedroom_window": 100,
 }
 
+# Per-device color calibration profiles. Each entry maps a driver keyword
+# to RGB multipliers used to compensate for hardware differences.
+COLOR_PROFILES = {
+    "kauf": [1.0, 1.0, 1.0],
+    "hue": [1.0, 1.0, 1.0],
+}
+
+def calibrate_rgb(rgb, profile):
+    """Apply a color calibration profile to an RGB tuple."""
+    if rgb is None or profile is None:
+        return rgb
+    result = []
+    for comp, factor in zip(rgb, profile):
+        val = int(comp * factor)
+        val = max(0, min(255, val))
+        result.append(val)
+    return result
+
 
 @service
 def reset():
@@ -1357,8 +1375,12 @@ class AreaTree:
                             driver = None
                             info = self.device_defs.get(output, {})
                             dtype = info.get("type")
+                            filters = info.get("filters", [])
                             if dtype == "light" or (dtype is None and "kauf" in output):
-                                driver = KaufLight(output)
+                                if "hue" in filters:
+                                    driver = HueLight(output)
+                                else:
+                                    driver = KaufLight(output)
                             elif dtype == "blind" or (dtype is None and "blind" in output):
                                 height = info.get("height", BLIND_HEIGHTS.get(output, 100))
                                 driver = BlindDriver(output, height)
@@ -1757,9 +1779,9 @@ class PresenceSensorDriver:
         return triggers
 
 class KaufLight:
-    """Light driver for kauf bulbs"""
+    """Light driver for kauf bulbs with optional color calibration."""
 
-    def __init__(self, name):
+    def __init__(self, name, color_profile=None):
         self.name = name
         self.last_state = {}
         # These values are cached on the driver, whereas the whole state is cached on the device
@@ -1768,6 +1790,10 @@ class KaufLight:
         self.temperature = None
         self.default_color = None
         self.color_type = "rgb"
+        self.color_profile = color_profile or COLOR_PROFILES.get("kauf")
+
+    def calibrate_color(self, rgb):
+        return calibrate_rgb(rgb, self.color_profile)
 
     # Status (on || off)
     def set_status(self, status, edit=0):
@@ -1918,12 +1944,11 @@ class KaufLight:
                 new_args[k] = v
 
 
-        # If rgb_color is present: save 
+        # If rgb_color is present: save and calibrate
         if "rgb_color" in new_args.keys():
-            self.rgb_color = new_args["rgb_color"] #TODO: Make setting states and caching their values more consistent and a seperate process
-            # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} rgb_color to {self.rgb_color }")
+            self.rgb_color = new_args["rgb_color"]  # cache raw value
+            new_args["rgb_color"] = self.calibrate_color(new_args["rgb_color"])
             self.color_type = "rgb"
-            # log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
 
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
@@ -1940,7 +1965,7 @@ class KaufLight:
 
                 log.info(f"KaufLight<{self.name}>:apply_values(): rgb_color not in new_args. self rgb is {rgb}")
                 if rgb is not None:
-                    new_args["rgb_color"] = rgb
+                    new_args["rgb_color"] = self.calibrate_color(rgb)
                     log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting rgb_color to {rgb}")
             else:
                 temp = self.get_temperature()
@@ -1976,6 +2001,13 @@ class KaufLight:
                 self.last_state = {"on": True}
 
         return self.last_state
+
+
+class HueLight(KaufLight):
+    """Light driver for Philips Hue bulbs using color calibration."""
+
+    def __init__(self, name):
+        super().__init__(name, color_profile=COLOR_PROFILES.get("hue"))
 
 
 class BlindDriver:
