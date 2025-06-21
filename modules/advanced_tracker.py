@@ -11,6 +11,8 @@ import time
 import random
 from collections import defaultdict
 from typing import Dict, List, Optional
+from dataclasses import dataclass, field
+import json
 import os
 import yaml
 import matplotlib
@@ -145,10 +147,31 @@ class PersonTracker:
         return {room: count / total for room, count in counts.items()}
 
 
+@dataclass
+class Phone:
+    """Represents a mobile device providing location hints."""
+
+    id: str
+    last_room: Optional[str] = None
+    last_seen: float = 0.0
+    person_id: Optional[str] = None
+
+
+@dataclass
+class Person:
+    """Wrapper around ``PersonTracker`` with phone associations."""
+
+    id: str
+    tracker: PersonTracker
+    phones: List[str] = field(default_factory=list)
+
+
 class MultiPersonTracker:
     def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
+        self.people: Dict[str, Person] = {}
+        self.phones: Dict[str, Phone] = {}
         self.trackers: Dict[str, PersonTracker] = {}
         self.debug = debug
         self.debug_dir = debug_dir
@@ -159,23 +182,77 @@ class MultiPersonTracker:
 
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
-        tracker = self.trackers.get(person_id)
-        if tracker is None:
+        person = self.people.get(person_id)
+        if person is None:
             tracker = PersonTracker(self.room_graph, self.sensor_model)
+            person = Person(person_id, tracker)
+            self.people[person_id] = person
             self.trackers[person_id] = tracker
+        tracker = person.tracker
         tracker.update(now, sensor_room=room_id)
         if self.debug:
             self._visualize(now)
 
     def step(self) -> None:
         now = time.time()
-        for tracker in self.trackers.values():
-            tracker.update(now)
+        for person in self.people.values():
+            person.tracker.update(now)
         if self.debug:
             self._visualize(now)
 
     def estimate_locations(self) -> Dict[str, str]:
-        return {pid: tracker.estimate() for pid, tracker in self.trackers.items()}
+        return {pid: person.tracker.estimate() for pid, person in self.people.items()}
+
+    def add_phone(self, phone_id: str) -> Phone:
+        """Create a phone entry if needed and return it."""
+        phone = self.phones.get(phone_id)
+        if phone is None:
+            phone = Phone(phone_id)
+            self.phones[phone_id] = phone
+        return phone
+
+    def associate_phone(self, phone_id: str, person_id: str) -> None:
+        """Associate ``phone_id`` with ``person_id`` creating objects as needed."""
+        phone = self.add_phone(phone_id)
+        person = self.people.get(person_id)
+        if person is None:
+            tracker = PersonTracker(self.room_graph, self.sensor_model)
+            person = Person(person_id, tracker)
+            self.people[person_id] = person
+            self.trackers[person_id] = tracker
+        if phone_id not in person.phones:
+            person.phones.append(phone_id)
+        phone.person_id = person_id
+
+    def process_phone_data(self, phone_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
+        """Record phone location and update the associated person's tracker."""
+        phone = self.add_phone(phone_id)
+        now = time.time() if timestamp is None else timestamp
+        phone.last_room = room_id
+        phone.last_seen = now
+        if phone.person_id:
+            self.process_event(phone.person_id, room_id, timestamp=now)
+
+    def dump_state(self) -> str:
+        """Return a JSON representation of current tracker state."""
+        data = {
+            "people": {
+                pid: {
+                    "estimate": person.tracker.estimate(),
+                    "phones": list(person.phones),
+                }
+                for pid, person in self.people.items()
+            },
+            "phones": {
+                phid: {
+                    "person": phone.person_id,
+                    "last_room": phone.last_room,
+                    "last_seen": phone.last_seen,
+                }
+                for phid, phone in self.phones.items()
+            },
+        }
+        return json.dumps(data)
 
     def _visualize(self, current_time: float) -> None:
         plt.clf()
@@ -187,8 +264,8 @@ class MultiPersonTracker:
             1: (0, 1, 0),
             2: (0, 0, 1),
         }
-        for idx, (pid, tracker) in enumerate(self.trackers.items()):
-            dist = tracker.distribution()
+        for idx, (pid, person) in enumerate(self.people.items()):
+            dist = person.tracker.distribution()
             node_colors = []
             for node in self.room_graph.graph.nodes:
                 intensity = dist.get(node, 0.0)
