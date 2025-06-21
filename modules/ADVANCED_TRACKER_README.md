@@ -84,7 +84,10 @@ when the `init` service is called:
 
 ```python
 tracker_manager = init_from_yaml(
-    "./pyscript/connections.yml", debug=True, debug_dir="pyscript/tracker_debug"
+    "./pyscript/connections.yml",
+    debug=True,
+    debug_dir="pyscript/tracker_debug",
+    debug_interval=60.0,
 )
 ```
 
@@ -100,7 +103,10 @@ associated person.  The current state of all trackers can be inspected with
 
 To enable or disable visual logging, pass `debug=True` and specify a
 `debug_dir` when calling `init_from_yaml()`.  Images are written to that
-folder with names like `frame_000001.png`.
+folder with names like `frame_000001.png`.  The optional `debug_interval`
+parameter controls how often a frame is saved (in seconds) so long term
+logging does not fill the disk.  Frames are rendered at a small size to
+keep files compact.
 
 ## Testing
 
