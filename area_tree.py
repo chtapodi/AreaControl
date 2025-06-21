@@ -22,7 +22,10 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
 
     color_util = _ColorUtil()
 from tracker import TrackManager, Track, Event
-from adaptive_learning import get_learner
+try:
+    from adaptive_learning import get_learner
+except ImportError:
+    from modules.adaptive_learning import get_learner
 import unittest
 
 
