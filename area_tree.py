@@ -21,7 +21,7 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
             return (0, 0, 0)
 
     color_util = _ColorUtil()
-from modules.advanced_tracker import init_from_yaml
+from tracker import TrackManager, Track, Event
 try:
     from adaptive_learning import get_learner
 except ImportError:
@@ -99,12 +99,7 @@ def init():
     global_triggers = []
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
-    tracker_manager = init_from_yaml(
-        "./pyscript/connections.yml",
-        debug=True,
-        debug_dir="./pyscript/tracker_debug",
-        debug_interval=60.0,
-    )
+    tracker_manager = TrackManager()
 
 
 def get_global_triggers():
@@ -570,7 +565,22 @@ def get_last_set_state(device, scope, *args):
     return get_cached_last_set_state()
 
 def get_last_track_state(device, scope, *args):
-    log.info("get_last_track_state(): not implemented for advanced tracker")
+    tracker_manager=get_tracker_manager()
+    area_tree=get_area_tree()
+    device_area = device.get_area().name
+
+    log.info(f"get_last_track_state(): looking for {device_area} in {tracker_manager.get_pretty_string()}")
+
+    for track in tracker_manager.tracks:
+        if track.get_area() == device_area:
+            previous_event=track.get_previous_event(1) # Get the event before the current one
+            if previous_event is not None:
+                previous_area=previous_event.get_area()
+                last_track_state=summarize_state(area_tree.get_state(previous_area))
+                if "name" in last_track_state:
+                    del last_track_state["name"] 
+                log.info(f"get_last_track_state(): Last track state is {last_track_state} from {previous_area}")
+                return last_track_state
     return None
 
 
@@ -941,15 +951,17 @@ def load_yaml(path):
 
 ### Tracker interface
 def update_tracker(device, *args):
-    tracker_manager = get_tracker_manager()
+    tracker_manager=get_tracker_manager()
 
-    tracker_manager.process_event("p1", device.get_area().name)
+    tracker_manager.add_event(device.get_area().name)
     try:
         get_learner().record_presence(device.get_area().name)
     except Exception:
         pass
 
-    log.info("update_tracker: event processed")
+    log.info(f"update_tracker: Current tracks")
+    for track in tracker_manager.tracks:
+        log.info(f"update_tracker: {track.get_pretty_string()}")
 
     return True
 

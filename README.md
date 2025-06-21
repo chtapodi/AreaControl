@@ -128,10 +128,7 @@ See the [`execute_rule`](area_tree.py) method for the full logic.
 particle-filter based tracker. It follows people through the area graph defined
 in [`connections.yml`](connections.yml) and can output visualization frames. The
 `update_tracker` function in [`area_tree.py`](area_tree.py) feeds motion sensor
-events into the tracker. When debugging is enabled the tracker periodically
-saves small PNG frames rather than dumping an image every step.
-The interval between frames defaults to 60 seconds and can be adjusted via
-the ``debug_interval`` argument of ``init_from_yaml``.
+events into the tracker and logs each generated frame.
 For a thorough explanation of the algorithm and code walkthroughs, see
 [the detailed tracker README](modules/ADVANCED_TRACKER_README.md).
 

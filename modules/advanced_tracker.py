@@ -167,16 +167,7 @@ class Person:
 
 
 class MultiPersonTracker:
-    def __init__(
-        self,
-        room_graph: RoomGraph,
-        sensor_model: SensorModel,
-        *,
-        debug: bool = False,
-        debug_dir: str = "debug",
-        debug_interval: float = 60.0,
-        debug_figsize: tuple = (4, 3),
-    ):
+    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.people: Dict[str, Person] = {}
@@ -184,10 +175,7 @@ class MultiPersonTracker:
         self.trackers: Dict[str, PersonTracker] = {}
         self.debug = debug
         self.debug_dir = debug_dir
-        self.debug_interval = debug_interval
-        self.debug_figsize = debug_figsize
         self._debug_counter = 0
-        self._last_debug_time = 0.0
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
@@ -267,10 +255,8 @@ class MultiPersonTracker:
         return json.dumps(data)
 
     def _visualize(self, current_time: float) -> None:
-        if current_time - self._last_debug_time < self.debug_interval:
-            return
         plt.clf()
-        fig, ax = plt.subplots(figsize=self.debug_figsize)
+        fig, ax = plt.subplots(figsize=(6, 4))
         nx.draw_networkx(self.room_graph.graph, pos=self._layout, ax=ax, node_color='lightgray', edgecolors='black')
 
         colors = {
@@ -296,28 +282,13 @@ class MultiPersonTracker:
         ax.set_title(f"t={current_time:.1f}")
         ax.axis('off')
         filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
-        plt.savefig(filename, dpi=80)
+        plt.savefig(filename)
         plt.close(fig)
         self._debug_counter += 1
-        self._last_debug_time = current_time
 
 
-def init_from_yaml(
-    connections_path: str,
-    *,
-    debug: bool = False,
-    debug_dir: str = "debug",
-    debug_interval: float = 60.0,
-    debug_figsize: tuple = (4, 3),
-) -> MultiPersonTracker:
+def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
-    return MultiPersonTracker(
-        graph,
-        sensor_model,
-        debug=debug,
-        debug_dir=debug_dir,
-        debug_interval=debug_interval,
-        debug_figsize=debug_figsize,
-    )
+    return MultiPersonTracker(graph, sensor_model, debug=debug, debug_dir=debug_dir)
 
