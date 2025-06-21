@@ -4,8 +4,25 @@ import copy
 import time
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
-from homeassistant.util import color as color_util
+try:
+    from homeassistant.util import color as color_util
+except Exception:  # pragma: no cover - fallback for tests without Home Assistant
+    class _ColorUtil:
+        @staticmethod
+        def color_RGB_to_hs(r, g, b):
+            return (0, 0)
+
+        @staticmethod
+        def color_hs_to_RGB(h, s):
+            return (0, 0, 0)
+
+        @staticmethod
+        def color_temperature_to_rgb(k):
+            return (0, 0, 0)
+
+    color_util = _ColorUtil()
 from tracker import TrackManager, Track, Event
+from modules.adaptive_learning import get_learner
 import unittest
 
 
@@ -916,6 +933,10 @@ def update_tracker(device, *args):
     tracker_manager=get_tracker_manager()
 
     tracker_manager.add_event(device.get_area().name)
+    try:
+        get_learner().record_presence(device.get_area().name)
+    except Exception:
+        pass
 
     log.info(f"update_tracker: Current tracks")
     for track in tracker_manager.tracks:
@@ -989,7 +1010,7 @@ class EventManager:
         for rule_name in matching_rules:
             rule = copy.deepcopy(self.rules[rule_name])
             log.info(f"EventManager:check_event():  Rule: {rule}")
-            results.append(self.execute_rule(event, rule))
+            results.append(self.execute_rule(event, rule, rule_name=rule_name))
 
         if results is not None:
             return results
@@ -1007,7 +1028,7 @@ class EventManager:
                         args.append(state)
         return args
 
-    def execute_rule(self, event_data, rule):
+    def execute_rule(self, event_data, rule, rule_name=None):
         device_name = event_data["device_name"]
 
         log.info(f"EventManager:execute_rule(): {event_data}")
@@ -1108,6 +1129,12 @@ class EventManager:
             log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
             for areas in scope:
                 areas.set_state(final_state)
+
+            if rule_name is not None:
+                try:
+                    get_learner().record_rule_event(rule_name)
+                except Exception:
+                    pass
 
             return True
         else:
