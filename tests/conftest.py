@@ -3,6 +3,7 @@ import sys
 import importlib.util
 import copy
 import builtins
+import os
 
 
 def _stub_decorator(*dargs, **dkwargs):
@@ -22,7 +23,17 @@ class DummyLog:
         pass
 
 
-def load_area_tree():
+def load_area_tree(use_real_drivers: bool | None = None):
+    """Load ``area_tree`` for tests.
+
+    When ``use_real_drivers`` is True (or the environment variable
+    ``AREATREE_REAL_DRIVERS`` is set to ``1``), the module is loaded
+    without stubbing Home Assistant modules and ``init()`` is executed so
+    the real drivers are used.  Otherwise the missing modules are stubbed
+    and ``init`` is not called.
+    """
+    if use_real_drivers is None:
+        use_real_drivers = os.getenv("AREATREE_REAL_DRIVERS") == "1"
     pyscript_mod = types.ModuleType('pyscript')
     pyscript_mod.k_to_rgb = types.ModuleType('pyscript.k_to_rgb')
     pyscript_mod.k_to_rgb.convert_K_to_RGB = lambda x: x
@@ -32,19 +43,28 @@ def load_area_tree():
     sys.modules['pyscript'] = pyscript_mod
     sys.modules['pyscript.k_to_rgb'] = pyscript_mod.k_to_rgb
 
-    # Use the real Home Assistant modules if available
-    try:
-        import homeassistant.const  # noqa: F401
-    except Exception:
-        sys.modules['homeassistant'] = types.ModuleType('homeassistant')
-        sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
-        sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
+    if not use_real_drivers:
+        # Use the real Home Assistant modules when available, otherwise stub them
+        try:
+            import homeassistant.const  # noqa: F401
+        except Exception:
+            sys.modules['homeassistant'] = types.ModuleType('homeassistant')
+            sys.modules['homeassistant.const'] = types.ModuleType('homeassistant.const')
+            sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
+            util_mod = types.ModuleType('homeassistant.util')
+            util_mod.color = types.SimpleNamespace(
+                color_RGB_to_hs=lambda *a, **k: (0, 0),
+                color_hs_to_RGB=lambda *a, **k: (0, 0, 0),
+                color_temperature_to_rgb=lambda *a, **k: (0, 0, 0),
+            )
+            sys.modules['homeassistant.util'] = util_mod
 
-    tracker_mod = types.ModuleType('tracker')
-    tracker_mod.TrackManager = object
-    tracker_mod.Track = object
-    tracker_mod.Event = object
-    sys.modules['tracker'] = tracker_mod
+    if not use_real_drivers:
+        tracker_mod = types.ModuleType('tracker')
+        tracker_mod.TrackManager = object
+        tracker_mod.Track = object
+        tracker_mod.Event = object
+        sys.modules['tracker'] = tracker_mod
 
     with open('area_tree.py') as f:
         lines = [line for line in f.readlines()
@@ -59,6 +79,8 @@ def load_area_tree():
     mod.pyscript_compile = _stub_decorator
     sys.modules['area_tree'] = mod
     exec(code, mod.__dict__)
+    if use_real_drivers and hasattr(mod, "init"):
+        mod.init()
     return mod
 
 
