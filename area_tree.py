@@ -1168,8 +1168,13 @@ class EventManager:
 class AreaTree:
     """Acts as an interface to the area tree"""
 
-    def __init__(self, config_path):
+    def __init__(self, config_path, devices_file="devices.yml"):
         self.config_path = config_path
+        self.device_defs = {}
+        try:
+            self.device_defs = load_yaml(devices_file)
+        except Exception:
+            pass
         self.area_tree_lookup = self._create_area_tree(self.config_path)
 
         self.root_name = self._find_root_area_name()
@@ -1322,30 +1327,29 @@ class AreaTree:
                 if "outputs" in area_data and area_data["outputs"] is not None:
                     for output in area_data.get("outputs", []):
                         if output is not None:
-                            if "kauf" in output:
-                                new_light = KaufLight(output)
-                                new_device = Device(new_light)
+                            driver = None
+                            info = self.device_defs.get(output, {})
+                            dtype = info.get("type")
+                            if dtype == "light" or (dtype is None and "kauf" in output):
+                                driver = KaufLight(output)
+                            elif dtype == "blind" or (dtype is None and "blind" in output):
+                                height = info.get("height", BLIND_HEIGHTS.get(output, 100))
+                                driver = BlindDriver(output, height)
+                            elif dtype == "speaker" or (dtype is None and ("speaker" in output or "google_home" in output)):
+                                driver = SpeakerDriver(output)
+                            elif dtype == "plug":
+                                driver = PlugDriver(output)
+                            elif dtype == "contact_sensor":
+                                driver = ContactSensorDriver(output)
+                            elif dtype == "fan":
+                                driver = FanDriver(output)
+                            elif dtype == "television":
+                                driver = TelevisionDriver(output)
 
+                            if driver is not None:
+                                new_device = Device(driver)
                                 area.add_device(new_device)
                                 new_device.set_area(area)
-
-                                area_tree[output] = new_device
-                            elif "blind" in output:
-                                height = BLIND_HEIGHTS.get(output, 100)
-                                new_blind = BlindDriver(output, height)
-                                new_device = Device(new_blind)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
-                                area_tree[output] = new_device
-                            elif "speaker" in output or "google_home" in output:
-                                new_speaker = SpeakerDriver(output)
-                                new_device = Device(new_speaker)
-
-                                area.add_device(new_device)
-                                new_device.set_area(area)
-
                                 area_tree[output] = new_device
 
                 # Add outputs as children
@@ -2035,6 +2039,157 @@ class SpeakerDriver:
             except Exception as e:
                 log.warning(f"Failed to set volume for {self.name}: {e}")
         self.last_state.update(state)
+        return self.last_state
+
+
+class PlugDriver:
+    """Driver for smart plugs acting as simple on/off switches."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"status": 0}
+
+    def get_valid_state_keys(self):
+        return ["status"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"switch.{self.name}")
+        except Exception:
+            pass
+        if status is None:
+            status = self.last_state.get("status", 0)
+        else:
+            status = 1 if str(status).lower() in {"on", "true", "1"} else 0
+        self.last_state = {"status": status}
+        return self.last_state
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    switch.turn_on(entity_id=f"switch.{self.name}")
+                else:
+                    switch.turn_off(entity_id=f"switch.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set plug {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
+        return self.last_state
+
+
+class ContactSensorDriver:
+    """Driver for simple binary contact sensors."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"contact": 0}
+
+    def get_valid_state_keys(self):
+        return ["contact"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"binary_sensor.{self.name}")
+        except Exception:
+            pass
+        if status is None:
+            status = self.last_state.get("contact", 0)
+        else:
+            status = 1 if str(status).lower() in {"on", "true", "open", "1"} else 0
+        self.last_state = {"contact": status}
+        return self.last_state
+
+
+class FanDriver:
+    """Driver for controllable fans supporting simple on/off."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"status": 0}
+
+    def get_valid_state_keys(self):
+        return ["status"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"fan.{self.name}")
+        except Exception:
+            pass
+        if status is None:
+            status = self.last_state.get("status", 0)
+        else:
+            status = 1 if str(status).lower() in {"on", "true", "1"} else 0
+        self.last_state = {"status": status}
+        return self.last_state
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    fan.turn_on(entity_id=f"fan.{self.name}")
+                else:
+                    fan.turn_off(entity_id=f"fan.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set fan {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
+        return self.last_state
+
+
+class TelevisionDriver:
+    """Driver for televisions treated as media players."""
+
+    def __init__(self, name):
+        self.name = name
+        self.last_state = {"status": 0}
+
+    def get_valid_state_keys(self):
+        return ["status"]
+
+    def filter_state(self, state):
+        valid = self.get_valid_state_keys()
+        return {k: v for k, v in state.items() if k in valid}
+
+    def get_state(self):
+        status = None
+        try:
+            status = state.get(f"media_player.{self.name}.state")
+        except Exception:
+            pass
+        if status is None:
+            status = self.last_state.get("status", 0)
+        else:
+            status = 1 if str(status).lower() in {"on", "playing", "true", "1"} else 0
+        self.last_state = {"status": status}
+        return self.last_state
+
+    def set_state(self, state):
+        state = self.filter_state(state)
+        if "status" in state:
+            try:
+                if state["status"]:
+                    media_player.turn_on(entity_id=f"media_player.{self.name}")
+                else:
+                    media_player.turn_off(entity_id=f"media_player.{self.name}")
+            except Exception as e:
+                log.warning(f"Failed to set television {self.name}: {e}")
+            self.last_state["status"] = 1 if state["status"] else 0
         return self.last_state
 
 
