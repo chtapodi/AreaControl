@@ -33,11 +33,15 @@ Particles are then resampled proportionally to their weight.  The room
 with the most particles is the current estimate returned by
 `PersonTracker.estimate()`.
 
-`MultiPersonTracker` simply holds a set of `PersonTracker` instances,
-indexed by person id.  It exposes `process_event()` to feed sensor updates
-and `step()` to progress the trackers when no new events occur.  Enabling
-debug mode saves a PNG frame for each step so you can visualize the
-distribution over time.
+`MultiPersonTracker` holds a set of `Person` objects, each wrapping a
+`PersonTracker` and zero or more `Phone` objects.  Phones report room data
+through `process_phone_data()` and can be associated with a person using
+`associate_phone()`.  Generic people are created automatically when a new
+identifier is seen.  The manager exposes `process_event()` for sensor
+triggers and `step()` to progress the trackers when no new events occur.
+Enabling debug mode saves a PNG frame for each step so you can visualize
+the distribution over time.  Call `dump_state()` to retrieve a JSON summary
+of all people and phones.
 
 ## Example Walk‑through
 
@@ -87,6 +91,12 @@ tracker_manager = init_from_yaml(
 Motion sensors invoke `update_tracker()` which calls
 `tracker_manager.process_event("p1", room)` and stores a debug image if
 logging is enabled.
+
+Phones can be registered with `add_phone()` and linked to a person via
+`associate_phone()`.  When phone location data arrives, call
+`process_phone_data(phone_id, room)` to treat it as a sensor event for the
+associated person.  The current state of all trackers can be inspected with
+`dump_state()` which returns JSON.
 
 To enable or disable visual logging, pass `debug=True` and specify a
 `debug_dir` when calling `init_from_yaml()`.  Images are written to that
