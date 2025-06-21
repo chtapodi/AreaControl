@@ -36,7 +36,13 @@ class TestAdvancedTracker(unittest.TestCase):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
         with tempfile.TemporaryDirectory() as tmp:
-            multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=tmp)
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                debug_interval=0.0,
+            )
             multi.process_event('p1', 'bedroom', timestamp=0.0)
             multi.step()
             files = sorted(os.listdir(tmp))
