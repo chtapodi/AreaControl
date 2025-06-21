@@ -22,6 +22,8 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
 
     color_util = _ColorUtil()
 from tracker import TrackManager, Track, Event
+
+# The modules will not load correctly in pyscript, so each of them need to be in a try case like this
 try:
     from adaptive_learning import get_learner
 except ImportError:
