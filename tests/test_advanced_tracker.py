@@ -3,6 +3,7 @@ import unittest
 import tempfile
 import pytest
 import yaml
+import json
 
 pytest.importorskip("scipy")
 
@@ -11,6 +12,8 @@ from modules.advanced_tracker import (
     SensorModel,
     PersonTracker,
     MultiPersonTracker,
+    Phone,
+    Person,
 )
 
 
@@ -38,6 +41,23 @@ class TestAdvancedTracker(unittest.TestCase):
             multi.step()
             files = sorted(os.listdir(tmp))
         self.assertTrue(any(f.startswith('frame_') and f.endswith('.png') for f in files))
+
+    def test_phone_association_and_state(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        multi = MultiPersonTracker(graph, sensor_model)
+        import random
+        random.seed(0)
+        multi.add_phone('ph1')
+        multi.associate_phone('ph1', 'alice')
+        multi.process_phone_data('ph1', 'bedroom', timestamp=0.0)
+        multi.step()
+        self.assertIn('alice', multi.people)
+        self.assertEqual(multi.people['alice'].phones, ['ph1'])
+        state = json.loads(multi.dump_state())
+        self.assertEqual(state['phones']['ph1']['person'], 'alice')
+        self.assertEqual(state['phones']['ph1']['last_room'], 'bedroom')
+        self.assertIn('estimate', state['people']['alice'])
 
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:
