@@ -51,3 +51,18 @@ def test_television_driver_on_off():
     d.set_state({"status": 1})
     d.set_state({"status": 0})
     assert calls[0][0] == "on" and calls[1][0] == "off"
+
+
+def test_hue_light_calibration():
+    area_tree = load_area_tree()
+    # adjust profile so test has predictable output
+    area_tree.COLOR_PROFILES["hue"] = [0.5, 1.0, 1.0]
+    calls = []
+    area_tree.light = types.SimpleNamespace(
+        turn_on=lambda **kw: calls.append(kw),
+        turn_off=lambda **kw: None,
+    )
+    HueLight = area_tree.HueLight
+    light = HueLight("library_lamp")
+    light.apply_values(rgb_color=[100, 100, 100])
+    assert calls and calls[0]["rgb_color"] == [50, 100, 100]
