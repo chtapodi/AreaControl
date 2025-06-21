@@ -9,7 +9,9 @@ import os
 
 @pyscript_compile
 def load_yaml(path):
-    with open(path, "r") as f:
+    """Load YAML data via builtin ``open`` for pyscript compatibility."""
+    import builtins
+    with builtins.open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
 

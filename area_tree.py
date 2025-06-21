@@ -934,7 +934,9 @@ class Area:
 
 @pyscript_compile
 def load_yaml(path):
-    with open(path, "r") as f:
+    """Load a YAML file inside pyscript using the builtin ``open``."""
+    import builtins
+    with builtins.open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
 
@@ -944,6 +946,7 @@ def update_tracker(device, *args):
     tracker_manager = get_tracker_manager()
 
     tracker_manager.process_event("p1", device.get_area().name)
+    tracker_manager.step()
     try:
         get_learner().record_presence(device.get_area().name)
     except Exception:
