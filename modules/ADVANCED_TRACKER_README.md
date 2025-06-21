@@ -93,7 +93,10 @@ To enable or disable visual logging, pass `debug=True` and specify a
 folder with names like `frame_000001.png`.  Each image has a corresponding
 `state_000001.json` file produced by `MultiPersonTracker.dump_state()` which
 contains the current estimates and probability distributions for all tracked
-people.
+people.  The tracker caps the number of stored frames (default ``1000``) and
+only saves a new image if at least ``log_interval`` seconds have passed
+(default ``60``) so logging can remain enabled long term without filling up
+disk space.
 
 ## Testing
 

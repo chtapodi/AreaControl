@@ -208,7 +208,17 @@ class MultiPersonTracker:
     custom path.
     """
 
-    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
+    def __init__(
+        self,
+        room_graph: RoomGraph,
+        sensor_model: SensorModel,
+        *,
+        debug: bool = False,
+        debug_dir: str = "debug",
+        log_interval: float = 60.0,
+        log_retention: int = 1000,
+        image_size: tuple = (6, 4),
+    ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.people: Dict[str, Person] = {}
@@ -216,7 +226,11 @@ class MultiPersonTracker:
         self._generic_counter = 0
         self.debug = debug
         self.debug_dir = debug_dir
+        self.log_interval = log_interval
+        self.log_retention = log_retention
+        self.image_size = image_size
         self._debug_counter = 0
+        self._last_log_time = 0.0
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
@@ -287,8 +301,22 @@ class MultiPersonTracker:
             json.dump(state, f)
 
     def _visualize(self, current_time: float) -> None:
+        if current_time - self._last_log_time < self.log_interval:
+            return
+        self._last_log_time = current_time
+
+        # Remove old frames if exceeding retention limit
+        old_idx = self._debug_counter - self.log_retention
+        if old_idx >= 0:
+            old_frame = os.path.join(self.debug_dir, f"frame_{old_idx:06d}.png")
+            old_state = os.path.join(self.debug_dir, f"state_{old_idx:06d}.json")
+            if os.path.exists(old_frame):
+                os.remove(old_frame)
+            if os.path.exists(old_state):
+                os.remove(old_state)
+
         plt.clf()
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, ax = plt.subplots(figsize=self.image_size)
         nx.draw_networkx(self.room_graph.graph, pos=self._layout, ax=ax, node_color='lightgray', edgecolors='black')
 
         colors = {
@@ -315,14 +343,30 @@ class MultiPersonTracker:
         ax.axis('off')
         frame_file = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
         state_file = os.path.join(self.debug_dir, f"state_{self._debug_counter:06d}.json")
-        plt.savefig(frame_file)
+        plt.savefig(frame_file, dpi=80, bbox_inches="tight")
         plt.close(fig)
         self.dump_state(state_file)
         self._debug_counter += 1
 
 
-def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
+def init_from_yaml(
+    connections_path: str,
+    *,
+    debug: bool = False,
+    debug_dir: str = "debug",
+    log_interval: float = 60.0,
+    log_retention: int = 1000,
+    image_size: tuple = (6, 4),
+) -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
-    return MultiPersonTracker(graph, sensor_model, debug=debug, debug_dir=debug_dir)
+    return MultiPersonTracker(
+        graph,
+        sensor_model,
+        debug=debug,
+        debug_dir=debug_dir,
+        log_interval=log_interval,
+        log_retention=log_retention,
+        image_size=image_size,
+    )
 

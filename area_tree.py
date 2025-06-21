@@ -7,10 +7,9 @@ import inspect
 #from pyscript import task
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
-from advanced_tracker import init_from_yaml, MultiPersonTracker
+from modules.advanced_tracker import init_from_yaml, MultiPersonTracker
 from homeassistant.util import color as color_util
-from tracker import TrackManager, Track, Event
-from adaptive_learning import get_learner
+from modules.adaptive_learning import get_learner
 import os
 import unittest
 
@@ -88,7 +87,12 @@ def init():
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
     tracker_manager = init_from_yaml(
-        "./pyscript/connections.yml", debug=True, debug_dir="pyscript/tracker_debug"
+        "./pyscript/connections.yml",
+        debug=True,
+        debug_dir="pyscript/tracker_debug",
+        log_interval=30.0,
+        log_retention=500,
+        image_size=(4, 3),
     )
 
 
@@ -555,22 +559,20 @@ def get_last_set_state(device, scope, *args):
     return get_cached_last_set_state()
 
 def get_last_track_state(device, scope, *args):
-    tracker_manager=get_tracker_manager()
-    area_tree=get_area_tree()
+    tracker_manager = get_tracker_manager()
+    area_tree = get_area_tree()
     device_area = device.get_area().name
 
-    log.info(f"get_last_track_state(): looking for {device_area} in {tracker_manager.get_pretty_string()}")
-
-    for track in tracker_manager.tracks:
-        if track.get_area() == device_area:
-            previous_event=track.get_previous_event(1) # Get the event before the current one
-            if previous_event is not None:
-                previous_area=previous_event.get_area()
-                last_track_state=summarize_state(area_tree.get_state(previous_area))
-                if "name" in last_track_state:
-                    del last_track_state["name"] 
-                log.info(f"get_last_track_state(): Last track state is {last_track_state} from {previous_area}")
-                return last_track_state
+    estimates = tracker_manager.estimate_locations()
+    current_room = estimates.get("p1")
+    if current_room and current_room != device_area:
+        last_track_state = summarize_state(area_tree.get_state(current_room))
+        if "name" in last_track_state:
+            del last_track_state["name"]
+        log.info(
+            f"get_last_track_state(): returning state from {current_room} -> {last_track_state}"
+        )
+        return last_track_state
     return None
 
 
@@ -2594,8 +2596,10 @@ async def run_tests() :
 
 
 
-init()
-task.create_task(run_tests())
+if __name__ == "__main__":
+    init()
+    from pyscript import task  # type: ignore
+    task.create_task(run_tests())
 
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_service_calls(**kwargs):
@@ -2683,6 +2687,6 @@ async def test_tracks() :
 
     # event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
 
-    log.info(tracker_manager.get_pretty_string())
+    log.info(str(tracker_manager.estimate_locations()))
 
 #test_tracks()
