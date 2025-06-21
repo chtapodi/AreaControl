@@ -31,9 +31,9 @@ def load_area_tree():
         sys.modules['homeassistant.const'].EVENT_CALL_SERVICE = 'call_service'
         util_mod = types.ModuleType('homeassistant.util')
         util_mod.color = types.SimpleNamespace(
-            color_RGB_to_hs=lambda r, g, b: (0, 0),
-            color_hs_to_RGB=lambda h, s: (0, 0, 0),
-            color_temperature_to_rgb=lambda k: (0, 0, 0),
+            color_RGB_to_hs=lambda *a, **k: (0, 0),
+            color_hs_to_RGB=lambda *a, **k: (0, 0, 0),
+            color_temperature_to_rgb=lambda *a, **k: (0, 0, 0),
         )
         sys.modules['homeassistant.util'] = util_mod
 

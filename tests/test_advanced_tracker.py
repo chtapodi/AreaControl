@@ -1,8 +1,10 @@
 import os
 import unittest
 import tempfile
-
+import pytest
 import yaml
+
+pytest.importorskip("scipy")
 
 from modules.advanced_tracker import (
     load_room_graph_from_yaml,
