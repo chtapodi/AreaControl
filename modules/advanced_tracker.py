@@ -19,6 +19,18 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+try:
+    from pyscript import pyscript_compile
+except Exception:  # pragma: no cover - fallback when pyscript not present
+    def pyscript_compile(func=None, **kwargs):
+        if func is not None:
+            return func
+
+        def wrapper(f):
+            return f
+
+        return wrapper
+
 import networkx as nx
 
 
@@ -35,6 +47,7 @@ class RoomGraph:
         return list(self.graph.neighbors(room_id))
 
 
+@pyscript_compile
 def load_room_graph_from_yaml(path: str) -> RoomGraph:
     with open(path, "r") as f:
         data = yaml.safe_load(f)
@@ -287,6 +300,7 @@ class MultiPersonTracker:
         self._debug_counter += 1
 
 
+@pyscript_compile
 def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
