@@ -69,9 +69,21 @@ class Logger:
             log.error(self._format(self.component, msg, data))
 
 
+def log_state_change(old_state: dict | None, new_state: dict | None) -> None:
+    """Log only the keys whose values changed between two state dictionaries."""
+    old_state = old_state or {}
+    new_state = new_state or {}
+    changed = {k: v for k, v in new_state.items() if old_state.get(k) != v}
+    for k in old_state:
+        if k not in new_state:
+            changed[k] = None
+    if changed:
+        log.info(f"State change: {changed}")
+
+
 def get_logger(component: str) -> Logger:
     """Return a ``Logger`` for ``component``."""
     return Logger(component)
 
 
-__all__ = ["get_logger", "set_level", "Logger"]
+__all__ = ["get_logger", "set_level", "Logger", "log_state_change"]
