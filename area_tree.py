@@ -4,6 +4,7 @@ import copy
 import time
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
+from modules.logger import get_logger
 try:
     from homeassistant.util import color as color_util
 except Exception:  # pragma: no cover - fallback for tests without Home Assistant
@@ -965,13 +966,19 @@ class EventManager:
     def __init__(self, rules_file, area_tree):
         self.rules = load_yaml(rules_file)
         self.area_tree = area_tree
+        self.event_id = 0
 
     def create_event(self, event):
-        log.info(f"EventManager: New event: {event}")
+        event["id"] = self.event_id
+        self.event_id += 1
+        logger = get_logger(f"Event:{event['id']}")
+        logger.info("EventManager: New event", event=event)
 
-        result = self.check_event(event)
+        result = self.check_event(event, logger)
 
-    def check_event(self, event):
+    def check_event(self, event, logger=None):
+        if logger is None:
+            logger = get_logger(f"Event:{event.get('id')}")
         matching_rules = []
         rule_lookup = self.get_rules()
         for rule_name in rule_lookup.keys():
@@ -979,9 +986,9 @@ class EventManager:
             trigger_prefix = rule_lookup[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
                 if "service" in event["device_name"]:
-                    log.info(f"EventManager:check_event(): SERVICESEARCH")
+                    logger.info("EventManager:check_event(): SERVICESEARCH")
                 if get_verbose_mode():
-                    log.info(
+                    logger.info(
                         f"EventManager:check_event(): Rule {rule_name} prefix [{trigger_prefix}] matches {event['device_name']}"
                     )
                 function_override = False
@@ -994,12 +1001,12 @@ class EventManager:
 
                 approved = True
                 if not (
-                    tag_override or self._check_tags(event, rule_lookup[rule_name])
+                    tag_override or self._check_tags(event, rule_lookup[rule_name], logger)
                 ):
                     approved = False
 
                 if get_verbose_mode() and approved:
-                    log.info(f"EventManager:check_event(): {rule_name} Passed tag check")
+                    logger.info(f"EventManager:check_event(): {rule_name} Passed tag check")
 
                 if "tags" in event:
                     if "tag_override" in event["tags"]:
@@ -1007,25 +1014,27 @@ class EventManager:
 
                 if not approved or (
                     function_override
-                    and self._check_functions(event, rule_lookup[rule_name])
+                    and self._check_functions(event, rule_lookup[rule_name], logger)
                 ):
                     approved = False
-                    # log.info(f"EventManager:check_event(): {rule_name} FAILED function check")
+                    # logger.info(f"EventManager:check_event(): {rule_name} FAILED function check")
 
                 if get_verbose_mode() and approved:
-                    log.info(f"EventManager:check_event(): {rule_name} Passed function check")
+                    logger.info(f"EventManager:check_event(): {rule_name} Passed function check")
 
                 if approved:
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
-        log.info(f"EventManager:check_event():  Event: {event} Matches:{matching_rules} Rules")
+        logger.info(
+            f"EventManager:check_event():  Event: {event} Matches:{matching_rules} Rules"
+        )
 
         results = []
         for rule_name in matching_rules:
             rule = copy.deepcopy(self.rules[rule_name])
-            log.info(f"EventManager:check_event():  Rule: {rule}")
-            results.append(self.execute_rule(event, rule, rule_name=rule_name))
+            logger.info(f"EventManager:check_event():  Rule: {rule}")
+            results.append(self.execute_rule(event, rule, rule_name=rule_name, logger=logger))
 
         if results is not None:
             return results
@@ -1033,20 +1042,23 @@ class EventManager:
         return False  # No matching rule
 
     # Looks for keywords in args and replaces them with values
-    def expand_args(self, args, event_data, state):
+    def expand_args(self, args, event_data, state, logger):
         for arg in args :
             if type(arg) is str:
                 if arg.startswith("$") :
                     if arg == "$state" :
-                        log.info(f"Expanding $state to {state}")
+                        logger.info(f"Expanding $state to {state}")
                         del args[args.index("$state")]
                         args.append(state)
         return args
 
-    def execute_rule(self, event_data, rule, rule_name=None):
+    def execute_rule(self, event_data, rule, rule_name=None, logger=None):
         device_name = event_data["device_name"]
 
-        log.info(f"EventManager:execute_rule(): {event_data}")
+        if logger is None:
+            logger = get_logger(f"Event:{event_data.get('id')}")
+
+        logger.info("EventManager:execute_rule()", event=event_data)
         device = self.get_area_tree().get_device(device_name)
 
 
@@ -1056,7 +1068,7 @@ class EventManager:
             device_area = device.get_area()
             rule_state = rule.get("state", {})
 
-            log.info(f"EventManager:execute_rule(): updating {rule} with {event_data}")
+            logger.info(f"EventManager:execute_rule(): updating {rule} with {event_data}")
             rule.update(event_data)
 
             scope = None  # Should these be anded?
@@ -1075,12 +1087,14 @@ class EventManager:
                                     edited_scope = []
                                     for area in scope:
                                         if get_verbose_mode():
-                                            log.info(
+                                            logger.info(
                                                 f"EventManager:execute_rule(): Checking if {area.name} in {new_scope}"
                                             )
                                         if area in new_scope:
                                             edited_scope.append(area)
-                                    log.info(f"EventManager:execute_rule(): Edited scope: {scope}->{edited_scope}")
+                                    logger.info(
+                                        f"EventManager:execute_rule(): Edited scope: {scope}->{edited_scope}"
+                                    )
                                     scope = edited_scope
 
             if scope is None:
@@ -1090,12 +1104,12 @@ class EventManager:
             for area in scope:
                 scope_names.append(area.name)
             
-            log.info(f"EventManager:execute_rule(): Event scope is {scope_names}")
+            logger.info(f"EventManager:execute_rule(): Event scope is {scope_names}")
 
             function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
-                log.info(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
+                logger.info(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
                 for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
                         function = get_function_by_name(function_name)
@@ -1103,10 +1117,14 @@ class EventManager:
                         if function is not None:
                             function_state = function(device, scope, args)
                             # Adds the states to a list to be combined
-                            log.info(f"EventManager:execute_rule(): Function {function_name} provided: {function_state}")
+                            logger.info(
+                                f"EventManager:execute_rule(): Function {function_name} provided: {function_state}"
+                            )
                             function_states.append(function_state)
 
-                log.info(f"EventManager:execute_rule(): Function states: {rule['state_functions']} provided  {function_states}")
+                logger.info(
+                    f"EventManager:execute_rule(): Function states: {rule['state_functions']} provided  {function_states}"
+                )
             # Add state_list to event_state
             state_list = []
             if "state" in event_data:
@@ -1123,7 +1141,7 @@ class EventManager:
                 state_list, strategy=strategy
             )
 
-            log.info(f"EventManager:execute_rule(): Event state is {final_state}")
+            logger.info(f"EventManager:execute_rule(): Event state is {final_state}")
 
 
 
@@ -1136,12 +1154,12 @@ class EventManager:
                         
                         # If function exists, run it
                         if function is not None:
-                            args=self.expand_args(args, event_data, final_state)
+                            args = self.expand_args(args, event_data, final_state, logger)
                             if not function(device, *args) :
-                                log.info(f"Fuction '{function_name}' failed, not running rule.")
+                                logger.info(f"Fuction '{function_name}' failed, not running rule.")
                                 return False
-            log.info("EventManager:execute_rule(): Event passed all functions")
-            log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
+            logger.info("EventManager:execute_rule(): Event passed all functions")
+            logger.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
             for areas in scope:
                 areas.set_state(final_state)
 
@@ -1153,37 +1171,37 @@ class EventManager:
 
             return True
         else:
-            log.warning(f"EventManager:execute_rule(): Device {device_name} not found")
+            logger.warning(f"EventManager:execute_rule(): Device {device_name} not found")
             return False
 
-    def _check_tags(self, event, rule):
+    def _check_tags(self, event, rule, logger):
         """Checks if the tags passed the rules tags"""
         tags = event.get("tags", [])
         if "required_tags" in rule:
             if get_verbose_mode():
-                log.info(
+                logger.info(
                     f"Checking Required tags {rule['required_tags']} against {tags}"
                 )
             for tag in rule["required_tags"]:
                 if tag not in tags:
                     if get_verbose_mode():
-                        log.info(f"Required tag {tag} not found in event {event}")
+                        logger.info(f"Required tag {tag} not found in event {event}")
                     return False
         if "prohibited_tags" in rule:
             if get_verbose_mode():
-                log.info(
+                logger.info(
                     f"Checking Prohibited tags {rule['prohibited_tags']} against {tags}"
                 )
             for tag in rule["prohibited_tags"]:
                 if tag in tags:
                     if get_verbose_mode():
-                        log.info(f"Prohibited tag {tag} found in event {event}")
+                        logger.info(f"Prohibited tag {tag} found in event {event}")
                     return False
         if get_verbose_mode():
-            log.info(f"Passed tag check")
+            logger.info("Passed tag check")
         return True
 
-    def _check_functions(self, event, rule, **kwargs):
+    def _check_functions(self, event, rule, logger, **kwargs):
         functions = rule.get("functions", [])
         if len(functions) > 0:
             for function_data in functions:
@@ -1195,7 +1213,7 @@ class EventManager:
                     result = function(event, **kwargs)
                     if not result:
                         if get_verbose_mode():
-                            log.info(f"Function {function_name} failed")
+                            logger.info(f"Function {function_name} failed")
                         return False
 
         return True  # If passed all checks or theres no functions to pass
