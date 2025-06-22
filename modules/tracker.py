@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import time
 import copy
 import os
+from modules.logger import get_logger
 
+logger = get_logger(__name__)
 
 
 @pyscript_compile
@@ -76,7 +78,7 @@ class Event:
         self.last_falling_edge_time=time.time()
 
     def end(self, end_timestamp=None) :
-        log.info("ENDING")
+        logger.debug("ENDING")
         if end_timestamp is not None:
             self.last_falling_edge_time=end_timestamp
         else :
@@ -119,7 +121,7 @@ class Track:
             self.event_list.append(Event(area))
         else :
             if self.get_head().get_area() == area:
-                log.info(f"TrackManager: add event: {area} - already head")
+                logger.debug(f"TrackManager: add event: {area} - already head")
                 if impulse: self.get_head().impulse()
                 else : self.get_head().presence()
             else :
@@ -128,10 +130,10 @@ class Track:
                 self.get_head().end() #end last Event
                 # add new event to track start
                 track.insert(0, new_event)
-                log.info(f"new track: {track}")
+                logger.debug(f"new track: {track}")
                 self.event_list = track
 
-        log.info(f"NEW EVENT ADDED {self.get_pretty_string()}")
+        logger.debug(f"NEW EVENT ADDED {self.get_pretty_string()}")
 
     def merge_tracks(self, track_to_merge):
         """
@@ -148,13 +150,13 @@ class Track:
         - Assumes that tracks and their events are monotonic
         """
         
-        log.info("Let us merge")
+        logger.debug("Let us merge")
         new_event_list = []
         current_track = self.get_copy()
-        log.info(f"Current track: {current_track}")
+        logger.debug(f"Current track: {current_track}")
         # current_track=copy.deepcopy(current_track) #deepcopy not working
 
-        log.info(
+        logger.debug(
             f"merging {track_to_merge.get_pretty_string()} with {self.get_pretty_string()}"
         )
 
@@ -208,7 +210,7 @@ class Track:
             while len(track_to_merge_event_list) > 0:
                 new_event_list.append( track_to_merge_event_list.pop(0))
 
-            log.info(f"new merged track: {new_event_list}")
+            logger.debug(f"new merged track: {new_event_list}")
             self.event_list=new_event_list
 
 
@@ -228,10 +230,10 @@ class Track:
         return self.event_list
 
     def _trim(self):
-        log.info(f"trimming track: {self.event_list} to {self.max_length}")
+        logger.debug(f"trimming track: {self.event_list} to {self.max_length}")
         if len(self.event_list) > self.max_length:
             self.event_list = self.event_list[:self.max_length]
-            log.info(f"trimmed track: {self.event_list}")
+            logger.debug(f"trimmed track: {self.event_list}")
 
     def get_duration(self):
         start=self.get_first_event().get_time_since_first_trigger()
@@ -295,14 +297,14 @@ class TrackManager:
 
     def add_event(self, area, person=None):
         if self.graph_manager.is_area_in_graph(area):
-            log.info(f"TrackManager: add event: {area}")
+            logger.debug(f"TrackManager: add event: {area}")
             new_track = Track()
             new_track.add_event(area)
             self.try_associate_track(new_track)
             self.cleanup_tracks()
             self.output_stats()
         else :
-            log.info(f"TrackManager: add event: {area} - not in graph")
+            logger.debug(f"TrackManager: add event: {area} - not in graph")
 
     def output_stats(self) :
         track_data=""
@@ -314,7 +316,7 @@ class TrackManager:
 
             head_data+=track.get_head().get_pretty_string()+"\n"
             head_names.append(track.get_head().get_area())
-        log.info(f"track_data: {track_data}")
+        logger.debug(f"track_data: {track_data}")
         state.set("pyscript.last_heads", head_data[:254])
         state.set("pyscript.last_tracks", track_data[:254])
 
@@ -332,7 +334,7 @@ class TrackManager:
                 track._trim()
 
         if len(self.tracks) > self.max_tracks:
-            log.warning(f"trimming tracks: {self.tracks}")
+            logger.warning(f"trimming tracks: {self.tracks}")
             self.tracks = self.tracks[-self.max_tracks :]
 
 
@@ -345,7 +347,7 @@ class TrackManager:
         event's location and timing is selected.
         """
 
-        log.info(
+        logger.debug(
             f"trying to associate track: {new_track.get_track_list()} with {self.get_tracks()}"
         )
 
@@ -400,13 +402,13 @@ class TrackManager:
 
             if best is not None:
                 best_track = best[0]
-                log.info(f"Merging {best_track.get_track_list()}")
+                logger.debug(f"Merging {best_track.get_track_list()}")
                 best_track.merge_tracks(new_track)
             else:
-                log.info("All tracks out of range, adding new track")
+                logger.debug("All tracks out of range, adding new track")
                 self.tracks.append(new_track)
         else:
-            log.info("First, Adding new track")
+            logger.debug("First, Adding new track")
             self.tracks.append(new_track)
 
     def get_tracks(self):
@@ -431,23 +433,23 @@ class GraphManager:
         self.tracks = None
 
     def create_graph(self, connections):
-        log.info(f"CONNECTIONS: {connections}")
+        logger.debug(f"CONNECTIONS: {connections}")
         connection_pairs = []
         for connection in connections["connections"]:
             for start, end in connection.items():
                 connection_pairs.append((start, end))
 
-        log.info(f"connection_pairs: {connection_pairs}")
+        logger.debug(f"connection_pairs: {connection_pairs}")
         graph = nx.Graph()
         graph.add_edges_from(connection_pairs)
         return graph
 
     def visualize_graph(self, areas_to_highlight=None, output_file="pyscript/graph2.png"):
-        log.info(f"graph: {self.graph}")
+        logger.debug(f"graph: {self.graph}")
         if self.graph is not None:
             self._visualize_graph(self.graph, areas_to_highlight, filename=output_file)
         else:
-            log.info("No graph to visualize")
+            logger.debug("No graph to visualize")
 
     def is_area_in_graph(self, area):
         if area in self.graph.nodes:
@@ -481,7 +483,7 @@ class GraphManager:
         nx.draw_networkx_labels(graph, pos)
 
         plt.axis("off")
-        log.info(f"Saving graph to {filename}")
+        logger.debug(f"Saving graph to {filename}")
         plt.savefig(filename)  # Save the image
         plt.clf()
         plt.close()
@@ -502,13 +504,13 @@ example_track = [
 
 @service
 def plot_graph():
-    log.info(f"STARTING")
+    logger.debug(f"STARTING")
     graph_manager = GraphManager("./pyscript/connections.yml")
     output = "pyscript/graph2.png"
     graph_manager.visualize_graph(output_file=output)
     try:
         size = os.path.getsize(output)
-        log.info(f"Graph saved to {output} ({size} bytes)")
+        logger.debug(f"Graph saved to {output} ({size} bytes)")
     except OSError as exc:
         log.error(f"Could not verify graph output: {exc}")
 
@@ -527,7 +529,7 @@ plot_graph()
 #     track_manager.add_event("office")
 #     track_manager.add_event("hallway")
 #     track_manager.add_event("outside")
-#     log.info("Getting tracks")
-#     log.info(track_manager.get_tracks())
+#     logger.debug("Getting tracks")
+#     logger.debug(track_manager.get_tracks())
 #     for track in track_manager.tracks:
-#         log.info(f"Track: {track.get_pretty_string()}")
+#         logger.debug(f"Track: {track.get_pretty_string()}")
