@@ -80,7 +80,8 @@ def load_area_tree(use_real_drivers: bool | None = None):
     sys.modules['area_tree'] = mod
     exec(code, mod.__dict__)
     if use_real_drivers and hasattr(mod, "init"):
-        mod.init()
+        import asyncio
+        asyncio.run(mod.init())
     return mod
 
 
