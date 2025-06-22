@@ -2,6 +2,7 @@ import yaml
 from collections import defaultdict
 import copy
 import time
+from modules.logger import log_state_change
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
 from modules.logger import get_logger
@@ -1528,16 +1529,17 @@ class Device:
     def add_to_cache(self, state):
         # Remove keys that don't apply to driver (buttons don't have rgb color etc...)
         if state is not None :
-            state=self.filter_state(state)
+            state = self.filter_state(state)
 
+            old_state = copy.deepcopy(self.cached_state)
             self.last_state = self.cached_state
-            new_state=copy.deepcopy(self.cached_state) # Set cached state as old state
-            if new_state is None :
+            new_state = copy.deepcopy(self.cached_state)  # Set cached state as old state
+            if new_state is None:
                 new_state = {}
             for key, val in state.items():
-                new_state[key] = copy.deepcopy(val) #update with new values
+                new_state[key] = copy.deepcopy(val)  # update with new values
             self.cached_state = new_state
-            log.info(f"add_to_cache: Added {state} to {self.last_state} to create Cached state: {self.cached_state}")
+            log_state_change(old_state, self.cached_state)
 
     def input_trigger(self, tags):
         global event_manager
@@ -1548,7 +1550,7 @@ class Device:
         event_manager.create_event(event)
 
     def set_state(self, state):
-        log.info(f"Setting state: {state} on {self.name}")
+        log_state_change(self.cached_state, state)
         if not self.locked:
             #TODO: FIXME this is a hack, should be done on driver side
             color_type=None
@@ -1572,10 +1574,9 @@ class Device:
                         del state["rgb_color"]
                 log.info(f"filled out state from cache: {state}")
 
-                applied_state=self.driver.set_state(state)
-                log.info(f"Applied state: {applied_state}")
+                applied_state = self.driver.set_state(state)
+                log_state_change(self.cached_state, applied_state)
                 self.add_to_cache(applied_state)
-                log.info(f"Updated cache: {self.cached_state}")
         else :
             if get_verbose_mode():
                 log.info(f"Device {self.name} is locked, not setting state {state}")
