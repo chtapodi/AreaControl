@@ -11,6 +11,7 @@ import time
 import random
 from collections import defaultdict
 from typing import Dict, List, Optional
+import asyncio
 from dataclasses import dataclass, field
 import json
 import os
@@ -48,9 +49,12 @@ class RoomGraph:
 
 
 @pyscript_compile
-def load_room_graph_from_yaml(path: str) -> RoomGraph:
-    with open(path, "r") as f:
-        data = yaml.safe_load(f)
+async def load_room_graph_from_yaml(path: str) -> RoomGraph:
+    def _load() -> dict:
+        with open(path, "r") as f:
+            return yaml.safe_load(f)
+
+    data = await asyncio.to_thread(_load)
     adjacency: Dict[str, List[str]] = defaultdict(list)
     for pair in data.get("connections", []):
         for a, b in pair.items():
@@ -301,8 +305,13 @@ class MultiPersonTracker:
 
 
 @pyscript_compile
-def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
-    graph = load_room_graph_from_yaml(connections_path)
+async def init_from_yaml(
+    connections_path: str,
+    *,
+    debug: bool = False,
+    debug_dir: str = "debug",
+) -> MultiPersonTracker:
+    graph = await load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
     return MultiPersonTracker(graph, sensor_model, debug=debug, debug_dir=debug_dir)
 
