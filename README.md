@@ -17,6 +17,7 @@ This README outlines the main pieces of the project and how events flow through 
 - [Rule Examples](#rule-examples)
 - [Design Philosophy](#design-philosophy)
 - [Running with Home Assistant](#running-with-home-assistant)
+- [Logging](#logging)
 
 ## Project Layout
 
@@ -207,4 +208,27 @@ Copy the YAML files and Python modules into your Home Assistant `pyscript` direc
 The new `freeze_area` and `unfreeze_area` services allow you to temporarily lock an area so lights ignore any events until unfrozen.
 
 Refer back to [Event and Rule Workflow](#event-and-rule-workflow) to understand how a service call becomes an action inside an area.
+
+## Logging
+
+The helper in [`modules/logger.py`](modules/logger.py) wraps Pyscript's built-in
+logger so all messages share a uniform format. Obtain a component logger with
+`get_logger(name)` and record structured data:
+
+```python
+from modules.logger import get_logger, set_level
+
+set_level("DEBUG")  # or INFO, WARNING, ERROR
+log = get_logger("tracker")
+log.info("add_event", area="kitchen", impulse=True)
+```
+
+This would log:
+
+```
+[tracker] add_event | area=kitchen impulse=True
+```
+
+Adjust the global verbosity with `set_level()` using a string or numeric value.
+Only messages at or above the chosen level are emitted.
 
