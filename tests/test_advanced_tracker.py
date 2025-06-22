@@ -4,7 +4,6 @@ import tempfile
 import pytest
 import yaml
 import json
-import asyncio
 
 pytest.importorskip("scipy")
 
@@ -20,12 +19,12 @@ from modules.advanced_tracker import (
 
 class TestAdvancedTracker(unittest.TestCase):
     def test_load_graph(self):
-        graph = asyncio.run(load_room_graph_from_yaml('connections.yml'))
+        graph = load_room_graph_from_yaml('connections.yml')
         self.assertIn('bedroom', graph.get_neighbors('bathroom'))
         self.assertIn('bathroom', graph.get_neighbors('bedroom'))
 
     def test_person_distribution(self):
-        graph = asyncio.run(load_room_graph_from_yaml('connections.yml'))
+        graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
         tracker = PersonTracker(graph, sensor_model, num_particles=10)
         now = 0.0
@@ -34,7 +33,7 @@ class TestAdvancedTracker(unittest.TestCase):
         self.assertAlmostEqual(sum(dist.values()), 1.0, places=5)
 
     def test_debug_visualization(self):
-        graph = asyncio.run(load_room_graph_from_yaml('connections.yml'))
+        graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
         with tempfile.TemporaryDirectory() as tmp:
             multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=tmp)
@@ -44,7 +43,7 @@ class TestAdvancedTracker(unittest.TestCase):
         self.assertTrue(any(f.startswith('frame_') and f.endswith('.png') for f in files))
 
     def test_phone_association_and_state(self):
-        graph = asyncio.run(load_room_graph_from_yaml('connections.yml'))
+        graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
         multi = MultiPersonTracker(graph, sensor_model)
         import random
@@ -64,7 +63,7 @@ class TestAdvancedTracker(unittest.TestCase):
         with open(path, 'r') as f:
             scenario = yaml.safe_load(f)
 
-        graph = asyncio.run(load_room_graph_from_yaml(scenario['connections']))
+        graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
         multi = MultiPersonTracker(graph, sensor_model)
 

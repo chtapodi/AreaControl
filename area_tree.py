@@ -96,7 +96,7 @@ def reset():
 
 
 @service
-async def init():
+def init():
     global area_tree
     global event_manager
     global global_triggers
@@ -104,7 +104,7 @@ async def init():
     global_triggers = []
     area_tree = AreaTree("./pyscript/layout.yml")
     event_manager = EventManager("./pyscript/rules.yml", area_tree)
-    tracker_manager = await init_from_yaml(
+    tracker_manager = init_from_yaml(
         "./pyscript/connections.yml",
         debug=False,
         debug_dir="pyscript/tracker_debug",
