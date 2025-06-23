@@ -42,19 +42,74 @@ class TestAdvancedTracker(unittest.TestCase):
     def test_debug_visualization(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
-        debug_dir, cleanup = _get_debug_dir('test_debug_visualization')
-        multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=debug_dir)
-        multi.process_event('p1', 'bedroom', timestamp=0.0)
-        multi.step()
-        files = sorted(os.listdir(debug_dir))
-        cleanup()
-        self.assertTrue(any(f.startswith('frame_') and f.endswith('.png') for f in files))
+        with tempfile.TemporaryDirectory() as tmp:
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                test_name=self._testMethodName,
+            )
+            multi.process_event('p1', 'bedroom')
+            multi.step()
+            event_dirs = [
+                root
+                for root, _, files in os.walk(tmp)
+                if any(f.startswith('frame_') for f in files)
+            ]
+            self.assertEqual(len(event_dirs), 1)
+            self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
+            contents = os.listdir(event_dirs[0])
+            self.assertTrue(
+                any(f.startswith('frame_') and f.endswith('.png') for f in contents)
+            )
+
+            legend = getattr(multi, '_last_legend_lines', [])
+            self.assertTrue(any(line.strip().startswith('p1:') for line in legend))
+            self.assertTrue(any('solid line: estimated path' in line for line in legend))
+            self.assertTrue(any('dashed orange: true path (tests only)' in line for line in legend))
+
+    def test_event_log_includes_timestamp(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        with tempfile.TemporaryDirectory() as tmp:
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                test_name=self._testMethodName,
+            )
+            multi.process_event('p1', 'bedroom', timestamp=5.0)
+            self.assertTrue(multi._event_history)
+            self.assertIn('5.0', multi._event_history[0])
+
+    def test_multiple_event_directories(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        with tempfile.TemporaryDirectory() as tmp:
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                event_window=600,
+                test_name=self._testMethodName,
+            )
+            multi.process_event('p1', 'bedroom', timestamp=0.0)
+            multi.process_event('p1', 'kitchen', timestamp=1000.0)
+            event_dirs = [
+                root
+                for root, _, files in os.walk(tmp)
+                if any(f.startswith('frame_') for f in files)
+            ]
+            self.assertEqual(len(event_dirs), 1)
+            self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
 
     def test_phone_association_and_state(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
-        debug_dir, cleanup = _get_debug_dir('test_phone_state')
-        multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=debug_dir)
+        multi = MultiPersonTracker(graph, sensor_model, debug=False)
         import random
         random.seed(0)
         multi.add_phone('ph1')
@@ -67,7 +122,6 @@ class TestAdvancedTracker(unittest.TestCase):
         self.assertEqual(state['phones']['ph1']['person'], 'alice')
         self.assertEqual(state['phones']['ph1']['last_room'], 'bedroom')
         self.assertIn('estimate', state['people']['alice'])
-        cleanup()
 
     def test_sensor_model_presence(self):
         model = SensorModel()
@@ -97,8 +151,7 @@ class TestAdvancedTracker(unittest.TestCase):
 
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
-        debug_dir, cleanup = _get_debug_dir(os.path.basename(path).replace('.yml', ''))
-        multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=debug_dir)
+        multi = MultiPersonTracker(graph, sensor_model, debug=False)
 
         # Build mapping of time -> list of (pid, room)
         time_events = {}
@@ -113,9 +166,10 @@ class TestAdvancedTracker(unittest.TestCase):
         random.seed(random_seed)
 
         max_t = max(time_events) if time_events else 0
+        extra_steps = scenario.get('extra_steps', 10)
 
         current = 0
-        while current <= max_t:
+        while current <= max_t + extra_steps:
             events = time_events.get(current, [])
             updated = set()
             for pid, room in events:
@@ -128,9 +182,7 @@ class TestAdvancedTracker(unittest.TestCase):
 
             current += 1
 
-        result = multi.estimate_locations()
-        cleanup()
-        return result, scenario.get('expected_final', {})
+        return multi.estimate_locations(), scenario.get('expected_final', {})
 
     def test_yaml_scenarios(self):
         scenario_dir = os.path.join('tests', 'scenarios')
