@@ -1,0 +1,49 @@
+connections: connections.yml
+persons:
+  - id: walker
+    events:
+      - time: 0
+        room: bedroom
+      - time: 300
+        room: living_room_hallway
+      - time: 600
+        room: living_room_door
+      - time: 900
+        room: living_room_front
+      - time: 1200
+        room: living_room_middle
+      - time: 1500
+        room: living_room_back
+      - time: 1800
+        room: dining_room_3
+      - time: 2100
+        room: dining_room_1
+      - time: 2400
+        room: dining_room_hallway
+      - time: 2700
+        room: kitchen
+      - time: 3000
+        room: hallway
+      - time: 3300
+        room: office
+      - time: 3350
+        room: laundry_room
+      - time: 3351
+        room: laundry_room
+      - time: 3352
+        room: laundry_room
+      - time: 3353
+        room: laundry_room
+      - time: 3354
+        room: laundry_room
+      - time: 3355
+        room: laundry_room
+      - time: 3356
+        room: laundry_room
+      - time: 3357
+        room: laundry_room
+      - time: 3358
+        room: laundry_room
+extra_steps: 100
+expected_final:
+  walker: office

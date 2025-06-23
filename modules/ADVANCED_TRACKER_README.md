@@ -42,6 +42,12 @@ triggers and `step()` to progress the trackers when no new events occur.
 Enabling debug mode saves a PNG frame for each step so you can visualize
 the distribution over time.  Call `dump_state()` to retrieve a JSON summary
 of all people and phones.
+Each debug frame includes a side panel with a legend explaining that node
+color represents the tracked person and the alpha channel indicates the
+probability of presence. The panel also logs every sensor event with a
+timestamp alongside the current location estimate so you can follow the
+sequence that produced the plot. The log now appears on the left of the
+image and the triggered room is highlighted in yellow for that frame.
 
 ## Example Walk‑through
 
@@ -99,8 +105,13 @@ associated person.  The current state of all trackers can be inspected with
 `dump_state()` which returns JSON.
 
 To enable or disable visual logging, pass `debug=True` and specify a
-`debug_dir` when calling `init_from_yaml()`.  Images are written to that
-folder with names like `frame_000001.png`.
+`debug_dir` when calling `init_from_yaml()`. Frames are saved under
+date-based folders inside `debug_dir`. Without a `test_name` the path is
+`YYYY/MM/DD/HHMMSS/frame_000001.png`. When `test_name` is provided, frames
+are written to `YYYY/MM/DD/tests/<test_name>/frame_000001.png`.  A new folder
+is created whenever no event has occurred for `event_window` seconds (default
+`600`), making it easy to inspect separate sequences or collect files per
+test case.
 
 ## Testing
 

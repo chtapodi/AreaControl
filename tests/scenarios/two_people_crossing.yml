@@ -1,0 +1,25 @@
+connections: connections.yml
+persons:
+  - id: p1
+    events:
+      - time: 0
+        room: bedroom
+      - time: 300
+        room: living_room_hallway
+      - time: 600
+        room: dining_room_hallway
+      - time: 900
+        room: kitchen
+  - id: p2
+    events:
+      - time: 0
+        room: kitchen
+      - time: 300
+        room: dining_room_hallway
+      - time: 600
+        room: living_room_hallway
+      - time: 900
+        room: bedroom
+expected_final:
+  p1: kitchen
+  p2: bedroom
