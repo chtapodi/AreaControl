@@ -47,17 +47,37 @@ def load_room_graph_from_yaml(path: str) -> RoomGraph:
 
 
 class SensorModel:
-    """Models likelihood that a person remains in a room."""
+    """Models room occupancy based on motion and presence sensors."""
 
     def __init__(self, cooldown: int = 420, floor_prob: float = 0.05):
         self.cooldown = cooldown
         self.floor_prob = floor_prob
         self.last_fire: Dict[str, float] = defaultdict(lambda: 0.0)
+        # ``presence`` stores the last known presence state per room.  ``None``
+        # means no presence sensor information is available.
+        self.presence: Dict[str, Optional[bool]] = defaultdict(lambda: None)
 
     def record_trigger(self, room_id: str, timestamp: Optional[float] = None) -> None:
-        self.last_fire[room_id] = time.time() if timestamp is None else timestamp
+        """Record a motion event for ``room_id``."""
+        ts = time.time() if timestamp is None else timestamp
+        self.last_fire[room_id] = ts
+
+    def set_presence(self, room_id: str, value: bool, timestamp: Optional[float] = None) -> None:
+        """Update explicit presence sensor state for ``room_id``."""
+        ts = time.time() if timestamp is None else timestamp
+        self.presence[room_id] = value
+        if value:
+            # Treat presence "on" the same as a motion trigger to reset decay.
+            self.last_fire[room_id] = ts
 
     def likelihood_still_present(self, room_id: str, current_time: Optional[float] = None) -> float:
+        """Return probability that someone remains in ``room_id``."""
+        presence_state = self.presence.get(room_id)
+        if presence_state is True:
+            return 1.0
+        if presence_state is False:
+            return 0.0
+
         now = time.time() if current_time is None else current_time
         dt = now - self.last_fire.get(room_id, 0.0)
         if dt <= 0:
@@ -232,6 +252,15 @@ class MultiPersonTracker:
         phone.last_seen = now
         if phone.person_id:
             self.process_event(phone.person_id, room_id, timestamp=now)
+
+    def record_presence(self, room_id: str, is_present: bool, timestamp: Optional[float] = None) -> None:
+        """Update presence sensor state and refresh all trackers."""
+        now = time.time() if timestamp is None else timestamp
+        self.sensor_model.set_presence(room_id, is_present, now)
+        for person in self.people.values():
+            person.tracker.update(now)
+        if self.debug:
+            self._visualize(now)
 
     def dump_state(self) -> str:
         """Return a JSON representation of current tracker state."""

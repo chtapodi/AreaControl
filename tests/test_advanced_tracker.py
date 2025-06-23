@@ -60,6 +60,13 @@ class TestAdvancedTracker(unittest.TestCase):
             self.assertEqual(state['phones']['ph1']['last_room'], 'bedroom')
             self.assertIn('estimate', state['people']['alice'])
 
+    def test_sensor_model_presence(self):
+        model = SensorModel()
+        model.set_presence('bedroom', True, timestamp=0.0)
+        self.assertEqual(model.likelihood_still_present('bedroom', current_time=10.0), 1.0)
+        model.set_presence('bedroom', False, timestamp=20.0)
+        self.assertEqual(model.likelihood_still_present('bedroom', current_time=20.0), 0.0)
+
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:
             scenario = yaml.safe_load(f)
