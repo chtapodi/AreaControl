@@ -318,7 +318,7 @@ class MultiPersonTracker:
             for node in self.room_graph.graph.nodes:
                 intensity = dist.get(node, 0.0)
                 base = colors.get(idx % 3, (0, 0, 0))
-                node_colors.append(tuple(intensity * c for c in base))
+                node_colors.append((*base, intensity))
             nx.draw_networkx_nodes(
                 self.room_graph.graph,
                 pos=self._layout,
