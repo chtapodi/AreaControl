@@ -191,6 +191,7 @@ class MultiPersonTracker:
         self._current_event_dir: Optional[str] = None
         self._last_event_time: float = 0.0
         self._event_history: List[str] = []
+        self._highlight_room: Optional[str] = None
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             # Use a deterministic spring layout with spacing based on graph size
@@ -228,17 +229,21 @@ class MultiPersonTracker:
             self.people[person_id] = person
             self.trackers[person_id] = tracker
         tracker = person.tracker
-        tracker.update(now, sensor_room=room_id)
-        if self.debug:
-            estimate = tracker.estimate()
-            self._event_history.append(f"motion {room_id} fired, est={estimate}")
         if self.debug:
             if (
                 self._current_event_dir is None
                 or now - self._last_event_time > self.event_window
             ):
                 self._start_event(now)
+        tracker.update(now, sensor_room=room_id)
+        if self.debug:
+            estimate = tracker.estimate()
+            self._highlight_room = room_id
+            self._event_history.append(
+                f"{now:.1f}s: motion {room_id} fired, est={estimate}"
+            )
             self._visualize(now)
+            self._highlight_room = None
 
     def step(self) -> None:
         now = time.time()
@@ -317,7 +322,7 @@ class MultiPersonTracker:
             node_color="skyblue",
             edgecolors="black",
             edge_color="gray",
-            font_size=8,
+            font_size=9,
             font_color="black",
         )
 
@@ -341,7 +346,18 @@ class MultiPersonTracker:
                 node_size=600,
                 ax=ax,
             )
-        ax.set_title(f"t={current_time:.1f}", fontsize=12)
+        if self._highlight_room:
+            nx.draw_networkx_nodes(
+                self.room_graph.graph,
+                pos=self._layout,
+                nodelist=[self._highlight_room],
+                node_color="yellow",
+                edgecolors="black",
+                linewidths=2,
+                node_size=800,
+                ax=ax,
+            )
+        ax.set_title(f"t={current_time:.1f}", fontsize=13)
         ax.axis("off")
 
         # Debug text overlay
@@ -349,7 +365,7 @@ class MultiPersonTracker:
             event_name = os.path.relpath(self._current_event_dir, self.debug_dir)
         else:
             event_name = "no_event"
-        fig.suptitle(f"event: {event_name}", y=0.98, fontsize=12)
+        fig.suptitle(f"event: {event_name}", y=0.98, fontsize=13)
         for idx, (pid, person) in enumerate(self.people.items()):
             text = f"{pid}: est={person.tracker.estimate()}"
             if person.tracker.last_sensor_room:
@@ -358,7 +374,7 @@ class MultiPersonTracker:
                 0.01,
                 0.92 - idx * 0.04,
                 text,
-                fontsize=8,
+                fontsize=9,
                 ha="left",
                 va="top",
             )
@@ -374,20 +390,20 @@ class MultiPersonTracker:
                 0.72,
                 0.92 - idx * 0.04,
                 line,
-                fontsize=8,
+                fontsize=9,
                 ha="left",
                 va="top",
             )
 
         # Event history log
         log_start = 0.92 - len(legend_lines) * 0.04 - 0.04
-        fig.text(0.72, log_start, "Event log:", fontsize=8, ha="left", va="top")
+        fig.text(0.02, log_start, "Event log:", fontsize=9, ha="left", va="top")
         for idx, message in enumerate(self._event_history[-10:]):
             fig.text(
-                0.72,
+                0.02,
                 log_start - (idx + 1) * 0.04,
                 message,
-                fontsize=8,
+                fontsize=9,
                 ha="left",
                 va="top",
             )

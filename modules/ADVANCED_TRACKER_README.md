@@ -44,9 +44,10 @@ the distribution over time.  Call `dump_state()` to retrieve a JSON summary
 of all people and phones.
 Each debug frame includes a side panel with a legend explaining that node
 color represents the tracked person and the alpha channel indicates the
-probability of presence. The panel also logs every sensor event along with
-the current location estimate so you can follow the sequence that produced
-the plot.
+probability of presence. The panel also logs every sensor event with a
+timestamp alongside the current location estimate so you can follow the
+sequence that produced the plot. The log now appears on the left of the
+image and the triggered room is highlighted in yellow for that frame.
 
 ## Example Walk‑through
 
