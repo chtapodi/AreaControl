@@ -65,10 +65,17 @@ class TestAdvancedTracker(unittest.TestCase):
     def test_event_log_includes_timestamp(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
-        multi = MultiPersonTracker(graph, sensor_model, debug=True)
-        multi.process_event('p1', 'bedroom', timestamp=5.0)
-        self.assertTrue(multi._event_history)
-        self.assertIn('5.0', multi._event_history[0])
+        with tempfile.TemporaryDirectory() as tmp:
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                test_name=self._testMethodName,
+            )
+            multi.process_event('p1', 'bedroom', timestamp=5.0)
+            self.assertTrue(multi._event_history)
+            self.assertIn('5.0', multi._event_history[0])
 
     def test_multiple_event_directories(self):
         graph = load_room_graph_from_yaml('connections.yml')
@@ -95,7 +102,7 @@ class TestAdvancedTracker(unittest.TestCase):
     def test_phone_association_and_state(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
-        multi = MultiPersonTracker(graph, sensor_model)
+        multi = MultiPersonTracker(graph, sensor_model, debug=False)
         import random
         random.seed(0)
         multi.add_phone('ph1')
@@ -115,7 +122,7 @@ class TestAdvancedTracker(unittest.TestCase):
 
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
-        multi = MultiPersonTracker(graph, sensor_model)
+        multi = MultiPersonTracker(graph, sensor_model, debug=False)
 
         # Build mapping of time -> list of (pid, room)
         time_events = {}
