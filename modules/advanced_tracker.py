@@ -187,18 +187,45 @@ class Person:
 
 
 class MultiPersonTracker:
-    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
+    def __init__(
+        self,
+        room_graph: RoomGraph,
+        sensor_model: SensorModel,
+        *,
+        debug: bool = False,
+        debug_dir: str = "debug",
+        event_window: Optional[float] = None,
+        test_name: Optional[str] = None,
+    ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.people: Dict[str, Person] = {}
         self.phones: Dict[str, Phone] = {}
         self.trackers: Dict[str, PersonTracker] = {}
         self.debug = debug
+
+        self.test_name = test_name
+        self.event_window = event_window
+
         self.debug_dir = debug_dir
+        if self.test_name:
+            self.debug_dir = os.path.join(self.debug_dir, "tests", self.test_name)
+
         self._debug_counter = 0
         self._highlight_room: Optional[str] = None
+        self._event_history: List[str] = []
+        self._last_event_time: Optional[float] = None
+        self._event_index = 0
+        self._last_legend_lines: List[str] = []
+
         if self.debug:
-            os.makedirs(self.debug_dir, exist_ok=True)
+            if self.event_window is not None:
+                self._current_event_dir = os.path.join(
+                    self.debug_dir, f"event_{self._event_index:04d}"
+                )
+            else:
+                self._current_event_dir = self.debug_dir
+            os.makedirs(self._current_event_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
 
     def set_highlight_room(self, room_id: Optional[str]) -> None:
@@ -228,6 +255,20 @@ class MultiPersonTracker:
         tracker = person.tracker
         tracker.update(now, sensor_room=room_id)
         if self.debug:
+            if self.event_window is not None:
+                if (
+                    self._last_event_time is None
+                    or now - self._last_event_time > self.event_window
+                ):
+                    if self._last_event_time is not None:
+                        self._event_index += 1
+                    self._current_event_dir = os.path.join(
+                        self.debug_dir, f"event_{self._event_index:04d}"
+                    )
+                    os.makedirs(self._current_event_dir, exist_ok=True)
+                    self._debug_counter = 0
+            self._event_history.append(f"{now}: {person_id}:{room_id}")
+            self._last_event_time = now
             self._visualize(now)
 
     def step(self) -> None:
@@ -338,14 +379,36 @@ class MultiPersonTracker:
                 va="bottom",
                 fontsize=8,
             )
-        filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
+        filename = os.path.join(
+            self._current_event_dir, f"frame_{self._debug_counter:06d}.png"
+        )
+        legend_lines = []
+        for pid in self.people.keys():
+            legend_lines.append(f"{pid}: solid line: estimated path")
+        legend_lines.append("dashed orange: true path (tests only)")
+        self._last_legend_lines = legend_lines
+
         plt.savefig(filename)
         plt.close(fig)
         self._debug_counter += 1
 
 
-def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
+def init_from_yaml(
+    connections_path: str,
+    *,
+    debug: bool = False,
+    debug_dir: str = "debug",
+    event_window: Optional[float] = None,
+    test_name: Optional[str] = None,
+) -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
-    return MultiPersonTracker(graph, sensor_model, debug=debug, debug_dir=debug_dir)
+    return MultiPersonTracker(
+        graph,
+        sensor_model,
+        debug=debug,
+        debug_dir=debug_dir,
+        event_window=event_window,
+        test_name=test_name,
+    )
 
