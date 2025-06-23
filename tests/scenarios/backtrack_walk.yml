@@ -1,0 +1,18 @@
+connections: connections.yml
+persons:
+  - id: wanderer
+    events:
+      - time: 0
+        room: bedroom
+      - time: 300
+        room: hallway
+      - time: 600
+        room: kitchen
+      - time: 900
+        room: dining_room
+      - time: 1200
+        room: hallway
+      - time: 1500
+        room: bedroom
+expected_final:
+  wanderer: bedroom

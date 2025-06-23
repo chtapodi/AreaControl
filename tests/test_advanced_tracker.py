@@ -117,9 +117,10 @@ class TestAdvancedTracker(unittest.TestCase):
         random.seed(random_seed)
 
         max_t = max(time_events) if time_events else 0
+        extra_steps = scenario.get('extra_steps', 10)
 
         current = 0
-        while current <= max_t:
+        while current <= max_t + extra_steps:
             events = time_events.get(current, [])
             updated = set()
             for pid, room in events:

@@ -10,4 +10,4 @@ persons:
         room: kitchen
 expected_final:
   alice: bedroom
-  bob: hallway
+  bob: kitchen
