@@ -187,7 +187,16 @@ class Person:
 
 
 class MultiPersonTracker:
-    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
+    def __init__(
+        self,
+        room_graph: RoomGraph,
+        sensor_model: SensorModel,
+        *,
+        debug: bool = False,
+        debug_dir: str = "debug",
+        test_name: Optional[str] = None,
+        event_window: int = 0,
+    ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.people: Dict[str, Person] = {}
@@ -195,9 +204,15 @@ class MultiPersonTracker:
         self.trackers: Dict[str, PersonTracker] = {}
         self.debug = debug
         self.debug_dir = debug_dir
+        self.test_name = test_name
+        self.event_window = event_window
         self._debug_counter = 0
         self._highlight_room: Optional[str] = None
+        self._event_history: List[str] = []
+        self._last_legend_lines: List[str] = []
         if self.debug:
+            if self.test_name:
+                self.debug_dir = os.path.join(self.debug_dir, "tests", self.test_name)
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
 
@@ -228,6 +243,7 @@ class MultiPersonTracker:
         tracker = person.tracker
         tracker.update(now, sensor_room=room_id)
         if self.debug:
+            self._event_history.append(f"{now}: {person_id}->{room_id}")
             self._visualize(now)
 
     def step(self) -> None:
@@ -310,6 +326,8 @@ class MultiPersonTracker:
             1: (0, 1, 0),
             2: (0, 0, 1),
         }
+        legend_lines: List[str] = []
+        color_names = {0: 'red', 1: 'green', 2: 'blue'}
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
@@ -325,6 +343,7 @@ class MultiPersonTracker:
                 node_size=400,
                 ax=ax,
             )
+            legend_lines.append(f"{pid}: {color_names.get(idx % 3, 'color')}")
         ax.set_title(f"t={current_time:.1f}")
         ax.axis('off')
 
@@ -338,6 +357,9 @@ class MultiPersonTracker:
                 va="bottom",
                 fontsize=8,
             )
+        legend_lines.append("solid line: estimated path")
+        legend_lines.append("dashed orange: true path (tests only)")
+        self._last_legend_lines = legend_lines
         filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
         plt.savefig(filename)
         plt.close(fig)
