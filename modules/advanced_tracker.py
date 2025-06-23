@@ -190,6 +190,7 @@ class MultiPersonTracker:
         self._debug_counter = 0
         self._current_event_dir: Optional[str] = None
         self._last_event_time: float = 0.0
+        self._event_history: List[str] = []
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             # Use a deterministic spring layout with spacing based on graph size
@@ -216,6 +217,7 @@ class MultiPersonTracker:
         self._current_event_dir = path
         self._last_event_time = timestamp
         self._debug_counter = 0
+        self._event_history = []
 
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
@@ -227,6 +229,9 @@ class MultiPersonTracker:
             self.trackers[person_id] = tracker
         tracker = person.tracker
         tracker.update(now, sensor_room=room_id)
+        if self.debug:
+            estimate = tracker.estimate()
+            self._event_history.append(f"motion {room_id} fired, est={estimate}")
         if self.debug:
             if (
                 self._current_event_dir is None
@@ -353,6 +358,35 @@ class MultiPersonTracker:
                 0.01,
                 0.92 - idx * 0.04,
                 text,
+                fontsize=8,
+                ha="left",
+                va="top",
+            )
+
+        # Legend for node colors and alpha
+        legend_lines = [
+            "Legend:",
+            "  Node color: person id (red, green, blue)",
+            "  Alpha: probability",
+        ]
+        for idx, line in enumerate(legend_lines):
+            fig.text(
+                0.72,
+                0.92 - idx * 0.04,
+                line,
+                fontsize=8,
+                ha="left",
+                va="top",
+            )
+
+        # Event history log
+        log_start = 0.92 - len(legend_lines) * 0.04 - 0.04
+        fig.text(0.72, log_start, "Event log:", fontsize=8, ha="left", va="top")
+        for idx, message in enumerate(self._event_history[-10:]):
+            fig.text(
+                0.72,
+                log_start - (idx + 1) * 0.04,
+                message,
                 fontsize=8,
                 ha="left",
                 va="top",

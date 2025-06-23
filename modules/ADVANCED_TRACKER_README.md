@@ -42,6 +42,11 @@ triggers and `step()` to progress the trackers when no new events occur.
 Enabling debug mode saves a PNG frame for each step so you can visualize
 the distribution over time.  Call `dump_state()` to retrieve a JSON summary
 of all people and phones.
+Each debug frame includes a side panel with a legend explaining that node
+color represents the tracked person and the alpha channel indicates the
+probability of presence. The panel also logs every sensor event along with
+the current location estimate so you can follow the sequence that produced
+the plot.
 
 ## Example Walk‑through
 
