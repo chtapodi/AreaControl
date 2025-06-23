@@ -433,9 +433,21 @@ class MultiPersonTracker:
         # Legend for node colors and alpha
         legend_lines = [
             "Legend:",
-            "  Node color: person id (red, green, blue)",
+            "  Node color: person id",
             "  Alpha: probability",
         ]
+
+        color_names = {0: "red", 1: "green", 2: "blue"}
+        for idx, pid in enumerate(self.people.keys()):
+            color_name = color_names.get(idx % 3, "unknown")
+            legend_lines.append(f"  {pid}: {color_name}")
+
+        legend_lines.append("  solid line: estimated path")
+        legend_lines.append("  dashed orange: true path (tests only)")
+
+        # Store for unit tests
+        self._last_legend_lines = legend_lines
+
         for idx, line in enumerate(legend_lines):
             fig.text(
                 0.72,
