@@ -36,7 +36,13 @@ class TestAdvancedTracker(unittest.TestCase):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
         with tempfile.TemporaryDirectory() as tmp:
-            multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=tmp)
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                test_name=self._testMethodName,
+            )
             multi.process_event('p1', 'bedroom')
             multi.step()
             event_dirs = [
@@ -45,6 +51,7 @@ class TestAdvancedTracker(unittest.TestCase):
                 if any(f.startswith('frame_') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
+            self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
             contents = os.listdir(event_dirs[0])
             self.assertTrue(
                 any(f.startswith('frame_') and f.endswith('.png') for f in contents)
@@ -55,7 +62,12 @@ class TestAdvancedTracker(unittest.TestCase):
         sensor_model = SensorModel()
         with tempfile.TemporaryDirectory() as tmp:
             multi = MultiPersonTracker(
-                graph, sensor_model, debug=True, debug_dir=tmp, event_window=600
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                event_window=600,
+                test_name=self._testMethodName,
             )
             multi.process_event('p1', 'bedroom', timestamp=0.0)
             multi.process_event('p1', 'kitchen', timestamp=1000.0)
@@ -64,7 +76,8 @@ class TestAdvancedTracker(unittest.TestCase):
                 for root, _, files in os.walk(tmp)
                 if any(f.startswith('frame_') for f in files)
             ]
-            self.assertEqual(len(event_dirs), 2)
+            self.assertEqual(len(event_dirs), 1)
+            self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
 
     def test_phone_association_and_state(self):
         graph = load_room_graph_from_yaml('connections.yml')

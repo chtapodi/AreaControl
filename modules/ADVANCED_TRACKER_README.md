@@ -99,11 +99,13 @@ associated person.  The current state of all trackers can be inspected with
 `dump_state()` which returns JSON.
 
 To enable or disable visual logging, pass `debug=True` and specify a
-`debug_dir` when calling `init_from_yaml()`.  Frames are saved under
-time-stamped folders inside `debug_dir` using the pattern
-`YYYY/MM/DD/HHMMSS/frame_000001.png`.  A new folder is created whenever no
-event has occurred for `event_window` seconds (default `600`), making it
-easy to inspect separate sequences.
+`debug_dir` when calling `init_from_yaml()`. Frames are saved under
+date-based folders inside `debug_dir`. Without a `test_name` the path is
+`YYYY/MM/DD/HHMMSS/frame_000001.png`. When `test_name` is provided, frames
+are written to `YYYY/MM/DD/tests/<test_name>/frame_000001.png`.  A new folder
+is created whenever no event has occurred for `event_window` seconds (default
+`600`), making it easy to inspect separate sequences or collect files per
+test case.
 
 ## Testing
 
