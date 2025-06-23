@@ -176,6 +176,7 @@ class MultiPersonTracker:
         debug: bool = False,
         debug_dir: str = "debug",
         event_window: int = 600,
+        test_name: Optional[str] = None,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
@@ -185,6 +186,7 @@ class MultiPersonTracker:
         self.debug = debug
         self.debug_dir = debug_dir
         self.event_window = event_window
+        self.test_name = test_name
         self._debug_counter = 0
         self._current_event_dir: Optional[str] = None
         self._last_event_time: float = 0.0
@@ -194,10 +196,12 @@ class MultiPersonTracker:
 
     def _start_event(self, timestamp: float) -> None:
         """Create a new directory for debug frames for a sensor event."""
-        date_path = datetime.datetime.fromtimestamp(timestamp).strftime(
-            "%Y/%m/%d/%H%M%S"
-        )
-        path = os.path.join(self.debug_dir, date_path)
+        date_dir = datetime.datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d")
+        if self.test_name:
+            path = os.path.join(self.debug_dir, date_dir, "tests", self.test_name)
+        else:
+            event_dir = datetime.datetime.fromtimestamp(timestamp).strftime("%H%M%S")
+            path = os.path.join(self.debug_dir, date_dir, event_dir)
         os.makedirs(path, exist_ok=True)
         self._current_event_dir = path
         self._last_event_time = timestamp
@@ -341,15 +345,27 @@ class MultiPersonTracker:
                 verticalalignment="top",
             )
 
-        target_dir = self._current_event_dir or self.debug_dir
+        target_dir = self._current_event_dir
         filename = os.path.join(target_dir, f"frame_{self._debug_counter:06d}.png")
         plt.savefig(filename)
         plt.close(fig)
         self._debug_counter += 1
 
 
-def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
+def init_from_yaml(
+    connections_path: str,
+    *,
+    debug: bool = False,
+    debug_dir: str = "debug",
+    test_name: Optional[str] = None,
+) -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
-    return MultiPersonTracker(graph, sensor_model, debug=debug, debug_dir=debug_dir)
+    return MultiPersonTracker(
+        graph,
+        sensor_model,
+        debug=debug,
+        debug_dir=debug_dir,
+        test_name=test_name,
+    )
 
