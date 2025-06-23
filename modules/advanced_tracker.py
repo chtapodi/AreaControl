@@ -173,7 +173,7 @@ class MultiPersonTracker:
         room_graph: RoomGraph,
         sensor_model: SensorModel,
         *,
-        debug: bool = False,
+        debug: bool = True,
         debug_dir: str = "debug",
         event_window: int = 600,
         test_name: Optional[str] = None,
