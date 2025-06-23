@@ -120,16 +120,23 @@ class PersonTracker:
             self.particles.append(Particle(room))
 
     def update(self, current_time: float, sensor_room: Optional[str] = None) -> None:
+        """Advance the particle filter by one timestep."""
+
+        move_particles = True
         if sensor_room is not None:
             self.last_sensor_room = sensor_room
             self.last_sensor_time = current_time
             self.sensor_model.record_trigger(sensor_room, current_time)
+            for p in self.particles:
+                p.room = sensor_room
+            move_particles = False
 
         for p in self.particles:
-            p.move(self.room_graph)
+            if move_particles:
+                p.move(self.room_graph)
             weight = self.sensor_model.likelihood_still_present(p.room, current_time)
             if self.last_sensor_room and p.room == self.last_sensor_room:
-                weight *= 1.5
+                weight *= 2.0
             p.weight = weight
 
         # Resample
