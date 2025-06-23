@@ -1,0 +1,21 @@
+connections: tests/scenarios/simple_connections.yml
+persons:
+  - id: alice
+    events:
+      - time: 0
+        room: bedroom
+      - time: 15
+        room: hallway
+      - time: 30
+        room: kitchen
+  - id: bob
+    events:
+      - time: 5
+        room: kitchen
+      - time: 20
+        room: hallway
+      - time: 35
+        room: bedroom
+expected_final:
+  alice: hallway
+  bob: bedroom
