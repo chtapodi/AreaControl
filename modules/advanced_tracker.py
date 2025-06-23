@@ -192,7 +192,9 @@ class MultiPersonTracker:
         self._last_event_time: float = 0.0
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
-            self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
+            # Use a deterministic spring layout so nodes have more space
+            # and plots remain consistent across runs.
+            self._layout = nx.spring_layout(self.room_graph.graph, seed=42)
 
     def _start_event(self, timestamp: float) -> None:
         """Create a new directory for debug frames for a sensor event."""
@@ -293,8 +295,17 @@ class MultiPersonTracker:
 
     def _visualize(self, current_time: float) -> None:
         plt.clf()
-        fig, ax = plt.subplots(figsize=(6, 4))
-        nx.draw_networkx(self.room_graph.graph, pos=self._layout, ax=ax, node_color='lightgray', edgecolors='black')
+        # Bigger figure for improved readability
+        fig, ax = plt.subplots(figsize=(12, 8))
+        nx.draw_networkx(
+            self.room_graph.graph,
+            pos=self._layout,
+            ax=ax,
+            node_color="skyblue",
+            edgecolors="black",
+            edge_color="gray",
+            font_size=10,
+        )
 
         colors = {
             0: (1, 0, 0),
@@ -313,10 +324,10 @@ class MultiPersonTracker:
                 pos=self._layout,
                 nodelist=list(self.room_graph.graph.nodes),
                 node_color=node_colors,
-                node_size=400,
+                node_size=600,
                 ax=ax,
             )
-        ax.set_title(f"t={current_time:.1f}")
+        ax.set_title(f"t={current_time:.1f}", fontsize=12)
         ax.axis("off")
 
         # Debug text overlay
@@ -324,26 +335,21 @@ class MultiPersonTracker:
             event_name = os.path.relpath(self._current_event_dir, self.debug_dir)
         else:
             event_name = "no_event"
-        ax.text(
-            0.01,
-            0.99,
-            f"event: {event_name}",
-            transform=ax.transAxes,
-            fontsize=8,
-            verticalalignment="top",
-        )
+        fig.suptitle(f"event: {event_name}", y=0.98, fontsize=12)
         for idx, (pid, person) in enumerate(self.people.items()):
             text = f"{pid}: est={person.tracker.estimate()}"
             if person.tracker.last_sensor_room:
                 text += f", last={person.tracker.last_sensor_room}"
-            ax.text(
+            fig.text(
                 0.01,
-                0.94 - idx * 0.05,
+                0.92 - idx * 0.04,
                 text,
-                transform=ax.transAxes,
-                fontsize=8,
-                verticalalignment="top",
+                fontsize=10,
+                ha="left",
+                va="top",
             )
+
+        plt.tight_layout(rect=[0, 0, 1, 0.95])
 
         target_dir = self._current_event_dir
         filename = os.path.join(target_dir, f"frame_{self._debug_counter:06d}.png")
