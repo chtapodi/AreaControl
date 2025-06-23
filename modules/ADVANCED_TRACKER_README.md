@@ -119,3 +119,25 @@ The tests in `tests/test_advanced_tracker.py` cover loading graphs,
 updating trackers and verifying that debug frames are produced.  They also
 execute several scenarios under `tests/scenarios/`.
 
+## Debug Options
+
+`MultiPersonTracker` accepts two optional arguments to help with automated
+testing:
+
+- `event_window` – history length in seconds used when drawing paths.
+  Older events are discarded.
+- `test_name` – when provided alongside `debug=True`, frames are written to
+  `os.path.join(debug_dir, "tests", test_name)`.
+
+Every call to `process_event()` appends a string `(timestamp person_id room)` to
+`_event_history`.  The last rendered legend lines are available in
+`_last_legend_lines` and include entries like:
+
+```
+p1: 100%
+solid line: estimated path
+dashed orange: true path (tests only)
+```
+
+These options are primarily exercised by `tests/test_advanced_tracker.py`.
+

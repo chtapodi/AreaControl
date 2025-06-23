@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 import random
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 import json
 import os
@@ -18,6 +18,7 @@ import yaml
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 import networkx as nx
 
@@ -187,16 +188,33 @@ class Person:
 
 
 class MultiPersonTracker:
-    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
+    def __init__(
+        self,
+        room_graph: RoomGraph,
+        sensor_model: SensorModel,
+        *,
+        debug: bool = False,
+        debug_dir: str = "debug",
+        event_window: int = 300,
+        test_name: Optional[str] = None,
+    ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.people: Dict[str, Person] = {}
         self.phones: Dict[str, Phone] = {}
         self.trackers: Dict[str, PersonTracker] = {}
         self.debug = debug
-        self.debug_dir = debug_dir
+        self.event_window = event_window
+        self.test_name = test_name
+        if self.debug and self.test_name:
+            self.debug_dir = os.path.join(debug_dir, "tests", self.test_name)
+        else:
+            self.debug_dir = debug_dir
         self._debug_counter = 0
         self._highlight_room: Optional[str] = None
+        self._event_history: List[str] = []
+        self._estimate_history: Dict[str, List[Tuple[float, str]]] = defaultdict(list)
+        self._last_legend_lines: List[str] = []
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
@@ -219,6 +237,9 @@ class MultiPersonTracker:
 
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
+        self._event_history.append(f"{now} {person_id} {room_id}")
+        cutoff = now - self.event_window
+        self._event_history = [e for e in self._event_history if float(e.split()[0]) >= cutoff]
         person = self.people.get(person_id)
         if person is None:
             tracker = PersonTracker(self.room_graph, self.sensor_model)
@@ -303,13 +324,20 @@ class MultiPersonTracker:
     def _visualize(self, current_time: float) -> None:
         plt.clf()
         fig, ax = plt.subplots(figsize=(6, 4))
-        nx.draw_networkx(self.room_graph.graph, pos=self._layout, ax=ax, node_color='lightgray', edgecolors='black')
+        nx.draw_networkx(
+            self.room_graph.graph,
+            pos=self._layout,
+            ax=ax,
+            node_color="lightgray",
+            edgecolors="black",
+        )
 
         colors = {
             0: (1, 0, 0),
             1: (0, 1, 0),
             2: (0, 0, 1),
         }
+        legend_handles = []
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
@@ -325,8 +353,57 @@ class MultiPersonTracker:
                 node_size=400,
                 ax=ax,
             )
+
+            est_room = person.tracker.estimate()
+            self._estimate_history[pid].append((current_time, est_room))
+            cutoff = current_time - self.event_window
+            self._estimate_history[pid] = [
+                (t, r) for t, r in self._estimate_history[pid] if t >= cutoff
+            ]
+            est_points = [self._layout[r] for _, r in self._estimate_history[pid]]
+            if len(est_points) >= 2:
+                ax.plot(
+                    [p[0] for p in est_points],
+                    [p[1] for p in est_points],
+                    color=colors.get(idx % 3, (0, 0, 0)),
+                )
+
+            ev_points = []
+            for entry in self._event_history:
+                ts, pid_e, room_e = entry.split()
+                if pid_e == pid and float(ts) >= cutoff:
+                    ev_points.append(self._layout[room_e])
+            if len(ev_points) >= 2:
+                ax.plot(
+                    [p[0] for p in ev_points],
+                    [p[1] for p in ev_points],
+                    color="orange",
+                    linestyle="--",
+                )
+
+            max_prob = max(dist.values()) if dist else 0.0
+            legend_handles.append(
+                mlines.Line2D(
+                    [],
+                    [],
+                    color=colors.get(idx % 3, (0, 0, 0)),
+                    label=f"{pid}: {int(max_prob * 100 + 0.5)}%",
+                )
+            )
+
+        legend_handles.append(
+            mlines.Line2D([], [], color="black", label="solid line: estimated path")
+        )
+        legend_handles.append(
+            mlines.Line2D(
+                [], [], color="orange", linestyle="--", label="dashed orange: true path (tests only)"
+            )
+        )
+        ax.legend(handles=legend_handles, loc="upper left", fontsize=8)
+        self._last_legend_lines = [h.get_label() for h in legend_handles]
+
         ax.set_title(f"t={current_time:.1f}")
-        ax.axis('off')
+        ax.axis("off")
 
         highlight_text = self._format_highlight_probabilities()
         if highlight_text:
@@ -344,8 +421,22 @@ class MultiPersonTracker:
         self._debug_counter += 1
 
 
-def init_from_yaml(connections_path: str, *, debug: bool = False, debug_dir: str = "debug") -> MultiPersonTracker:
+def init_from_yaml(
+    connections_path: str,
+    *,
+    debug: bool = False,
+    debug_dir: str = "debug",
+    event_window: int = 300,
+    test_name: Optional[str] = None,
+) -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
-    return MultiPersonTracker(graph, sensor_model, debug=debug, debug_dir=debug_dir)
+    return MultiPersonTracker(
+        graph,
+        sensor_model,
+        debug=debug,
+        debug_dir=debug_dir,
+        event_window=event_window,
+        test_name=test_name,
+    )
 
