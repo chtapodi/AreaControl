@@ -60,6 +60,12 @@ class TestAdvancedTracker(unittest.TestCase):
             self.assertEqual(state['phones']['ph1']['last_room'], 'bedroom')
             self.assertIn('estimate', state['people']['alice'])
 
+    def test_sensor_model_presence(self):
+        model = SensorModel()
+        model.set_presence('bedroom', True, timestamp=0.0)
+        self.assertEqual(model.likelihood_still_present('bedroom', current_time=10.0), 1.0)
+        model.set_presence('bedroom', False, timestamp=20.0)
+        self.assertEqual(model.likelihood_still_present('bedroom', current_time=20.0), 0.0)
     def test_highlight_format(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()

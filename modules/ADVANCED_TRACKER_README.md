@@ -15,11 +15,14 @@ weight is adjusted based on the `SensorModel`.
 
 ### Sensor Model
 
-`SensorModel` records the last time a motion sensor fired in each room and
-computes the probability that a person is still there.  The probability
-drops from `1.0` at the time of the event down to a small floor value over
-a configurable cooldown (default 7 minutes).  When a new sensor event is
-processed the corresponding probability spikes back to `1.0`.
+`SensorModel` records motion events and optional presence sensor states for
+each room.  Motion sensors behave like real hardware—they trigger once and
+then remain "on" for 7 minutes before resetting.  The model decays the
+probability of someone still being in the room from `1.0` down to a small
+floor value over this cooldown period.  Presence sensors, if available,
+override the probability entirely: ``True`` means the room is occupied and
+``False`` means it is empty.  A motion event or a ``True`` presence update
+resets the cooldown timer.
 
 ### Particle Updates
 
