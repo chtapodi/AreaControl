@@ -57,6 +57,11 @@ class TestAdvancedTracker(unittest.TestCase):
                 any(f.startswith('frame_') and f.endswith('.png') for f in contents)
             )
 
+            legend = getattr(multi, '_last_legend_lines', [])
+            self.assertTrue(any(line.strip().startswith('p1:') for line in legend))
+            self.assertTrue(any('solid line: estimated path' in line for line in legend))
+            self.assertTrue(any('dashed orange: true path (tests only)' in line for line in legend))
+
     def test_event_log_includes_timestamp(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
