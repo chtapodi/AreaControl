@@ -17,6 +17,7 @@ import json
 import os
 import yaml
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -58,7 +59,9 @@ class SensorModel:
     def record_trigger(self, room_id: str, timestamp: Optional[float] = None) -> None:
         self.last_fire[room_id] = time.time() if timestamp is None else timestamp
 
-    def likelihood_still_present(self, room_id: str, current_time: Optional[float] = None) -> float:
+    def likelihood_still_present(
+        self, room_id: str, current_time: Optional[float] = None
+    ) -> float:
         now = time.time() if current_time is None else current_time
         dt = now - self.last_fire.get(room_id, 0.0)
         if dt <= 0:
@@ -85,7 +88,9 @@ class Particle:
 class PersonTracker:
     """Particle filter tracker for a single person."""
 
-    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, num_particles: int = 100):
+    def __init__(
+        self, room_graph: RoomGraph, sensor_model: SensorModel, num_particles: int = 100
+    ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.particles: List[Particle] = []
@@ -192,12 +197,14 @@ class MultiPersonTracker:
         self._last_event_time: float = 0.0
         self._event_history: List[str] = []
         self._highlight_room: Optional[str] = None
+        self._estimate_paths: Dict[str, List[str]] = defaultdict(list)
+        self._true_paths: Dict[str, List[str]] = defaultdict(list)
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             # Use a deterministic spring layout with spacing based on graph size
             # so plots remain consistent across runs.
             num_nodes = len(self.room_graph.graph.nodes)
-            k = 2.0 / (num_nodes ** 0.5) if num_nodes else 0.5
+            k = 2.0 / (num_nodes**0.5) if num_nodes else 0.5
             self._layout = nx.spring_layout(
                 self.room_graph.graph,
                 seed=42,
@@ -219,8 +226,12 @@ class MultiPersonTracker:
         self._last_event_time = timestamp
         self._debug_counter = 0
         self._event_history = []
+        self._estimate_paths = defaultdict(list)
+        self._true_paths = defaultdict(list)
 
-    def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
+    def process_event(
+        self, person_id: str, room_id: str, timestamp: Optional[float] = None
+    ) -> None:
         now = time.time() if timestamp is None else timestamp
         person = self.people.get(person_id)
         if person is None:
@@ -238,6 +249,8 @@ class MultiPersonTracker:
         tracker.update(now, sensor_room=room_id)
         if self.debug:
             estimate = tracker.estimate()
+            self._estimate_paths[person_id].append(estimate)
+            self._true_paths[person_id].append(room_id)
             self._highlight_room = room_id
             self._event_history.append(
                 f"{now:.1f}s: motion {room_id} fired, est={estimate}"
@@ -247,8 +260,10 @@ class MultiPersonTracker:
 
     def step(self) -> None:
         now = time.time()
-        for person in self.people.values():
+        for pid, person in self.people.items():
             person.tracker.update(now)
+            if self.debug:
+                self._estimate_paths[pid].append(person.tracker.estimate())
         if self.debug:
             if (
                 self._current_event_dir is None
@@ -281,7 +296,9 @@ class MultiPersonTracker:
             person.phones.append(phone_id)
         phone.person_id = person_id
 
-    def process_phone_data(self, phone_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
+    def process_phone_data(
+        self, phone_id: str, room_id: str, timestamp: Optional[float] = None
+    ) -> None:
         """Record phone location and update the associated person's tracker."""
         phone = self.add_phone(phone_id)
         now = time.time() if timestamp is None else timestamp
@@ -346,6 +363,40 @@ class MultiPersonTracker:
                 node_size=600,
                 ax=ax,
             )
+
+            # Draw estimated path arrows
+            path = self._estimate_paths.get(pid, [])
+            for start, end in zip(path[:-1], path[1:]):
+                start_pos = self._layout[start]
+                end_pos = self._layout[end]
+                ax.annotate(
+                    "",
+                    xy=end_pos,
+                    xytext=start_pos,
+                    arrowprops=dict(
+                        arrowstyle="->",
+                        color=colors.get(idx % 3, (0, 0, 0)),
+                        lw=2,
+                    ),
+                )
+
+            # If we have ground truth for tests, draw it too
+            if self.test_name:
+                true_path = self._true_paths.get(pid, [])
+                for start, end in zip(true_path[:-1], true_path[1:]):
+                    start_pos = self._layout[start]
+                    end_pos = self._layout[end]
+                    ax.annotate(
+                        "",
+                        xy=end_pos,
+                        xytext=start_pos,
+                        arrowprops=dict(
+                            arrowstyle="->",
+                            color="orange",
+                            lw=2,
+                            linestyle="dashed",
+                        ),
+                    )
         if self._highlight_room:
             nx.draw_networkx_nodes(
                 self.room_graph.graph,
@@ -433,4 +484,3 @@ def init_from_yaml(
         debug_dir=debug_dir,
         test_name=test_name,
     )
-
