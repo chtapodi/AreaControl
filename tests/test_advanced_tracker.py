@@ -66,6 +66,20 @@ class TestAdvancedTracker(unittest.TestCase):
         self.assertEqual(model.likelihood_still_present('bedroom', current_time=10.0), 1.0)
         model.set_presence('bedroom', False, timestamp=20.0)
         self.assertEqual(model.likelihood_still_present('bedroom', current_time=20.0), 0.0)
+    def test_highlight_format(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        with tempfile.TemporaryDirectory() as tmp:
+            multi = MultiPersonTracker(graph, sensor_model, debug=True, debug_dir=tmp)
+            import random
+            random.seed(0)
+            multi.set_highlight_room('bedroom')
+            multi.process_event('p1', 'bedroom', timestamp=0.0)
+            multi.process_event('p2', 'kitchen', timestamp=0.0)
+            multi.step()
+            text = multi._format_highlight_probabilities()
+            self.assertIsNotNone(text)
+            self.assertTrue(text.splitlines()[0].startswith('p1:'))
 
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:

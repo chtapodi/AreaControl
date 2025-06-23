@@ -196,9 +196,26 @@ class MultiPersonTracker:
         self.debug = debug
         self.debug_dir = debug_dir
         self._debug_counter = 0
+        self._highlight_room: Optional[str] = None
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
+
+    def set_highlight_room(self, room_id: Optional[str]) -> None:
+        """Set the room for probability highlighting during visualization."""
+        self._highlight_room = room_id
+
+    def _format_highlight_probabilities(self) -> Optional[str]:
+        """Return formatted probability list for the highlighted room."""
+        if not self._highlight_room:
+            return None
+        entries = []
+        for pid, tracker in self.trackers.items():
+            prob = tracker.distribution().get(self._highlight_room, 0.0)
+            entries.append((prob, pid))
+        entries.sort(reverse=True)
+        lines = [f"{pid}: {int(prob * 100 + 0.5)}%" for prob, pid in entries]
+        return "\n".join(lines)
 
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
@@ -310,6 +327,17 @@ class MultiPersonTracker:
             )
         ax.set_title(f"t={current_time:.1f}")
         ax.axis('off')
+
+        highlight_text = self._format_highlight_probabilities()
+        if highlight_text:
+            fig.text(
+                0.98,
+                0.02,
+                highlight_text,
+                ha="right",
+                va="bottom",
+                fontsize=8,
+            )
         filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
         plt.savefig(filename)
         plt.close(fig)
