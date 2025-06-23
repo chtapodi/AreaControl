@@ -197,6 +197,7 @@ class MultiPersonTracker:
         self.debug_dir = debug_dir
         self._debug_counter = 0
         self._highlight_room: Optional[str] = None
+        self._event_history: List[str] = []
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
@@ -219,6 +220,7 @@ class MultiPersonTracker:
 
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
+        self._event_history.append(f"{now}: {person_id}->{room_id}")
         person = self.people.get(person_id)
         if person is None:
             tracker = PersonTracker(self.room_graph, self.sensor_model)
