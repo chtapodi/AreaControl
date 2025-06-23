@@ -137,6 +137,7 @@ class TestAdvancedTracker(unittest.TestCase):
         random.seed(random_seed)
 
         max_t = max(time_events) if time_events else 0
+        extra_steps = scenario.get('extra_steps', 0)
 
         current = 0
         while current <= max_t:
@@ -150,6 +151,12 @@ class TestAdvancedTracker(unittest.TestCase):
                 if pid not in updated:
                     tracker.update(current)
 
+            current += 1
+
+        # Continue stepping without new events if requested
+        for _ in range(extra_steps):
+            for tracker in multi.trackers.values():
+                tracker.update(current)
             current += 1
 
         return multi.estimate_locations(), scenario.get('expected_final', {})
