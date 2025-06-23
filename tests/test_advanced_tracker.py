@@ -4,8 +4,10 @@ import tempfile
 import pytest
 import yaml
 import json
+from PIL import Image
 
 pytest.importorskip("scipy")
+pytest.importorskip("pytesseract")
 
 from modules.advanced_tracker import (
     load_room_graph_from_yaml,
@@ -56,6 +58,40 @@ class TestAdvancedTracker(unittest.TestCase):
             self.assertTrue(
                 any(f.startswith('frame_') and f.endswith('.png') for f in contents)
             )
+
+    def test_probability_overlay(self):
+        import pytesseract
+        import shutil
+        if not shutil.which('tesseract'):
+            pytest.skip('tesseract binary not available')
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        with tempfile.TemporaryDirectory() as tmp:
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                test_name=self._testMethodName,
+            )
+            import random
+            random.seed(0)
+            multi.process_event('p1', 'bedroom', timestamp=0.0)
+            event_dirs = [
+                root
+                for root, _, files in os.walk(tmp)
+                if any(f.startswith('frame_') for f in files)
+            ]
+            self.assertEqual(len(event_dirs), 1)
+            frame = sorted(
+                f for f in os.listdir(event_dirs[0]) if f.startswith('frame_')
+            )[0]
+            path = os.path.join(event_dirs[0], frame)
+            expected = int(round(
+                multi.trackers['p1'].distribution().get('bedroom', 0.0) * 100
+            ))
+            text = pytesseract.image_to_string(Image.open(path), config='--psm 6')
+            self.assertIn(f"{expected}%", text)
 
     def test_event_log_includes_timestamp(self):
         graph = load_room_graph_from_yaml('connections.yml')

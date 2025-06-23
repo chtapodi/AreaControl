@@ -6,3 +6,5 @@ matplotlib
 scipy
 astral
 pytz
+pillow
+pytesseract

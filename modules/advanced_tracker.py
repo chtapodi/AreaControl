@@ -459,6 +459,22 @@ class MultiPersonTracker:
                 va="top",
             )
 
+        if self._highlight_room:
+            prob_list = []
+            for pid, person in self.people.items():
+                dist = person.tracker.distribution()
+                prob_list.append((pid, dist.get(self._highlight_room, 0.0)))
+            prob_list.sort(key=lambda x: x[1], reverse=True)
+            for idx, (pid, prob) in enumerate(prob_list):
+                fig.text(
+                    0.72,
+                    0.05 + idx * 0.04,
+                    f"{pid}: {int(round(prob * 100))}%",
+                    fontsize=9,
+                    ha="left",
+                    va="bottom",
+                )
+
         plt.tight_layout(rect=[0, 0, 1, 0.95])
 
         target_dir = self._current_event_dir
