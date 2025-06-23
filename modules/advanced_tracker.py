@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 import random
+import datetime
 from collections import defaultdict
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
@@ -167,7 +168,15 @@ class Person:
 
 
 class MultiPersonTracker:
-    def __init__(self, room_graph: RoomGraph, sensor_model: SensorModel, *, debug: bool = False, debug_dir: str = "debug"):
+    def __init__(
+        self,
+        room_graph: RoomGraph,
+        sensor_model: SensorModel,
+        *,
+        debug: bool = False,
+        debug_dir: str = "debug",
+        event_window: int = 600,
+    ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
         self.people: Dict[str, Person] = {}
@@ -175,10 +184,24 @@ class MultiPersonTracker:
         self.trackers: Dict[str, PersonTracker] = {}
         self.debug = debug
         self.debug_dir = debug_dir
+        self.event_window = event_window
         self._debug_counter = 0
+        self._current_event_dir: Optional[str] = None
+        self._last_event_time: float = 0.0
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             self._layout = nx.kamada_kawai_layout(self.room_graph.graph)
+
+    def _start_event(self, timestamp: float) -> None:
+        """Create a new directory for debug frames for a sensor event."""
+        date_path = datetime.datetime.fromtimestamp(timestamp).strftime(
+            "%Y/%m/%d/%H%M%S"
+        )
+        path = os.path.join(self.debug_dir, date_path)
+        os.makedirs(path, exist_ok=True)
+        self._current_event_dir = path
+        self._last_event_time = timestamp
+        self._debug_counter = 0
 
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
@@ -191,6 +214,11 @@ class MultiPersonTracker:
         tracker = person.tracker
         tracker.update(now, sensor_room=room_id)
         if self.debug:
+            if (
+                self._current_event_dir is None
+                or now - self._last_event_time > self.event_window
+            ):
+                self._start_event(now)
             self._visualize(now)
 
     def step(self) -> None:
@@ -198,6 +226,11 @@ class MultiPersonTracker:
         for person in self.people.values():
             person.tracker.update(now)
         if self.debug:
+            if (
+                self._current_event_dir is None
+                or now - self._last_event_time > self.event_window
+            ):
+                self._start_event(now)
             self._visualize(now)
 
     def estimate_locations(self) -> Dict[str, str]:
@@ -280,8 +313,36 @@ class MultiPersonTracker:
                 ax=ax,
             )
         ax.set_title(f"t={current_time:.1f}")
-        ax.axis('off')
-        filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
+        ax.axis("off")
+
+        # Debug text overlay
+        if self._current_event_dir:
+            event_name = os.path.relpath(self._current_event_dir, self.debug_dir)
+        else:
+            event_name = "no_event"
+        ax.text(
+            0.01,
+            0.99,
+            f"event: {event_name}",
+            transform=ax.transAxes,
+            fontsize=8,
+            verticalalignment="top",
+        )
+        for idx, (pid, person) in enumerate(self.people.items()):
+            text = f"{pid}: est={person.tracker.estimate()}"
+            if person.tracker.last_sensor_room:
+                text += f", last={person.tracker.last_sensor_room}"
+            ax.text(
+                0.01,
+                0.94 - idx * 0.05,
+                text,
+                transform=ax.transAxes,
+                fontsize=8,
+                verticalalignment="top",
+            )
+
+        target_dir = self._current_event_dir or self.debug_dir
+        filename = os.path.join(target_dir, f"frame_{self._debug_counter:06d}.png")
         plt.savefig(filename)
         plt.close(fig)
         self._debug_counter += 1
