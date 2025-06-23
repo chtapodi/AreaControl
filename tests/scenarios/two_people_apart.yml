@@ -1,0 +1,29 @@
+connections: connections.yml
+persons:
+  - id: alice
+    events:
+      - time: 0
+        room: bedroom
+      - time: 300
+        room: bedroom
+      - time: 600
+        room: bedroom
+      - time: 900
+        room: bedroom
+      - time: 1200
+        room: bedroom
+  - id: bob
+    events:
+      - time: 0
+        room: kitchen
+      - time: 300
+        room: kitchen
+      - time: 600
+        room: kitchen
+      - time: 900
+        room: kitchen
+      - time: 1200
+        room: kitchen
+expected_final:
+  alice: bedroom
+  bob: kitchen
