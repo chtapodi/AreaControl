@@ -192,9 +192,17 @@ class MultiPersonTracker:
         self._last_event_time: float = 0.0
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
-            # Use a deterministic spring layout so nodes have more space
-            # and plots remain consistent across runs.
-            self._layout = nx.spring_layout(self.room_graph.graph, seed=42)
+            # Use a deterministic spring layout with spacing based on graph size
+            # so plots remain consistent across runs.
+            num_nodes = len(self.room_graph.graph.nodes)
+            k = 2.0 / (num_nodes ** 0.5) if num_nodes else 0.5
+            self._layout = nx.spring_layout(
+                self.room_graph.graph,
+                seed=42,
+                k=k,
+                scale=2.0,
+                iterations=100,
+            )
 
     def _start_event(self, timestamp: float) -> None:
         """Create a new directory for debug frames for a sensor event."""
@@ -296,7 +304,7 @@ class MultiPersonTracker:
     def _visualize(self, current_time: float) -> None:
         plt.clf()
         # Bigger figure for improved readability
-        fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(figsize=(16, 10))
         nx.draw_networkx(
             self.room_graph.graph,
             pos=self._layout,
@@ -304,7 +312,8 @@ class MultiPersonTracker:
             node_color="skyblue",
             edgecolors="black",
             edge_color="gray",
-            font_size=10,
+            font_size=8,
+            font_color="black",
         )
 
         colors = {
@@ -344,7 +353,7 @@ class MultiPersonTracker:
                 0.01,
                 0.92 - idx * 0.04,
                 text,
-                fontsize=10,
+                fontsize=8,
                 ha="left",
                 va="top",
             )
