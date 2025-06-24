@@ -2,7 +2,6 @@ import yaml
 from collections import defaultdict
 import copy
 import time
-
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
 try:
@@ -25,13 +24,12 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
 from tracker import TrackManager, Track, Event
 try:
     from adaptive_learning import get_learner
-    from logger import Logger
 except ImportError:
     from modules.adaptive_learning import get_learner
-    from modules.logger import Logger
 import unittest
+from logger import Logger
 
-log = Logger(__name__, globals().get("log"))
+logger = Logger(log)
 
 
 
@@ -82,7 +80,7 @@ def calibrate_rgb(rgb, profile):
 
 @service
 def reset():
-    log.warning("RESETTING. MAKE SURE YOU WANT THIS")
+    logger.warning("RESETTING. MAKE SURE YOU WANT THIS")
     global area_tree
     global event_manager
     global global_triggers
@@ -158,7 +156,7 @@ def get_cached_last_set_state():
 
 def set_cached_last_set_state(device,state):
     global last_set_state
-    log.info(f"set global last set state to {state}")
+    logger.debug(f"set global last set state to {state}")
     if state is None:
         last_set_state = None
     else:
@@ -167,7 +165,7 @@ def set_cached_last_set_state(device,state):
 
 @service
 def create_event(**kwargs):
-    log.info(f"Service creating event:  with kwargs {kwargs}")
+    logger.debug(f"Service creating event:  with kwargs {kwargs}")
     event = {}
     if "name" in kwargs.keys():
         event["device_name"] = kwargs["name"]
@@ -189,11 +187,11 @@ def create_event(**kwargs):
             event["state_functions"] = kwargs["state_functions"]
 
         event_manager = get_event_manager()
-        log.info(f"Service creating event: {event}")
+        logger.debug(f"Service creating event: {event}")
         event_manager.create_event(event)
 
     else:
-        log.warning(f"No devic_name in serice created event {kwargs}")
+        logger.warning(f"No devic_name in serice created event {kwargs}")
 
 
 @service
@@ -201,7 +199,7 @@ def freeze_area(area_name, recursive=True):
     """Freeze an area so its lights ignore future state changes."""
     area = get_area_tree().get_area(area_name)
     if area is None:
-        log.warning(f"freeze_area: area {area_name} not found")
+        logger.warning(f"freeze_area: area {area_name} not found")
         return False
     area.freeze(propagate=recursive)
     return True
@@ -212,7 +210,7 @@ def unfreeze_area(area_name, recursive=True):
     """Unfreeze a previously frozen area."""
     area = get_area_tree().get_area(area_name)
     if area is None:
-        log.warning(f"unfreeze_area: area {area_name} not found")
+        logger.warning(f"unfreeze_area: area {area_name} not found")
         return False
     area.unfreeze(propagate=recursive)
     return True
@@ -224,15 +222,15 @@ def get_function_by_name(function_name, func_object=None):
         if function_name in globals().keys():
             func = globals()[function_name]
         else:
-            log.warning(f"Function {function_name} not found")
+            logger.warning(f"Function {function_name} not found")
     else:
         if hasattr(func_object, function_name):
             func = getattr(func_object, function_name)
 
     if func is None:
-        log.warning(f"Function {function_name} not found")
+        logger.warning(f"Function {function_name} not found")
     # else:
-    # log.info(f"Function {function_name} found")
+    # logger.debug(f"Function {function_name} found")
     return func
 
 
@@ -255,14 +253,14 @@ def combine_states(state_list, strategy="last"):
         dict: The final combined state.
     """
     final_state = {}
-    log.info(f"Combining states with strategy {strategy}: {state_list}")
+    logger.debug(f"Combining states with strategy {strategy}: {state_list}")
     state_list=copy.deepcopy(state_list)
 
     if strategy=="first_state" : # Uses the first valid state in the list 
         # state_list.reverse()
         for state in state_list:
             if state is not None and len(state) > 0:
-                log.info(f"Found first state: {state}")
+                logger.debug(f"Found first state: {state}")
                 return state
 
 
@@ -271,7 +269,7 @@ def combine_states(state_list, strategy="last"):
         if strategy == "first": # Combine, first is least likely to be overwritten
             state_list.reverse()
 
-        log.info(f"COMBINING states with strategy {strategy}: {state_list}")
+        logger.debug(f"COMBINING states with strategy {strategy}: {state_list}")
         for state in state_list:
             if state is not None:
                 final_state.update(state)  # Update overwrites previous value
@@ -307,7 +305,7 @@ def combine_states(state_list, strategy="last"):
                         sum_dict[key] += value
                         count_dict[key] += 1
 
-        log.info(f"SUMDICT {sum_dict} COUNTDICT {count_dict}")
+        logger.debug(f"SUMDICT {sum_dict} COUNTDICT {count_dict}")
         for key, value in sum_dict.items():
             # if iterable 
             
@@ -326,12 +324,12 @@ def combine_states(state_list, strategy="last"):
         if "status" in final_state.keys() and final_state["status"] > 0:
             final_state["status"] = 1
         
-        log.info(f"FINAL STATE {final_state}")
+        logger.debug(f"FINAL STATE {final_state}")
 
     else :
-        log.warning(f"Strategy {strategy} not found")
+        logger.warning(f"Strategy {strategy} not found")
     if get_verbose_mode():
-        log.info(f"combined states {state_list} into {final_state}")
+        logger.debug(f"combined states {state_list} into {final_state}")
     return final_state
 
 
@@ -344,7 +342,7 @@ def summarize_state(state):
         else:
             flat_state[key] = value
     if get_verbose_mode():
-        log.info(f"summarized state {state} as {flat_state}")
+        logger.debug(f"summarized state {state} as {flat_state}")
     return flat_state
 
 
@@ -359,7 +357,7 @@ def combine_colors(color_one, color_two, strategy="add"):
         color[2] = color_one[2] + color_two[2]
         color[0] = color_one[0] + color_two[0]
     else:
-        log.warning(f"Strategy {strategy} not found")
+        logger.warning(f"Strategy {strategy} not found")
 
     for i in range(len(color)):
         val = color[i]
@@ -368,7 +366,7 @@ def combine_colors(color_one, color_two, strategy="add"):
         if val < 0:
             color[i] = 0
     if get_verbose_mode():
-        log.info(f"combined: {color_one} + {color_two} = {color}")
+        logger.debug(f"combined: {color_one} + {color_two} = {color}")
 
     return color
 
@@ -382,17 +380,17 @@ def check_sleep(
     area_state,
 ):
     is_theo_alseep = state.get("binary_sensor.xavier_is_sleeping")
-    log.info(f"theo sleep {is_theo_alseep}")
+    logger.debug(f"theo sleep {is_theo_alseep}")
 
 
 def motion_sensor_mode(*args, **kwargs):
-    log.info(f"motion_sensor_mode {input_boolean.motion_sensor_mode}")
+    logger.debug(f"motion_sensor_mode {input_boolean.motion_sensor_mode}")
     return input_boolean.motion_sensor_mode == "on"
 
 def set_motion_sensor_mode(state):
-    log.info(f"set_motion_sensor_mode {input_boolean.motion_sensor_mode}")
+    logger.debug(f"set_motion_sensor_mode {input_boolean.motion_sensor_mode}")
     input_boolean.motion_sensor_mode = state
-    log.info(f"set_motion_sensor_mode is now {input_boolean.motion_sensor_mode}")
+    logger.debug(f"set_motion_sensor_mode is now {input_boolean.motion_sensor_mode}")
 
 
 
@@ -413,15 +411,15 @@ def get_local_scope(device, device_area, *args):
 
 # When area names are passed in as args, gets their local scopes
 def get_area_local_scope(device, device_area, *args):
-    log.info(f"get_area_local_scope {args}")
+    logger.debug(f"get_area_local_scope {args}")
     areas = []
     for area_name in args[0]:
         area_tree = get_area_tree()
         if area_tree.is_area(area_name):
             areas.append(area_tree.get_area(area_name))
         else:
-            log.info(f"Area {area_name} not found")
-    log.info(f"get_area_local_scope {areas[0].name}")
+            logger.debug(f"Area {area_name} not found")
+    logger.debug(f"get_area_local_scope {areas[0].name}")
     return areas
 
 
@@ -465,17 +463,17 @@ def get_time_based_state(device, scope, *args):
     # using now, have if statements for times of day: early morning, morning, midday, afternoon, evening, night, late night
 
     if now > 0 and now < 5:
-        log.info("it is late_night")
+        logger.debug("it is late_night")
 
         state["brightness"] = 50
         state["rgb_color"] = [255, 0, 0]
 
     elif now >= 5 and now < 7:
-        log.info("it is dawn")
+        logger.debug("it is dawn")
         state["rgb_color"] = [255, 0, 0]
 
     elif now >= 7 and now < 8:
-        log.info("it is early morning")
+        logger.debug("it is early morning")
         state["brightness"] = 255
 
         goal_color = [255, 200, 185]
@@ -487,35 +485,35 @@ def get_time_based_state(device, scope, *args):
             state["rgb_color"] = goal_color
 
     elif now >= 8 and now < 11:
-        log.info("it is morning")
+        logger.debug("it is morning")
         state["brightness"] = 255
         state["color_temp"] = 350
 
     elif now >= 11 and now < 14:  # 11-2
-        log.info("it is midday")
+        logger.debug("it is midday")
         state["brightness"] = 255
         state["color_temp"] = 350
 
     elif now >= 14 and now < 18:  # 2-6
-        log.info("it is afternoon")
+        logger.debug("it is afternoon")
         state["brightness"] = 255
         state["color_temp"] = 350
 
 
     elif now >= 18 and now < 20:  # 6-8
-        log.info("it is evening")
+        logger.debug("it is evening")
         goal_color = [255, 200, 185]
         if "rgb_color" in scope_state:
-            log.info(f"combining {scope_state['rgb_color']} with {goal_color}")
+            logger.debug(f"combining {scope_state['rgb_color']} with {goal_color}")
             state["rgb_color"] = combine_colors(
                 scope_state["rgb_color"], goal_color, strategy="average"
             )  # scope_state["rgb_color"]
         else:
-            log.info("just setting the color")
+            logger.debug("just setting the color")
             state["rgb_color"] = goal_color
 
     elif now >= 20 and now < 22:  # 8-10
-        log.info("it is late evening")
+        logger.debug("it is late evening")
 
         goal_color = [255, 172, 89]
         if "rgb_color" in scope_state:
@@ -526,10 +524,10 @@ def get_time_based_state(device, scope, *args):
             state["rgb_color"] = goal_color
 
     elif now >= 22:  # 10-11
-        log.info("it is night")
+        logger.debug("it is night")
 
         if "rgb_color" in scope_state:
-            log.info("Light is off, darkening color")
+            logger.debug("Light is off, darkening color")
             redder_state = combine_colors(
                 scope_state["rgb_color"],
                 [+step_increment, -step_increment, -step_increment],
@@ -541,7 +539,7 @@ def get_time_based_state(device, scope, *args):
 
     elif now >= 23:  # 23-0
         if scope_state["status"] == 0:
-            log.info("it is late-ish_night")
+            logger.debug("it is late-ish_night")
             state["rgb_color"] = [255, 0, 0]
         else:
             if "brightness" in scope_state:
@@ -560,9 +558,9 @@ def get_time_based_state(device, scope, *args):
             if "color_temp" in state:
                 del state["color_temp"]
     else:
-        log.warning("Status is not in scope_state")
+        logger.warning("Status is not in scope_state")
 
-    log.info(f"Time based state is {state}")
+    logger.debug(f"Time based state is {state}")
     return state
 
 # Gets the most recent state that was manually set
@@ -574,7 +572,7 @@ def get_last_track_state(device, scope, *args):
     area_tree=get_area_tree()
     device_area = device.get_area().name
 
-    log.info(f"get_last_track_state(): looking for {device_area} in {tracker_manager.get_pretty_string()}")
+    logger.debug(f"get_last_track_state(): looking for {device_area} in {tracker_manager.get_pretty_string()}")
 
     for track in tracker_manager.tracks:
         if track.get_area() == device_area:
@@ -584,7 +582,7 @@ def get_last_track_state(device, scope, *args):
                 last_track_state=summarize_state(area_tree.get_state(previous_area))
                 if "name" in last_track_state:
                     del last_track_state["name"] 
-                log.info(f"get_last_track_state(): Last track state is {last_track_state} from {previous_area}")
+                logger.debug(f"get_last_track_state(): Last track state is {last_track_state} from {previous_area}")
                 return last_track_state
     return None
 
@@ -594,9 +592,9 @@ def toggle_status(device, scope, *args):
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
-        log.info(f"Area {area.name} state is {states[area.name]}")
+        logger.debug(f"Area {area.name} state is {states[area.name]}")
     scope_state = summarize_state(states)
-    log.info(f"Toggling status is {scope_state}")
+    logger.debug(f"Toggling status is {scope_state}")
     if "status" in scope_state:
         if scope_state["status"]:  # if on
             return {"status": 0}  # turn off
@@ -614,23 +612,23 @@ def toggle_state(device, scope, *args):
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
-        log.info(f"toggle_state: Area {area.name} state is {states[area.name]}")
+        logger.debug(f"toggle_state: Area {area.name} state is {states[area.name]}")
     scope_state = summarize_state(states)
 
-    log.info("toggle_state: Does scope_state match goal?")
+    logger.debug("toggle_state: Does scope_state match goal?")
     if does_state_match_goal(scope_state):
-        log.info(f"toggle_state: Already in goal state, toggling to last scope state")
+        logger.debug(f"toggle_state: Already in goal state, toggling to last scope state")
 
         last_states = {}
         for area in scope:
             last_states[area.name] = area.get_last_state()
         last_scope_state = summarize_state(last_states)
         last_scope_state["status"]=1
-        log.info(f"toggle_state: Last state is {last_scope_state}")
+        logger.debug(f"toggle_state: Last state is {last_scope_state}")
 
-        log.info("toggle_state: Does last_scope_state match goal?")
+        logger.debug("toggle_state: Does last_scope_state match goal?")
         if does_state_match_goal(last_scope_state):
-            log.info(f"toggle_state: last scope state matches goal state, applying opposite state")
+            logger.debug(f"toggle_state: last scope state matches goal state, applying opposite state")
             return opposite_state
 
         # TODO: Theres gotta be a better way
@@ -649,7 +647,7 @@ def toggle_state(device, scope, *args):
         return last_scope_state
 
     else:
-        log.info(f"toggle_state: scope_state does not match goal, toggling to {goal_state}")
+        logger.debug(f"toggle_state: scope_state does not match goal, toggling to {goal_state}")
         return goal_state
 
     return scope_state
@@ -659,12 +657,12 @@ def toggle_state(device, scope, *args):
 
 
 def generate_state_trigger(trigger, functions, kwarg_list):
-    log.info(f"generating state trigger @{trigger} {functions}( {kwarg_list} )")
+    logger.debug(f"generating state trigger @{trigger} {functions}( {kwarg_list} )")
 
     @service
     @state_trigger(trigger)
     def func_trig(**kwargs):
-        log.info(f"TRIGGER: state trigger @{trigger} {functions}( {kwarg_list} )")
+        logger.debug(f"TRIGGER: state trigger @{trigger} {functions}( {kwarg_list} )")
         # This assumes that if the functions are lists the kwargs are as well.
         if isinstance(functions, list):
             for function, kwargs in zip(functions, kwarg_list):
@@ -766,7 +764,7 @@ def merge_states(state_list, name=None):
         merged_state["status"]=1 
     else:
         merged_state["status"]=0
-    log.info(f"merged_state: {merged_state}")
+    logger.debug(f"merged_state: {merged_state}")
     return merged_state
 
 def get_state_similarity(state1, state2):
@@ -791,7 +789,7 @@ def get_state_similarity(state1, state2):
     matching_vals=0
     for key in shared_keys:
         if  type(state2[key]) != type(state2[key]):
-            log.info(f"State keys '{key}' have mismatched types: {state1[key]} vs {state2[key]}")
+            logger.debug(f"State keys '{key}' have mismatched types: {state1[key]} vs {state2[key]}")
             num_shared-=1
 
         if type(state1[key]) == dict:
@@ -894,20 +892,20 @@ class Area:
 
     def set_state(self, state):
         if self.frozen:
-            log.info(f"Area {self.name} is frozen; skipping state change {state}")
+            logger.debug(f"Area {self.name} is frozen; skipping state change {state}")
             return
         for child in self.get_children():
             child.set_state(copy.deepcopy(state))
 
     def get_state(self):
-        log.info(f"Area:get_state(): Getting state for {self.get_pretty_string()}")
+        logger.debug(f"Area:get_state(): Getting state for {self.get_pretty_string()}")
         child_states = []
 
         for child in self.get_children():
             child_state = child.get_state()
-            log.info(f"Area:get_state(): Child state: {child_state}")
+            logger.debug(f"Area:get_state(): Child state: {child_state}")
             child_states.append(child_state)
-        log.info(f"merging states: {child_states}")
+        logger.debug(f"merging states: {child_states}")
         merged = merge_states(child_states, self.name)
 
         return merged
@@ -964,9 +962,9 @@ def update_tracker(device, *args):
     except Exception:
         pass
 
-    log.info(f"update_tracker: Current tracks")
+    logger.debug(f"update_tracker: Current tracks")
     for track in tracker_manager.tracks:
-        log.info(f"update_tracker: {track.get_pretty_string()}")
+        logger.debug(f"update_tracker: {track.get_pretty_string()}")
 
     return True
 
@@ -978,7 +976,7 @@ class EventManager:
         self.area_tree = area_tree
 
     def create_event(self, event):
-        log.info(f"EventManager: New event: {event}")
+        logger.debug(f"EventManager: New event: {event}")
 
         result = self.check_event(event)
 
@@ -990,9 +988,9 @@ class EventManager:
             trigger_prefix = rule_lookup[rule_name]["trigger_prefix"]
             if event["device_name"].startswith(trigger_prefix):
                 if "service" in event["device_name"]:
-                    log.info(f"EventManager:check_event(): SERVICESEARCH")
+                    logger.debug(f"EventManager:check_event(): SERVICESEARCH")
                 if get_verbose_mode():
-                    log.info(
+                    logger.debug(
                         f"EventManager:check_event(): Rule {rule_name} prefix [{trigger_prefix}] matches {event['device_name']}"
                     )
                 function_override = False
@@ -1010,7 +1008,7 @@ class EventManager:
                     approved = False
 
                 if get_verbose_mode() and approved:
-                    log.info(f"EventManager:check_event(): {rule_name} Passed tag check")
+                    logger.debug(f"EventManager:check_event(): {rule_name} Passed tag check")
 
                 if "tags" in event:
                     if "tag_override" in event["tags"]:
@@ -1021,21 +1019,22 @@ class EventManager:
                     and self._check_functions(event, rule_lookup[rule_name])
                 ):
                     approved = False
-                    # log.info(f"EventManager:check_event(): {rule_name} FAILED function check")
+                    # logger.debug(f"EventManager:check_event(): {rule_name} FAILED function check")
 
                 if get_verbose_mode() and approved:
-                    log.info(f"EventManager:check_event(): {rule_name} Passed function check")
+                    logger.debug(f"EventManager:check_event(): {rule_name} Passed function check")
 
                 if approved:
                     matching_rules.append(rule_name)
+                    logger.info("rule-match", rule=rule_name, device=event["device_name"])
 
         event_tags = event.get("tags", [])
-        log.info(f"EventManager:check_event():  Event: {event} Matches:{matching_rules} Rules")
+        logger.debug(f"EventManager:check_event():  Event: {event} Matches:{matching_rules} Rules")
 
         results = []
         for rule_name in matching_rules:
             rule = copy.deepcopy(self.rules[rule_name])
-            log.info(f"EventManager:check_event():  Rule: {rule}")
+            logger.debug(f"EventManager:check_event():  Rule: {rule}")
             results.append(self.execute_rule(event, rule, rule_name=rule_name))
 
         if results is not None:
@@ -1049,7 +1048,7 @@ class EventManager:
             if type(arg) is str:
                 if arg.startswith("$") :
                     if arg == "$state" :
-                        log.info(f"Expanding $state to {state}")
+                        logger.debug(f"Expanding $state to {state}")
                         del args[args.index("$state")]
                         args.append(state)
         return args
@@ -1057,7 +1056,7 @@ class EventManager:
     def execute_rule(self, event_data, rule, rule_name=None):
         device_name = event_data["device_name"]
 
-        log.info(f"EventManager:execute_rule(): {event_data}")
+        logger.debug(f"EventManager:execute_rule(): {event_data}")
         device = self.get_area_tree().get_device(device_name)
 
 
@@ -1067,7 +1066,7 @@ class EventManager:
             device_area = device.get_area()
             rule_state = rule.get("state", {})
 
-            log.info(f"EventManager:execute_rule(): updating {rule} with {event_data}")
+            logger.debug(f"EventManager:execute_rule(): updating {rule} with {event_data}")
             rule.update(event_data)
 
             scope = None  # Should these be anded?
@@ -1086,12 +1085,12 @@ class EventManager:
                                     edited_scope = []
                                     for area in scope:
                                         if get_verbose_mode():
-                                            log.info(
+                                            logger.debug(
                                                 f"EventManager:execute_rule(): Checking if {area.name} in {new_scope}"
                                             )
                                         if area in new_scope:
                                             edited_scope.append(area)
-                                    log.info(f"EventManager:execute_rule(): Edited scope: {scope}->{edited_scope}")
+                                    logger.debug(f"EventManager:execute_rule(): Edited scope: {scope}->{edited_scope}")
                                     scope = edited_scope
 
             if scope is None:
@@ -1101,12 +1100,12 @@ class EventManager:
             for area in scope:
                 scope_names.append(area.name)
             
-            log.info(f"EventManager:execute_rule(): Event scope is {scope_names}")
+            logger.debug(f"EventManager:execute_rule(): Event scope is {scope_names}")
 
             function_states = []
             # if there are state functions, run them
             if "state_functions" in rule:
-                log.info(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
+                logger.debug(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
                 for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
                         function = get_function_by_name(function_name)
@@ -1114,10 +1113,10 @@ class EventManager:
                         if function is not None:
                             function_state = function(device, scope, args)
                             # Adds the states to a list to be combined
-                            log.info(f"EventManager:execute_rule(): Function {function_name} provided: {function_state}")
+                            logger.debug(f"EventManager:execute_rule(): Function {function_name} provided: {function_state}")
                             function_states.append(function_state)
 
-                log.info(f"EventManager:execute_rule(): Function states: {rule['state_functions']} provided  {function_states}")
+                logger.debug(f"EventManager:execute_rule(): Function states: {rule['state_functions']} provided  {function_states}")
             # Add state_list to event_state
             state_list = []
             if "state" in event_data:
@@ -1134,7 +1133,7 @@ class EventManager:
                 state_list, strategy=strategy
             )
 
-            log.info(f"EventManager:execute_rule(): Event state is {final_state}")
+            logger.debug(f"EventManager:execute_rule(): Event state is {final_state}")
 
 
 
@@ -1149,10 +1148,11 @@ class EventManager:
                         if function is not None:
                             args=self.expand_args(args, event_data, final_state)
                             if not function(device, *args) :
-                                log.info(f"Fuction '{function_name}' failed, not running rule.")
+                                logger.debug(f"Fuction '{function_name}' failed, not running rule.")
                                 return False
-            log.info("EventManager:execute_rule(): Event passed all functions")
-            log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
+            logger.debug("EventManager:execute_rule(): Event passed all functions")
+            logger.debug(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
+            logger.info("apply-state", device=device_name, state=summarize_state(final_state))
             for areas in scope:
                 areas.set_state(final_state)
 
@@ -1164,7 +1164,7 @@ class EventManager:
 
             return True
         else:
-            log.warning(f"EventManager:execute_rule(): Device {device_name} not found")
+            logger.warning(f"EventManager:execute_rule(): Device {device_name} not found")
             return False
 
     def _check_tags(self, event, rule):
@@ -1172,26 +1172,26 @@ class EventManager:
         tags = event.get("tags", [])
         if "required_tags" in rule:
             if get_verbose_mode():
-                log.info(
+                logger.debug(
                     f"Checking Required tags {rule['required_tags']} against {tags}"
                 )
             for tag in rule["required_tags"]:
                 if tag not in tags:
                     if get_verbose_mode():
-                        log.info(f"Required tag {tag} not found in event {event}")
+                        logger.debug(f"Required tag {tag} not found in event {event}")
                     return False
         if "prohibited_tags" in rule:
             if get_verbose_mode():
-                log.info(
+                logger.debug(
                     f"Checking Prohibited tags {rule['prohibited_tags']} against {tags}"
                 )
             for tag in rule["prohibited_tags"]:
                 if tag in tags:
                     if get_verbose_mode():
-                        log.info(f"Prohibited tag {tag} found in event {event}")
+                        logger.debug(f"Prohibited tag {tag} found in event {event}")
                     return False
         if get_verbose_mode():
-            log.info(f"Passed tag check")
+            logger.debug(f"Passed tag check")
         return True
 
     def _check_functions(self, event, rule, **kwargs):
@@ -1206,7 +1206,7 @@ class EventManager:
                     result = function(event, **kwargs)
                     if not result:
                         if get_verbose_mode():
-                            log.info(f"Function {function_name} failed")
+                            logger.debug(f"Function {function_name} failed")
                         return False
 
         return True  # If passed all checks or theres no functions to pass
@@ -1237,7 +1237,7 @@ class AreaTree:
             area = self.root_name
 
         state=self.area_tree_lookup[area].get_state()
-        log.info(f"AreaTree:get_state(): State for {area} is {state}")
+        logger.debug(f"AreaTree:get_state(): State for {area} is {state}")
         return state
 
     def get_root(self):
@@ -1247,7 +1247,7 @@ class AreaTree:
         if area_name is None:
             area_name = self.root_name
         if area_name not in self.area_tree_lookup:
-            log.warning(f"Area {area_name} not found in area tree")
+            logger.warning(f"Area {area_name} not found in area tree")
             return None
         return self.area_tree_lookup[area_name]
 
@@ -1255,7 +1255,7 @@ class AreaTree:
         if device_name not in self.area_tree_lookup:
             if "service_" in device_name:
                 return self.area_tree_lookup["service_input"]
-            log.warning(f"Device {device_name} not found in area tree")
+            logger.warning(f"Device {device_name} not found in area tree")
             return None
         return self.area_tree_lookup[device_name]
 
@@ -1263,7 +1263,7 @@ class AreaTree:
         return self.area_tree_lookup
 
     def is_area(self, area_name):
-        log.info(f"Checking if {area_name} is an area")
+        logger.debug(f"Checking if {area_name} is an area")
         if area_name in self.get_area_tree_lookup():
             return True
         return False
@@ -1279,7 +1279,7 @@ class AreaTree:
     def get_greatest_area(self, area_name):
         # Gets the highest area which still has the input area as a direct child
         if area_name not in self.area_tree_lookup:
-            log.warning(f"Area {area_name} not found in area tree")
+            logger.warning(f"Area {area_name} not found in area tree")
             return None
 
         starting_area = self.area_tree_lookup[area_name]
@@ -1412,11 +1412,11 @@ class AreaTree:
                 # Add outputs as children
                 if "inputs" in area_data:
                     inputs = area_data["inputs"]
-                    log.info(f"Inputs: {inputs}")
+                    logger.debug(f"Inputs: {inputs}")
 
                     if type(inputs) == list:
                         if inputs[0] is not None:
-                            log.warning(f"Inputs are a list: {inputs}. Not processing")
+                            logger.warning(f"Inputs are a list: {inputs}. Not processing")
 
                     elif type(inputs) == dict:
                         for input_type, device_id_list in area_data["inputs"].items():
@@ -1425,26 +1425,26 @@ class AreaTree:
                                     if device_id is not None:
                                         new_input = None
                                         if "motion" in device_id:
-                                            log.info(f"lumi: {device_id}")
+                                            logger.debug(f"lumi: {device_id}")
                                             new_input = MotionSensorDriver(
                                                 input_type, device_id
                                             )
                                         elif "presence" in device_id:
-                                            log.info(
+                                            logger.debug(
                                                 f"Creating presence device: {device_id}"
                                             )
                                             new_input = PresenceSensorDriver(
                                                 input_type, device_id
                                             )
                                         elif "service" in device_id:
-                                            log.info(
+                                            logger.debug(
                                                 f"Creating service device: {device_id}"
                                             )
                                             new_input = ServiceDriver(
                                                 input_type, device_id
                                             )
                                         else:
-                                            log.warning(
+                                            logger.warning(
                                                 f"Input has no driver: {device_id}"
                                             )
 
@@ -1480,19 +1480,19 @@ class Device:
     # "Lock" The device so it can't be changed
     def lock(self, value=True):
         if value:
-            log.info(f"Locking {self.name}")
+            logger.debug(f"Locking {self.name}")
         else:
-            log.info(f"Unlocking {self.name}")
+            logger.debug(f"Unlocking {self.name}")
         self.locked = value
 
     def get_state(self):
         
         state = self.driver.get_state()
-        log.info(f"Device:get_state(): Getting state for {self.name} state:{state}")
+        logger.debug(f"Device:get_state(): Getting state for {self.name} state:{state}")
         state["name"] = self.name
         # self.cached_state = state #Update cached state to that of driver
         state=self.fillout_state_from_cache(state)
-        log.info(f"Device:get_state(): filled out state: {state}")
+        logger.debug(f"Device:get_state(): filled out state: {state}")
         return state
 
     def get_last_state(self):
@@ -1502,12 +1502,12 @@ class Device:
             state = copy.deepcopy(self.last_state)
         state["name"] = self.name
         self.last_state = state
-        log.info(f"Device:get_last_state(): Last state: {state}")
+        logger.debug(f"Device:get_last_state(): Last state: {state}")
         return state
 
     def fillout_state_from_cache(self, state):
         if self.cached_state is not None and type(self.cached_state)==dict:
-            log.info(f"Device:fillout_state_from_cache(): Filling out state {state} from cache: {self.cached_state}")
+            logger.debug(f"Device:fillout_state_from_cache(): Filling out state {state} from cache: {self.cached_state}")
             for key, val in self.cached_state.items():
 
                 if key not in state.keys():
@@ -1530,18 +1530,18 @@ class Device:
             for key, val in state.items():
                 new_state[key] = copy.deepcopy(val) #update with new values
             self.cached_state = new_state
-            log.info(f"add_to_cache: Added {state} to {self.last_state} to create Cached state: {self.cached_state}")
+            logger.debug(f"add_to_cache: Added {state} to {self.last_state} to create Cached state: {self.cached_state}")
 
     def input_trigger(self, tags):
         global event_manager
 
         event = {"device_name": self.name, "tags": tags}
-        log.info(f"Device {self.area.name} Triggered. Event: {event}")
+        logger.debug(f"Device {self.area.name} Triggered. Event: {event}")
 
         event_manager.create_event(event)
 
     def set_state(self, state):
-        log.info(f"Setting state: {state} on {self.name}")
+        logger.debug(f"Setting state: {state} on {self.name}")
         if not self.locked:
             #TODO: FIXME this is a hack, should be done on driver side
             color_type=None
@@ -1556,22 +1556,22 @@ class Device:
                 # I want this here so color/temp can be filled out when it is off
                 # state = self.fillout_state_from_cache(state) #TODO: rethink how this is done in relation to add_to_cache
                 if get_verbose_mode():
-                    log.info(f"Setting state: {state} on {self.name}")
+                    logger.debug(f"Setting state: {state} on {self.name}")
                 #THIS IS A HACK, FIXME
                 if color_type is not None:
                     if color_type == "rgb" and "color_temp" in state:
                         del state["color_temp"]
                     elif color_type == "temp" and "rgb_color" in state:
                         del state["rgb_color"]
-                log.info(f"filled out state from cache: {state}")
+                logger.debug(f"filled out state from cache: {state}")
 
                 applied_state=self.driver.set_state(state)
-                log.info(f"Applied state: {applied_state}")
+                logger.debug(f"Applied state: {applied_state}")
                 self.add_to_cache(applied_state)
-                log.info(f"Updated cache: {self.cached_state}")
+                logger.debug(f"Updated cache: {self.cached_state}")
         else :
             if get_verbose_mode():
-                log.info(f"Device {self.name} is locked, not setting state {state}")
+                logger.debug(f"Device {self.name} is locked, not setting state {state}")
 
     def get(self, value):
         if self.cached_state is None:
@@ -1633,17 +1633,17 @@ class MotionSensorDriver:
         
 
     def trigger_state(self, **kwargs):
-        log.info(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
+        logger.debug(f"Triggering Motion Sensor: {self.name} with value: {kwargs}")
         if self.callback is not None:
             if "tags" in kwargs:
                 tags = kwargs["tags"]
-                log.info(f"tags are {tags}")
+                logger.debug(f"tags are {tags}")
                 self.callback(tags)
             else:
-                log.info(f"No tags in kwargs {kwargs}")
+                logger.debug(f"No tags in kwargs {kwargs}")
 
     def setup_service_triggers(self, device_id):
-        log.info(f"Generating trigger for: {device_id}")
+        logger.debug(f"Generating trigger for: {device_id}")
         trigger_types = ["_ias_zone", "_occupancy"]
         values = ["on", "off"]
 
@@ -1655,9 +1655,9 @@ class MotionSensorDriver:
                 tag = "motion_occupancy"
 
             if f"binary_sensor.{device_id}{trigger_type}" in locals():
-                log.info(f"IN LOCALS: {device_id}")
+                logger.debug(f"IN LOCALS: {device_id}")
             if f"binary_sensor.{device_id}{trigger_type}" in globals():
-                log.info(f"IN GLOBALS: {device_id}")
+                logger.debug(f"IN GLOBALS: {device_id}")
 
             for value in values:
                 triggers.append(
@@ -1672,7 +1672,7 @@ class MotionSensorDriver:
 class ServiceDriver:
     def __init__(self, input_type, device_id):
         self.name = device_id
-        log.info(f"Creating Service Input: {self.name}")
+        logger.debug(f"Creating Service Input: {self.name}")
 
         self.last_state = None
         self.trigger = self.create_trigger()
@@ -1684,7 +1684,7 @@ class ServiceDriver:
     def create_trigger(self, **kwargs):
         @service
         def service_driver_trigger(**kwargs):
-            log.info(f"Triggering Service: with value: {kwargs}")
+            logger.debug(f"Triggering Service: with value: {kwargs}")
             new_event = {}
             if "state" in kwargs:
                 state = kwargs["state"]
@@ -1704,7 +1704,7 @@ class ServiceDriver:
                 else:
                     new_event["device_name"] = self.name
 
-                log.info(f"state: {state}")
+                logger.debug(f"state: {state}")
                 new_event["state"] = state
 
             get_event_manager().create_event(new_event)
@@ -1723,7 +1723,7 @@ class ServiceDriver:
 class PresenceSensorDriver:
     def __init__(self, input_type, device_id):
         self.name = self.create_name(input_type, device_id)
-        log.info(f"Creating Presence Sensor: {self.name}")
+        logger.debug(f"Creating Presence Sensor: {self.name}")
 
         self.last_state = None
         self.trigger = self.setup_service_triggers(device_id)
@@ -1738,7 +1738,7 @@ class PresenceSensorDriver:
         else:
             name = f"{input_type}_{device_id}"
 
-        log.info(f"Creating Presence Sensor: {name}")
+        logger.debug(f"Creating Presence Sensor: {name}")
         return name
 
     def add_callback(self, callback):
@@ -1755,25 +1755,25 @@ class PresenceSensorDriver:
         return ["presence"]
 
     def trigger_state(self, **kwargs):
-        log.info(f"Triggering Presence Sensor: {self.name} with value: {kwargs}")
+        logger.debug(f"Triggering Presence Sensor: {self.name} with value: {kwargs}")
         if self.callback is not None:
             if "tags" in kwargs:
                 tags = kwargs["tags"]
-                log.info(f"tags are {tags}")
+                logger.debug(f"tags are {tags}")
                 self.callback(tags)
             else:
-                log.info(f"No tags in kwargs {kwargs}")
+                logger.debug(f"No tags in kwargs {kwargs}")
 
     def setup_service_triggers(self, device_id):
-        log.info(f"Generating trigger for: {device_id}")
+        logger.debug(f"Generating trigger for: {device_id}")
         values = ["on", "off"]
 
         triggers = []
 
         if f"binary_sensor.{device_id}" in locals():
-            log.info(f"IN LOCALS: {device_id}")
+            logger.debug(f"IN LOCALS: {device_id}")
         if f"binary_sensor.{device_id}" in globals():
-            log.info(f"IN GLOBALS: {device_id}")
+            logger.debug(f"IN GLOBALS: {device_id}")
 
         for value in values:
             triggers.append(
@@ -1815,12 +1815,12 @@ class KaufLight:
         try:
             status = state.get(f"light.{self.name}")
 
-            log.info(f"KaufLight<{self.name}>:get_status(): Getting status {status}")
+            logger.debug(f"KaufLight<{self.name}>:get_status(): Getting status {status}")
         except:
             pass
 
         if status is None or status == "unavailable":
-            log.warning(f"KaufLight<{self.name}>:get_status(): Unable to get status- Returning unknown")
+            logger.warning(f"KaufLight<{self.name}>:get_status(): Unable to get status- Returning unknown")
         return status
 
     def get_valid_state_keys(self):
@@ -1843,13 +1843,13 @@ class KaufLight:
         status = self.get_status()
         if status is None or "off" in status or "unknown" in status or "unavailable" in status:
             return False
-        log.info(f"KaufLight<{self.name}>:is_on(): Returning True: {status}")
+        logger.debug(f"KaufLight<{self.name}>:is_on(): Returning True: {status}")
         return True
 
     # RGB (color)
     def set_rgb(self, color, apply=False):
         self.color = color
-        log.info(f"KaufLight<{self.name}>:set_rgb(): Caching color: {self.color}")
+        logger.debug(f"KaufLight<{self.name}>:set_rgb(): Caching color: {self.color}")
         if apply or self.is_on():
             self.apply_values(rgb_color=self.color)
 
@@ -1859,7 +1859,7 @@ class KaufLight:
         try:
             color = state.get(f"light.{self.name}.rgb_color")
         except:
-            log.warning(f"Unable to get rgb_color from {self.name}")
+            logger.warning(f"Unable to get rgb_color from {self.name}")
 
         self.rgb_color = color
 
@@ -1875,7 +1875,7 @@ class KaufLight:
         try:
             brightness = state.get(f"light.{self.name}.brightness")
         except:
-            log.warning(f"get_brightness(): Unable to get brightness from {self.name}")
+            logger.warning(f"get_brightness(): Unable to get brightness from {self.name}")
 
         if self.is_on():  # brightness reports as 0 when off
             self.brightness = brightness
@@ -1891,11 +1891,11 @@ class KaufLight:
         try:
             temperature = state.get(f"light.{self.name}.color_temp")
         except:
-            log.warning(f"Unable to get color_temp from {self.name}")
+            logger.warning(f"Unable to get color_temp from {self.name}")
 
         if temperature is None or temperature == "null":
             if self.temperature is not None:
-                log.info(f"KaufLight<{self.name}>:get_temperature(): temperature is {temperature}. Getting cached temperature")
+                logger.debug(f"KaufLight<{self.name}>:get_temperature(): temperature is {temperature}. Getting cached temperature")
                 temperature = self.temperature
         else:
             self.temperature = temperature
@@ -1939,7 +1939,7 @@ class KaufLight:
             color_temp = self.get_temperature()
             if color_temp is not None:
                 state["color_temp"] = color_temp
-        log.info(f"KaufLight<{self.name}>:get_state(): Returning state: {state}")
+        logger.debug(f"KaufLight<{self.name}>:get_state(): Returning state: {state}")
         return state
 
     # Apply values
@@ -1960,27 +1960,27 @@ class KaufLight:
 
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
-            # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} color_temp to {self.color_temp }")
+            # logger.debug(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} color_temp to {self.color_temp }")
             self.color_type = "temp"
-            # log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
+            # logger.debug(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
 
         else:
-            # log.info(f"KaufLight<{self.name}>:apply_values(): Neither rgb_color nor color_temp in {new_args}")
+            # logger.debug(f"KaufLight<{self.name}>:apply_values(): Neither rgb_color nor color_temp in {new_args}")
 
-            log.info(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
+            logger.debug(f"KaufLight<{self.name}>:apply_values(): color_type is {self.color_type} -> {new_args}")
             if self.color_type == "rgb":
                 rgb = self.get_rgb()
 
-                log.info(f"KaufLight<{self.name}>:apply_values(): rgb_color not in new_args. self rgb is {rgb}")
+                logger.debug(f"KaufLight<{self.name}>:apply_values(): rgb_color not in new_args. self rgb is {rgb}")
                 if rgb is not None:
                     new_args["rgb_color"] = self.calibrate_color(rgb)
-                    log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting rgb_color to {rgb}")
+                    logger.debug(f"KaufLight<{self.name}>:apply_values(): Supplimenting rgb_color to {rgb}")
             else:
                 temp = self.get_temperature()
-                log.info(f"KaufLight<{self.name}>:apply_values(): color_temp not in new_args. self color_temp is {temp}")
+                logger.debug(f"KaufLight<{self.name}>:apply_values(): color_temp not in new_args. self color_temp is {temp}")
                 if temp is not None:
                     new_args["color_temp"] = temp
-                    log.info(f"KaufLight<{self.name}>:apply_values(): Supplimenting color_temp to {temp}")
+                    logger.debug(f"KaufLight<{self.name}>:apply_values(): Supplimenting color_temp to {temp}")
 
         if (
             "off" in new_args and new_args["off"]
@@ -1997,12 +1997,12 @@ class KaufLight:
 
                 
             try:
-                log.info(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
+                logger.debug(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
 
             except Exception as e:
-                log.warning(
+                logger.warning(
                     f"\nPYSCRIPT: [ERROR 0/1] Failed to set {self.name} {new_args}: {e}"
                 )
                 light.turn_on(entity_id=f"light.{self.name}")
@@ -2061,7 +2061,7 @@ class BlindDriver:
             try:
                 cover.set_cover_position(entity_id=f"cover.{self.name}", position=position)
             except Exception as e:
-                log.warning(f"Failed to set blind {self.name} to {position}% open: {e}")
+                logger.warning(f"Failed to set blind {self.name} to {position}% open: {e}")
             self.last_state = {"closed_percent": percent}
             if self.height:
                 self.last_state["height"] = self.height * (100 - percent) / 100
@@ -2104,7 +2104,7 @@ class SpeakerDriver:
             try:
                 media_player.volume_set(entity_id=f"media_player.{self.name}", volume_level=state["volume"])
             except Exception as e:
-                log.warning(f"Failed to set volume for {self.name}: {e}")
+                logger.warning(f"Failed to set volume for {self.name}: {e}")
         self.last_state.update(state)
         return self.last_state
 
@@ -2145,7 +2145,7 @@ class PlugDriver:
                 else:
                     switch.turn_off(entity_id=f"switch.{self.name}")
             except Exception as e:
-                log.warning(f"Failed to set plug {self.name}: {e}")
+                logger.warning(f"Failed to set plug {self.name}: {e}")
             self.last_state["status"] = 1 if state["status"] else 0
         return self.last_state
 
@@ -2214,7 +2214,7 @@ class FanDriver:
                 else:
                     fan.turn_off(entity_id=f"fan.{self.name}")
             except Exception as e:
-                log.warning(f"Failed to set fan {self.name}: {e}")
+                logger.warning(f"Failed to set fan {self.name}: {e}")
             self.last_state["status"] = 1 if state["status"] else 0
         return self.last_state
 
@@ -2255,7 +2255,7 @@ class TelevisionDriver:
                 else:
                     media_player.turn_off(entity_id=f"media_player.{self.name}")
             except Exception as e:
-                log.warning(f"Failed to set television {self.name}: {e}")
+                logger.warning(f"Failed to set television {self.name}: {e}")
             self.last_state["status"] = 1 if state["status"] else 0
         return self.last_state
 
@@ -2285,11 +2285,11 @@ class TelevisionDriver:
 
 @service
 def test_event():
-    log.info("TEST")
+    logger.debug("TEST")
     unittest.main()
     # reset()
-    # log.info(get_event_manager().area_tree.get_pretty_string())
-    log.info("STARTING TEST EVENT")
+    # logger.debug(get_event_manager().area_tree.get_pretty_string())
+    logger.debug("STARTING TEST EVENT")
     name = "TEST_TRACKER"
     event = {
         "device_name": name,
@@ -2298,7 +2298,7 @@ def test_event():
             "update_tracker" : []
         }
     }
-    log.info(f"\nCreating Event: {event}")
+    logger.debug(f"\nCreating Event: {event}")
 
     event_manager.create_event(event)
 
@@ -2313,7 +2313,7 @@ class TestManager():
         self.event_manager = get_event_manager()
         self.area_tree = get_area_tree()
         self.default_test_area=self.area_tree.get_area(self.default_test_room)
-        log.info(f"AREA DEVICES: {self.default_test_area.get_devices()}")
+        logger.debug(f"AREA DEVICES: {self.default_test_area.get_devices()}")
         self.default_test_light = self._find_light()
         self.default_motion_sensor = self._find_motion_sensor()
 
@@ -2324,7 +2324,7 @@ class TestManager():
 
     def _find_light(self) :
         # for device in self.default_test_area.get_devices() :
-        #     log.info(f"LIGHT: {device.get_name()}")
+        #     logger.debug(f"LIGHT: {device.get_name()}")
         #     if device.get_name().startswith("kauf") :
         #         return device
         return self.area_tree.get_device("kauf_laundry_room_2")
@@ -2334,23 +2334,23 @@ class TestManager():
         tests_passed=0
         failed_tests=[]
         # get all methods in this class and check if their name starts with "test"
-        log.info(dir(self))
+        logger.debug(dir(self))
         for method_name in dir(self):
             if method_name.startswith("test"):
                 if getattr(self, method_name)() :
-                    log.info(f"Test {tests_run+1}: {method_name} PASSED")
+                    logger.debug(f"Test {tests_run+1}: {method_name} PASSED")
 
                     tests_passed+=1
                 else :
-                    log.info(f"Test {tests_run+1}: {method_name} FAILED")
+                    logger.debug(f"Test {tests_run+1}: {method_name} FAILED")
 
                     failed_tests.append(method_name)
                 tests_run+=1
 
-        log.info(f"Tests passed: {tests_passed}/{tests_run}")
+        logger.debug(f"Tests passed: {tests_passed}/{tests_run}")
 
         if len(failed_tests) > 0 :
-            log.info(f"Failed tests: {failed_tests}")
+            logger.debug(f"Failed tests: {failed_tests}")
             return False
         
     # Test methods for merge_data
@@ -2398,24 +2398,24 @@ class TestManager():
         """
         A test function to check setting status functionality by turning on and off from different initial states.
         """
-        log.info("STARTING TEST SETTING STATUS")
+        logger.debug("STARTING TEST SETTING STATUS")
         initial_state=self.default_test_area.get_state()
         # turn on from unknown default state
         self.default_test_area.set_state({"status": 1})
         time.sleep(.1)
         current_state=self.default_test_area.get_state()
         if not current_state["status"] :
-            log.info(f"Failed to turn on from initial state {initial_state}")
+            logger.debug(f"Failed to turn on from initial state {initial_state}")
             return False
         # Turn off from on
         self.default_test_area.set_state({"status": 0})
         time.sleep(.1)
-        log.info(f"Test testting test: current state: {self.default_test_area.get_state()}")
+        logger.debug(f"Test testting test: current state: {self.default_test_area.get_state()}")
         
         current_state=self.default_test_area.get_state()
-        log.info(f"current state: { current_state['status']}")
+        logger.debug(f"current state: { current_state['status']}")
         if current_state["status"] :
-            log.info(f"Failed to turn off from on")
+            logger.debug(f"Failed to turn off from on")
             return False
 
         # Turn on from off
@@ -2423,89 +2423,89 @@ class TestManager():
         time.sleep(.1)
         current_state=self.default_test_area.get_state()
         if not current_state["status"] :
-            log.info(f"Failed to turn on from off")
+            logger.debug(f"Failed to turn on from off")
             return False
 
         return True
 
     def test_setting_cache(self) :
-        log.info("STARTING TEST SETTING CACHE")
+        logger.debug("STARTING TEST SETTING CACHE")
         self.default_test_light.set_state({"status": 1, "rgb_color": [255, 255, 255]})
         time.sleep(.1)
         self.default_test_light.set_state({"status": 0})
         time.sleep(.1)
         state=self.default_test_light.get_state()
         if state["status"] != 0 :
-            log.info(f"test_setting_cache: Failed to set to off {state}")
+            logger.debug(f"test_setting_cache: Failed to set to off {state}")
             return False
         
         if state["rgb_color"] != [255, 255, 255] and state["rgb_color"] != (255, 255, 255) :
-            log.info(f"test_setting_cache: Failed to keep rgb_color {state}")
+            logger.debug(f"test_setting_cache: Failed to keep rgb_color {state}")
             return False
 
-        log.info("test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}")
+        logger.debug("test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}")
         self.default_test_light.add_to_cache({"rgb_color": [255, 0, 255]})
         time.sleep(.1)
         state=self.default_test_light.get_state()
         if state["status"] != 0 or state["rgb_color"] != [255, 0, 255] :
-            log.info(f"test_setting_cache: Failed to update cache {state}")
+            logger.debug(f"test_setting_cache: Failed to update cache {state}")
             return False
 
         return True
 
     def test_set_and_get_color(self):
-        log.info("TEST SETTING AND GETTING COLOR")
+        logger.debug("TEST SETTING AND GETTING COLOR")
         # Set to off as default
-        log.info("TEST: setting status 0 and rgb 000")
+        logger.debug("TEST: setting status 0 and rgb 000")
         self.default_test_area.set_state({"rgb_color": [0, 0, 0], "status":0})
         time.sleep(.1)
         state=self.default_test_area.get_state()
 
         if state["status"] != 0:
-            log.warning(f"test_set_and_get_color: Failed to set to off {state}")
+            logger.warning(f"test_set_and_get_color: Failed to set to off {state}")
             return False
 
         if "rgb_color" in state and state["rgb_color"] != [0, 0, 0] :
-            log.warning(f"Failed to set color while setting off {state}")
+            logger.warning(f"Failed to set color while setting off {state}")
             return False
 
 
-        log.info("TEST: setting rgb while off")
+        logger.debug("TEST: setting rgb while off")
         # Set color while off
         self.default_test_area.set_state({"rgb_color": [255, 255, 255]})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if "rgb_color" in state and state["rgb_color"] != [255, 255, 255] :
-            log.warning(f"TEST: Failed to set color while off {state}")
+            logger.warning(f"TEST: Failed to set color while off {state}")
             return False
         if state["status"] != 0:
-            log.warning(f"TEST: Failed to stay off when setting color {state}")
+            logger.warning(f"TEST: Failed to stay off when setting color {state}")
 
-        log.info("TEST: turning on")
+        logger.debug("TEST: turning on")
         # turn on 
         self.default_test_area.set_state({"status":1})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["status"] != 1:
-            log.warning(f"TEST: Failed to turn on {state}")
+            logger.warning(f"TEST: Failed to turn on {state}")
             return False
 
         if state["rgb_color"] != [255, 255, 255]:
-            log.warning(f"TEST: Failed to keep color that was set while off {state}")
+            logger.warning(f"TEST: Failed to keep color that was set while off {state}")
             return False
 
-        log.info("TEST: setting rgb while on")
+        logger.debug("TEST: setting rgb while on")
 
         # Change color while on 
         self.default_test_area.set_state({"rgb_color": [0, 255, 0]})
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [0, 255, 0] or state["status"] != 1:
-            log.warning(f"TEST: Failed to change color while on {state}")
+            logger.warning(f"TEST: Failed to change color while on {state}")
             return False
             
         
-        log.info(f"TEST: current state: {self.default_test_area.get_state()}")
+        logger.debug(f"TEST: current state: {self.default_test_area.get_state()}")
 
         self.default_test_area.set_state({"rgb_color": [255, 195, 50]})
         time.sleep(.1)
@@ -2515,7 +2515,7 @@ class TestManager():
         time.sleep(.1)
         state=self.default_test_area.get_state()
         if state["rgb_color"] != [255, 195, 50] or state["status"] != 1:
-            log.warning(f"test_set_and_get_color: Failed to persist through toggle {state}")
+            logger.warning(f"test_set_and_get_color: Failed to persist through toggle {state}")
         return True
 
     # TODO:
@@ -2528,7 +2528,7 @@ class TestManager():
 
     # Test combine states
     def test_combine_states(self):
-        log.info("STARTING TEST COMBINE STATES")
+        logger.debug("STARTING TEST COMBINE STATES")
         states = [
             {"status": 1, "brightness": 255, "rgb_color": [255, 255, 0]},
             {"status": 1, "rgb_color": [255, 0, 0]},
@@ -2538,21 +2538,21 @@ class TestManager():
         first_state_result = combine_states(states, strategy="first")
 
         if first_state_result != fist_expected_state:
-            log.warning(f"Expected first state to be {fist_expected_state} but was {first_state_result}")
+            logger.warning(f"Expected first state to be {fist_expected_state} but was {first_state_result}")
             return False
         
         last_expected_state = {"status": 0, "brightness": 100, "rgb_color": [0, 255, 255]}
         last_state_result = combine_states(states, strategy="last")
 
         if last_state_result != last_expected_state:
-            log.warning(f"Expected last state to be {last_expected_state} but was {last_state_result}")
+            logger.warning(f"Expected last state to be {last_expected_state} but was {last_state_result}")
             return False
         
         average_expected_state = {"status": 1, "brightness": 177.5, "rgb_color": [170, 170, 85]}
         average_state_result = combine_states(states, strategy="average")
 
         if average_state_result != average_expected_state:
-            log.warning(f"Expected average state to be {average_expected_state} but was {average_state_result}")
+            logger.warning(f"Expected average state to be {average_expected_state} but was {average_state_result}")
             return False
 
         return True
@@ -2560,9 +2560,9 @@ class TestManager():
 
     def test_motion_sensor(self) :
         # When motion sensor is triggered, the area should be turned off.
-        log.info(f"test_motion_sensor: starting: Area {self.default_test_area}")
+        logger.debug(f"test_motion_sensor: starting: Area {self.default_test_area}")
         initial_state=self.default_test_area.get_state()
-        log.info(f"test_motion_sensor: initial state: {initial_state}")
+        logger.debug(f"test_motion_sensor: initial state: {initial_state}")
         # Set to known initial state
         #TODO: Enable a way of testing this with various state rules. currently most of state us not checkable
         self.default_test_area.set_state({"status": 1, "brightness": 255, "rgb_color": [255, 72, 35]})
@@ -2570,23 +2570,23 @@ class TestManager():
         # Set to off
         self.default_test_area.set_state({"status": 0})
         time.sleep(.1)
-        log.info(f"test_motion_sensor: state after off: {self.default_test_area.get_state()}")
+        logger.debug(f"test_motion_sensor: state after off: {self.default_test_area.get_state()}")
 
         event_manager.create_event({'device_name': self.default_motion_sensor.name, 'tags': ['on', 'motion_occupancy']})
         time.sleep(.2)
         # Check if area is on
         state=self.default_test_area.get_state()
-        log.info(f"test_motion_sensor: state after motion: {state}")
+        logger.debug(f"test_motion_sensor: state after motion: {state}")
         if state['status'] != 1 :
-            log.warning(f"test_motion_sensor: Failed - Expected area to be on after motion sensor trigger but was {state}")
+            logger.warning(f"test_motion_sensor: Failed - Expected area to be on after motion sensor trigger but was {state}")
             return False
         if state["brightness"] != 255 :
-            log.warning(f"test_motion_sensor: Failed - Expected brightness to be 255 but was {state['brightness']}")
+            logger.warning(f"test_motion_sensor: Failed - Expected brightness to be 255 but was {state['brightness']}")
             return False
 
         #TODO: Figure out how to have deterministic states with motion on
         # if state["rgb_color"] != [255, 72, 35]:
-        #     log.warning(f"test_motion_sensor: Failed - Expected rgb_color to be [255, 72, 35] but was {state['rgb_color']}")
+        #     logger.warning(f"test_motion_sensor: Failed - Expected rgb_color to be [255, 72, 35] but was {state['rgb_color']}")
         #     return False
 
 
@@ -2599,7 +2599,7 @@ class TestManager():
         time.sleep(.2)
         state=self.default_test_area.get_state()
         if state['status'] != 0:
-            log.warning(f"Expected area to be off after motion sensor deactivation but was {self.default_test_area.get_state()}")
+            logger.warning(f"Expected area to be off after motion sensor deactivation but was {self.default_test_area.get_state()}")
             return False
 
         # cleanup
@@ -2608,7 +2608,7 @@ class TestManager():
 
 @service 
 def run_tests() :
-    log.info("TEST")
+    logger.debug("TEST")
     test_manager=TestManager()
     test_manager.run_tests()
     
@@ -2621,7 +2621,7 @@ run_tests()
 
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_service_calls(**kwargs):
-    log.info(f"got EVENT_CALL_SERVICE with kwargs={kwargs}")
+    logger.debug(f"got EVENT_CALL_SERVICE with kwargs={kwargs}")
 
 # This monitors other methods of settings lights colors and informs the area tree
 @event_trigger(EVENT_CALL_SERVICE)
@@ -2660,17 +2660,17 @@ def monitor_external_state_setting(**kwargs):
 
             devices=[]
             for device_name in device_names:
-                log.info(f"ATTEMPTING TO SET DEVICE {device_name} TO {state}")
+                logger.debug(f"ATTEMPTING TO SET DEVICE {device_name} TO {state}")
                 device=event_manager.area_tree.get_device(device_name) #FIXME: The names do not match up, need a lookup
                 if device is not None:
                     devices.append(device)
                     device_state=device.get_state()
                     if device_state is not None:
                         if get_state_similarity(device_state, state)<=0.5: 
-                            log.info(f"SETTING DEVICE {device_name} TO {state}")
+                            logger.debug(f"SETTING DEVICE {device_name} TO {state}")
                             # device.set_state(state)
                 else :
-                    log.info(f"DEVICE {device_name} NOT FOUND")
+                    logger.debug(f"DEVICE {device_name} NOT FOUND")
 
 
 ### Tests ###
@@ -2683,7 +2683,7 @@ def monitor_external_state_setting(**kwargs):
 
 @service
 def test_tracks() :
-    log.info("STARTING TEST TRACKS")
+    logger.debug("STARTING TEST TRACKS")
     event_manager = get_event_manager()
     tracker_manager=get_tracker_manager()
     event_manager.create_event({'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']})
@@ -2705,6 +2705,6 @@ def test_tracks() :
 
     # event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
 
-    log.info(tracker_manager.get_pretty_string())
+    logger.debug(tracker_manager.get_pretty_string())
 
 #test_tracks()

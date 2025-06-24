@@ -1,0 +1,12 @@
+connections: tests/scenarios/simple_connections.yml
+persons:
+  - id: p1
+    events:
+      - time: 0
+        room: bedroom
+      - time: 540
+        room: hallway   # leave after nine minutes
+      - time: 1200
+        room: bedroom   # return after eleven more minutes
+expected_final:
+  p1: bedroom

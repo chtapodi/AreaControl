@@ -15,12 +15,14 @@ weight is adjusted based on the `SensorModel`.
 
 ### Sensor Model
 
-`SensorModel` tracks a boolean motion state for every room. When a sensor
-fires the room becomes *active* for the configured cooldown period (default
-7 minutes). While active the probability of presence remains at `1.0` and
-additional triggers in that room are ignored so the window does not extend.
-Once the cooldown elapses the state resets and the probability drops back to
-a small floor value until another event occurs.
+`SensorModel` records motion events and optional presence sensor states for
+each room.  Motion sensors behave like real hardware—they trigger once and
+then remain "on" for 7 minutes before resetting.  The model decays the
+probability of someone still being in the room from `1.0` down to a small
+floor value over this cooldown period.  Presence sensors, if available,
+override the probability entirely: ``True`` means the room is occupied and
+``False`` means it is empty.  A motion event or a ``True`` presence update
+resets the cooldown timer.
 
 ### Particle Updates
 
@@ -43,18 +45,6 @@ triggers and `step()` to progress the trackers when no new events occur.
 Enabling debug mode saves a PNG frame for each step so you can visualize
 the distribution over time.  Call `dump_state()` to retrieve a JSON summary
 of all people and phones.
-Each debug frame includes a side panel with a legend explaining that node
-color represents the tracked person and the alpha channel indicates the
-probability of presence. The panel also logs every sensor event with a
-timestamp alongside the current location estimate so you can follow the
-sequence that produced the plot. The log now appears on the left of the
-image and the triggered room is highlighted in yellow for that frame.
-Only the most recent ten entries are shown to keep the event log readable.
-Passing a room id to `set_highlight_room()` allows highlighting any node
-manually. When debug mode is enabled the tracker also records event and
-estimate history which can be overlaid on each frame. Presence sensors can
-update the model via `record_presence(room, present)` which refreshes all
-trackers and optionally visualizes the change.
 
 ## Example Walk‑through
 
@@ -112,14 +102,8 @@ associated person.  The current state of all trackers can be inspected with
 `dump_state()` which returns JSON.
 
 To enable or disable visual logging, pass `debug=True` and specify a
-`debug_dir` when calling `init_from_yaml()`. Frames are saved under
-date-based folders inside `debug_dir`. Without a `test_name` the path is
-`YYYY/MM/DD/HHMMSS/frame_000001.png`. When `test_name` is provided, frames
-are written to `YYYY/MM/DD/<test_name>/frame_000001.png` and all plots remain
-preserved under this dated directory.  A new folder
-is created whenever no event has occurred for `event_window` seconds (default
-`600`), making it easy to inspect separate sequences or collect files per
-test case.
+`debug_dir` when calling `init_from_yaml()`.  Images are written to that
+folder with names like `frame_000001.png`.
 
 ## Testing
 
@@ -134,4 +118,26 @@ pytest -q
 The tests in `tests/test_advanced_tracker.py` cover loading graphs,
 updating trackers and verifying that debug frames are produced.  They also
 execute several scenarios under `tests/scenarios/`.
+
+## Debug Options
+
+`MultiPersonTracker` accepts two optional arguments to help with automated
+testing:
+
+- `event_window` – history length in seconds used when drawing paths.
+  Older events are discarded.
+- `test_name` – when provided alongside `debug=True`, frames are written to
+  `os.path.join(debug_dir, "tests", test_name)`.
+
+Every call to `process_event()` appends a string `(timestamp person_id room)` to
+`_event_history`.  The last rendered legend lines are available in
+`_last_legend_lines` and include entries like:
+
+```
+p1: 100%
+solid line: estimated path
+dashed orange: true path (tests only)
+```
+
+These options are primarily exercised by `tests/test_advanced_tracker.py`.
 

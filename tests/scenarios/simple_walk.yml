@@ -1,18 +1,10 @@
-name: simple_walk
 connections: tests/scenarios/simple_connections.yml
 persons:
   - id: p1
     events:
       - time: 0
         room: bedroom
-      - time: 600
-        room: hallway
-      - time: 1200
-        room: kitchen
-      - time: 1800
-        room: hallway
-      - time: 2400
-        room: bedroom
-extra_steps: 20
+      - time: 300
+        room: hallway  # leave after five minutes
 expected_final:
-  p1: bedroom
+  p1: hallway
