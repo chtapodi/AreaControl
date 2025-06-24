@@ -170,27 +170,53 @@ class TestAdvancedTracker(unittest.TestCase):
         extra_steps = scenario.get('extra_steps', 10)
 
         current = 0
+        true_locations = {}
+        correct = 0
+        total = 0
         while current <= max_t + extra_steps:
             events = time_events.get(current, [])
             updated = set()
             for pid, room in events:
                 multi.process_event(pid, room, timestamp=current)
                 updated.add(pid)
+                true_locations[pid] = room
 
             multi.step(timestamp=current, skip_ids=updated)
 
+            if events:
+                estimates = multi.estimate_locations()
+                known = list(true_locations.keys())
+                predicted = [estimates.get(pid) for pid in known]
+                actual = [true_locations.get(pid) for pid in known]
+                if sorted(predicted) == sorted(actual):
+                    correct += len(known)
+                else:
+                    for pid in known:
+                        if estimates.get(pid) == true_locations.get(pid):
+                            correct += 1
+                total += len(known)
+
             current += 1
 
-        return multi.estimate_locations(), scenario.get('expected_final', {})
+        accuracy = correct / total if total else 1.0
+
+        return (
+            multi.estimate_locations(),
+            scenario.get('expected_final', {}),
+            accuracy,
+        )
 
     def test_yaml_scenarios(self):
         scenario_dir = os.path.join('tests', 'scenarios')
         for fname in os.listdir(scenario_dir):
             if not fname.endswith('.yml') or 'connections' in fname:
                 continue
-            result, expected = self._run_yaml_scenario(os.path.join(scenario_dir, fname))
+            result, expected, accuracy = self._run_yaml_scenario(
+                os.path.join(scenario_dir, fname)
+            )
             for pid, room in expected.items():
                 self.assertEqual(result.get(pid), room)
+            self.assertGreaterEqual(accuracy, 0.8)
 
 
 if __name__ == '__main__':
