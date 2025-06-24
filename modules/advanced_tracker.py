@@ -20,6 +20,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as patheffects
 
 import networkx as nx
 
@@ -226,12 +227,12 @@ class MultiPersonTracker:
             # Use a deterministic spring layout with spacing based on graph size
             # so plots remain consistent across runs.
             num_nodes = len(self.room_graph.graph.nodes)
-            k = 2.0 / (num_nodes**0.5) if num_nodes else 0.5
+            k = 2.5 / (num_nodes**0.5) if num_nodes else 0.6
             self._layout = nx.spring_layout(
                 self.room_graph.graph,
                 seed=42,
                 k=k,
-                scale=2.0,
+                scale=3.0,
                 iterations=100,
             )
 
@@ -446,6 +447,9 @@ class MultiPersonTracker:
                         color=colors.get(idx % 3, (0, 0, 0)),
                         fontsize=7,
                         ha="center",
+                        path_effects=[
+                            patheffects.withStroke(linewidth=2, foreground="white")
+                        ],
                     )
 
             # Draw estimated path as a continuous line
@@ -514,7 +518,14 @@ class MultiPersonTracker:
             indices = {r: i for i, r in enumerate(rooms)}
             times = [t - self._start_time for t, _ in self._sensor_events]
             ys = [indices[r] for _, r in self._sensor_events]
-            timeline_ax.scatter(times, ys, marker="|", s=200, color="black")
+            timeline_ax.scatter(
+                times,
+                ys,
+                marker="o",
+                s=60,
+                color="black",
+                zorder=3,
+            )
             timeline_ax.set_yticks(list(indices.values()))
             timeline_ax.set_yticklabels(rooms)
             timeline_ax.set_xlabel("Time (s)")
