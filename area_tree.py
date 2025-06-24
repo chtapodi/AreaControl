@@ -2,7 +2,7 @@ import yaml
 from collections import defaultdict
 import copy
 import time
-from logger import Logger
+
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
 try:
@@ -25,8 +25,10 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
 from tracker import TrackManager, Track, Event
 try:
     from adaptive_learning import get_learner
+    from logger import Logger
 except ImportError:
     from modules.adaptive_learning import get_learner
+    from modules.logger import Logger
 import unittest
 
 log = Logger(__name__, globals().get("log"))

@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 import time
 import copy
 import os
-from logger import Logger
+try:
+    from logger import Logger
+except ImportError:
+    from modules.logger import Logger
+
 
 log = Logger(__name__, globals().get("log"))
 

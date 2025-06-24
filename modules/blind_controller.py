@@ -19,7 +19,11 @@ except NameError:
 
     state = DummyState()
 
-from logger import Logger
+try:
+    from logger import Logger
+except ImportError:
+    from modules.logger import Logger
+
 try:
     log  # type: ignore
 except NameError:
