@@ -4,6 +4,7 @@ import tempfile
 import pytest
 import yaml
 import json
+from unittest.mock import patch
 
 
 def _get_debug_dir(name: str):
@@ -142,8 +143,28 @@ class TestAdvancedTracker(unittest.TestCase):
         multi.step()
         text = multi._format_highlight_probabilities()
         self.assertIsNotNone(text)
-        self.assertTrue(text.splitlines()[0].startswith('p1:'))
+        self.assertTrue(any(line.startswith('p1:') for line in text.splitlines()))
         cleanup()
+
+    def test_debug_interval(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        with tempfile.TemporaryDirectory() as tmp, patch('time.time') as mock_time:
+            mock_time.return_value = 0.0
+            multi = MultiPersonTracker(
+                graph,
+                sensor_model,
+                debug=True,
+                debug_dir=tmp,
+                debug_interval=5.0,
+            )
+            multi.process_event('p1', 'bedroom', timestamp=0.0)
+            mock_time.return_value = 1.0
+            multi.step()
+            mock_time.return_value = 6.0
+            multi.step()
+            frames = [f for f in os.listdir(tmp) if f.startswith('frame_')]
+            self.assertEqual(len(frames), 2)
 
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:

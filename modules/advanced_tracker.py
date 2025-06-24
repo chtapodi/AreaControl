@@ -203,6 +203,7 @@ class MultiPersonTracker:
         debug: bool = False,
         debug_dir: str = "debug",
         event_window: int = 300,
+        debug_interval: float = 5.0,
         test_name: Optional[str] = None,
     ):
         self.room_graph = room_graph
@@ -218,6 +219,9 @@ class MultiPersonTracker:
         else:
             self.debug_dir = debug_dir
         self._debug_counter = 0
+        self.debug_interval = debug_interval
+        self._last_plot_time: float = float("-inf")
+        self._updated_since_plot: bool = False
         self._highlight_room: Optional[str] = None
         self._event_history: List[str] = []
         self._estimate_history: Dict[str, List[Tuple[float, str]]] = defaultdict(list)
@@ -242,6 +246,18 @@ class MultiPersonTracker:
         lines = [f"{pid}: {int(prob * 100 + 0.5)}%" for prob, pid in entries]
         return "\n".join(lines)
 
+    def _maybe_visualize(self, current_time: float) -> None:
+        """Render a debug frame if enough time has passed and there was an update."""
+        if not self.debug:
+            return
+        if not self._updated_since_plot:
+            return
+        if current_time - self._last_plot_time < self.debug_interval:
+            return
+        self._visualize(current_time)
+        self._last_plot_time = current_time
+        self._updated_since_plot = False
+
     def process_event(self, person_id: str, room_id: str, timestamp: Optional[float] = None) -> None:
         now = time.time() if timestamp is None else timestamp
         self._event_history.append(f"{now} {person_id} {room_id}")
@@ -255,15 +271,15 @@ class MultiPersonTracker:
             self.trackers[person_id] = tracker
         tracker = person.tracker
         tracker.update(now, sensor_room=room_id)
-        if self.debug:
-            self._visualize(now)
+        self._updated_since_plot = True
+        self._maybe_visualize(now)
 
     def step(self) -> None:
         now = time.time()
         for person in self.people.values():
             person.tracker.update(now)
-        if self.debug:
-            self._visualize(now)
+        self._updated_since_plot = True
+        self._maybe_visualize(now)
 
     def estimate_locations(self) -> Dict[str, str]:
         return {pid: person.tracker.estimate() for pid, person in self.people.items()}
@@ -304,8 +320,8 @@ class MultiPersonTracker:
         self.sensor_model.set_presence(room_id, is_present, now)
         for person in self.people.values():
             person.tracker.update(now)
-        if self.debug:
-            self._visualize(now)
+        self._updated_since_plot = True
+        self._maybe_visualize(now)
 
     def dump_state(self) -> str:
         """Return a JSON representation of current tracker state."""
@@ -434,6 +450,7 @@ def init_from_yaml(
     debug: bool = False,
     debug_dir: str = "debug",
     event_window: int = 300,
+    debug_interval: float = 5.0,
     test_name: Optional[str] = None,
 ) -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
@@ -444,6 +461,7 @@ def init_from_yaml(
         debug=debug,
         debug_dir=debug_dir,
         event_window=event_window,
+        debug_interval=debug_interval,
         test_name=test_name,
     )
 
