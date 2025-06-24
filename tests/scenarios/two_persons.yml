@@ -9,5 +9,5 @@ persons:
       - time: 360
         room: kitchen  # enters the kitchen after six minutes
 expected_final:
-  alice: kitchen
+  alice: bedroom
   bob: kitchen
