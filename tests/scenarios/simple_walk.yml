@@ -4,7 +4,7 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 600
-        room: hallway
+      - time: 420
+        room: hallway  # leave after seven minutes
 expected_final:
   p1: hallway
