@@ -243,6 +243,7 @@ class MultiPersonTracker:
         self._sensor_events: List[Tuple[float, str]] = []
         self._sensor_glow: Dict[str, int] = defaultdict(int)
         self._start_time: float = 0.0
+        self._last_estimates: Dict[str, str] = {}
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             # Use a deterministic spring layout with spacing based on graph size
@@ -275,6 +276,7 @@ class MultiPersonTracker:
         self._debug_counter = 0
         self._event_history = []
         self._estimate_history = []
+        self._last_estimates = {}
         self._estimate_paths = defaultdict(list)
         self._true_paths = defaultdict(list)
         self._sensor_events = []
@@ -318,6 +320,13 @@ class MultiPersonTracker:
             estimate = tracker.estimate()
             self._estimate_paths[person_id].append(estimate)
             self._true_paths[person_id].append(room_id)
+            if estimate != self._last_estimates.get(person_id):
+                prob = tracker.distribution().get(estimate, 0.0)
+                true_loc = tracker.last_sensor_room or "unknown"
+                self._estimate_history.append(
+                    f"{now:.1f}s: {person_id}: {estimate} ({prob:.2f}) true={true_loc}"
+                )
+                self._last_estimates[person_id] = estimate
             self._highlight_room = room_id
             self._sensor_events.append((now, room_id))
             self._sensor_glow[room_id] = 5
@@ -330,21 +339,31 @@ class MultiPersonTracker:
 
     def step(self, timestamp: Optional[float] = None, skip_ids: Optional[set[str]] = None) -> None:
         now = time.time() if timestamp is None else timestamp
+        changed: List[str] = []
         for pid, person in self.people.items():
             if skip_ids and pid in skip_ids:
                 if self.debug:
-                    self._estimate_paths[pid].append(person.tracker.estimate())
+                    est = person.tracker.estimate()
+                    self._estimate_paths[pid].append(est)
+                    if est != self._last_estimates.get(pid):
+                        changed.append(pid)
                 continue
             person.tracker.update(now)
             if self.debug:
-                self._estimate_paths[pid].append(person.tracker.estimate())
-        if self.debug:
-            self._estimate_history.append(
-                f"{now:.1f}s: "
-                + ", ".join(
-                    f"{pid}={person.tracker.estimate()}" for pid, person in self.people.items()
+                est = person.tracker.estimate()
+                self._estimate_paths[pid].append(est)
+                if est != self._last_estimates.get(pid):
+                    changed.append(pid)
+        if self.debug and changed:
+            for pid in changed:
+                person = self.people[pid]
+                est = person.tracker.estimate()
+                prob = person.tracker.distribution().get(est, 0.0)
+                true_loc = person.tracker.last_sensor_room or "unknown"
+                self._estimate_history.append(
+                    f"{now:.1f}s: {pid}: {est} ({prob:.2f}) true={true_loc}"
                 )
-            )
+                self._last_estimates[pid] = est
             self._pending_update = True
             self._maybe_visualize(now)
 
