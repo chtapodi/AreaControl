@@ -5,6 +5,12 @@ import time
 import copy
 import os
 
+try:
+    log
+except NameError:
+    from logger import get_logger
+    log = get_logger(__name__)
+
 
 
 @pyscript_compile

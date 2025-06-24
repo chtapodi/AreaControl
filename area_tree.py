@@ -4,6 +4,12 @@ import copy
 import time
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
+
+try:
+    log
+except NameError:  # pragma: no cover - use wrapper when not provided
+    from logger import get_logger
+    log = get_logger(__name__)
 try:
     from homeassistant.util import color as color_util
 except Exception:  # pragma: no cover - fallback for tests without Home Assistant

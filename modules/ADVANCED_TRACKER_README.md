@@ -48,6 +48,10 @@ probability of presence. The panel also logs every sensor event with a
 timestamp alongside the current location estimate so you can follow the
 sequence that produced the plot. The log now appears on the left of the
 image and the triggered room is highlighted in yellow for that frame.
+Calling ``set_highlight_room(room_id)`` manually highlights a room on the next
+frame and overlays each person's probability of being there. Presence sensors
+can update the tracker through ``record_presence(room, True/False)`` which keeps
+the model consistent even without motion events.
 
 ## Example Walk‑through
 
@@ -103,6 +107,8 @@ Phones can be registered with `add_phone()` and linked to a person via
 `process_phone_data(phone_id, room)` to treat it as a sensor event for the
 associated person.  The current state of all trackers can be inspected with
 `dump_state()` which returns JSON.
+Use ``record_presence(room, True)`` to feed persistent presence sensors and
+refresh the trackers immediately.
 
 To enable or disable visual logging, pass `debug=True` and specify a
 `debug_dir` when calling `init_from_yaml()`. Frames are saved under

@@ -157,6 +157,27 @@ class TestAdvancedTracker(unittest.TestCase):
             for pid, room in expected.items():
                 self.assertEqual(result.get(pid), room)
 
+    def test_presence_overrides_sensor_model(self):
+        sm = SensorModel()
+        sm.set_presence('room1', True)
+        self.assertEqual(sm.likelihood_still_present('room1', current_time=1000.0), 1.0)
+        sm.set_presence('room1', False)
+        self.assertEqual(sm.likelihood_still_present('room1', current_time=1000.0), 0.0)
+
+    def test_format_highlight_probabilities(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sm = SensorModel()
+        tracker = PersonTracker(graph, sm, num_particles=5)
+        for p in tracker.particles:
+            p.room = 'bedroom'
+        multi = MultiPersonTracker(graph, sm, debug=True)
+        multi.people['p1'] = Person('p1', tracker)
+        multi.trackers['p1'] = tracker
+        multi.set_highlight_room('bedroom')
+        text = multi._format_highlight_probabilities()
+        self.assertIn('bedroom', text)
+        self.assertIn('p1=', text)
+
 
 if __name__ == '__main__':
     unittest.main()
