@@ -6,25 +6,34 @@ persons:
       - time: 0
         room: bedroom
       - time: 300
-        room: bedroom
+        room: bathroom
       - time: 600
-        room: bedroom
+        room: hallway
       - time: 900
-        room: bedroom
+        room: office
       - time: 1200
-        room: bedroom
+        room: laundry_room
+      - time: 1500
+        room: laundry_room
+      - time: 1800
+        room: laundry_room
   - id: bob
     events:
       - time: 0
         room: kitchen
       - time: 300
-        room: kitchen
+        room: dining_room_hallway
       - time: 600
-        room: kitchen
+        room: dining_room_1
       - time: 900
-        room: kitchen
+        room: dining_room_3
       - time: 1200
-        room: kitchen
+        room: living_room_back
+      - time: 1500
+        room: living_room_middle
+      - time: 1800
+        room: living_room_front
+extra_steps: 20
 expected_final:
-  alice: bedroom
-  bob: kitchen
+  alice: laundry_room
+  bob: living_room_front

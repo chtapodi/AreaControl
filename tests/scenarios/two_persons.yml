@@ -1,14 +1,23 @@
 name: two_persons
-connections: tests/scenarios/simple_connections.yml
+connections: connections.yml
 persons:
   - id: alice
     events:
       - time: 0
         room: bedroom
+      - time: 300
+        room: hallway
+      - time: 600
+        room: bathroom
   - id: bob
     events:
-      - time: 30
+      - time: 0
         room: kitchen
+      - time: 300
+        room: hallway
+      - time: 600
+        room: office
+extra_steps: 20
 expected_final:
-  alice: bedroom
-  bob: kitchen
+  alice: bathroom
+  bob: office

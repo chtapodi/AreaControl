@@ -1,18 +1,23 @@
-name: simple_walk
+name: missed_event_multi
 connections: tests/scenarios/simple_connections.yml
 persons:
-  - id: p1
+  - id: alice
     events:
       - time: 0
         room: bedroom
       - time: 600
-        room: hallway
-      - time: 1200
         room: kitchen
-      - time: 1800
+      - time: 1200
         room: hallway
-      - time: 2400
+  - id: bob
+    events:
+      - time: 0
+        room: kitchen
+      - time: 600
         room: bedroom
+      - time: 1200
+        room: hallway
 extra_steps: 20
 expected_final:
-  p1: bedroom
+  alice: hallway
+  bob: hallway
