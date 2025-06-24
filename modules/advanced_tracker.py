@@ -234,10 +234,14 @@ class MultiPersonTracker:
 
     def _start_event(self, timestamp: float) -> None:
         """Create a new directory for debug frames for a sensor event."""
-        date_dir = datetime.datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d")
         if self.test_name:
-            path = os.path.join(self.debug_dir, date_dir, "tests", self.test_name)
+            # When running under tests, keep all output under a fixed
+            # "tests" date directory and use the test name instead of
+            # timestamp-based subfolders. This keeps paths stable and
+            # ensures subsequent events append to the same directory.
+            path = os.path.join(self.debug_dir, "tests", self.test_name)
         else:
+            date_dir = datetime.datetime.fromtimestamp(timestamp).strftime("%Y/%m/%d")
             event_dir = datetime.datetime.fromtimestamp(timestamp).strftime("%H%M%S")
             path = os.path.join(self.debug_dir, date_dir, event_dir)
         os.makedirs(path, exist_ok=True)
