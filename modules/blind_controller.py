@@ -19,11 +19,13 @@ except NameError:
 
     state = DummyState()
 
+from logger import Logger
 try:
-    log
+    log  # type: ignore
 except NameError:
-    import logging
-    log = logging.getLogger(__name__)
+    log = Logger(__name__)
+else:
+    log = Logger(__name__, log)
 
 
 class BlindDriver:

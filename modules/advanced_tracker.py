@@ -55,13 +55,23 @@ class SensorModel:
         self.cooldown = cooldown
         self.floor_prob = floor_prob
         self.last_fire: Dict[str, float] = defaultdict(lambda: 0.0)
+        self.presence: Dict[str, bool] = {}
 
     def record_trigger(self, room_id: str, timestamp: Optional[float] = None) -> None:
         self.last_fire[room_id] = time.time() if timestamp is None else timestamp
 
+    def set_presence(self, room_id: str, present: bool) -> None:
+        """Record explicit presence information."""
+        self.presence[room_id] = present
+
     def likelihood_still_present(
         self, room_id: str, current_time: Optional[float] = None
     ) -> float:
+        pres = self.presence.get(room_id)
+        if pres is True:
+            return 1.0
+        if pres is False:
+            return 0.0
         now = time.time() if current_time is None else current_time
         dt = now - self.last_fire.get(room_id, 0.0)
         if dt <= 0:
@@ -104,17 +114,25 @@ class PersonTracker:
             room = random.choice(rooms)
             self.particles.append(Particle(room))
 
+    def move_particles(self, sensor_room: Optional[str] = None) -> None:
+        if sensor_room is not None:
+            for p in self.particles:
+                p.room = sensor_room
+        else:
+            for p in self.particles:
+                p.move(self.room_graph)
+
     def update(self, current_time: float, sensor_room: Optional[str] = None) -> None:
         if sensor_room is not None:
             self.last_sensor_room = sensor_room
             self.last_sensor_time = current_time
             self.sensor_model.record_trigger(sensor_room, current_time)
+        self.move_particles(sensor_room)
 
         for p in self.particles:
-            p.move(self.room_graph)
             weight = self.sensor_model.likelihood_still_present(p.room, current_time)
             if self.last_sensor_room and p.room == self.last_sensor_room:
-                weight *= 1.5
+                weight *= 2.0
             p.weight = weight
 
         # Resample
@@ -196,6 +214,7 @@ class MultiPersonTracker:
         self._current_event_dir: Optional[str] = None
         self._last_event_time: float = 0.0
         self._event_history: List[str] = []
+        self._estimate_history: List[str] = []
         self._highlight_room: Optional[str] = None
         self._estimate_paths: Dict[str, List[str]] = defaultdict(list)
         self._true_paths: Dict[str, List[str]] = defaultdict(list)
@@ -226,6 +245,7 @@ class MultiPersonTracker:
         self._last_event_time = timestamp
         self._debug_counter = 0
         self._event_history = []
+        self._estimate_history = []
         self._estimate_paths = defaultdict(list)
         self._true_paths = defaultdict(list)
 
@@ -265,6 +285,13 @@ class MultiPersonTracker:
             if self.debug:
                 self._estimate_paths[pid].append(person.tracker.estimate())
         if self.debug:
+            self._estimate_history.append(
+                f"{now:.1f}s: "
+                + ", ".join(
+                    f"{pid}={person.tracker.estimate()}" for pid, person in self.people.items()
+                )
+            )
+        if self.debug:
             if (
                 self._current_event_dir is None
                 or now - self._last_event_time > self.event_window
@@ -274,6 +301,33 @@ class MultiPersonTracker:
 
     def estimate_locations(self) -> Dict[str, str]:
         return {pid: person.tracker.estimate() for pid, person in self.people.items()}
+
+    def set_highlight_room(self, room_id: Optional[str]) -> None:
+        self._highlight_room = room_id
+
+    def _format_highlight_probabilities(self) -> str:
+        if not self._highlight_room:
+            return ""
+        parts = []
+        for pid, person in self.people.items():
+            prob = person.tracker.distribution().get(self._highlight_room, 0.0)
+            parts.append(f"{pid}:{prob:.2f}")
+        if not parts:
+            return ""
+        return f"{self._highlight_room}: " + ", ".join(parts)
+
+    def record_presence(self, room_id: str, present: bool, timestamp: Optional[float] = None) -> None:
+        now = time.time() if timestamp is None else timestamp
+        self.sensor_model.set_presence(room_id, present)
+        for pid, person in self.people.items():
+            person.tracker.update(now)
+        if self.debug:
+            self._highlight_room = room_id
+            self._event_history.append(
+                f"{now:.1f}s: presence {room_id}={present}"
+            )
+            self._visualize(now)
+            self._highlight_room = None
 
     def add_phone(self, phone_id: str) -> Phone:
         """Create a phone entry if needed and return it."""
@@ -466,6 +520,32 @@ class MultiPersonTracker:
                 0.02,
                 log_start - (idx + 1) * 0.04,
                 message,
+                fontsize=9,
+                ha="left",
+                va="top",
+            )
+
+        # Highlight probabilities
+        if self._highlight_room:
+            prob_text = self._format_highlight_probabilities()
+            if prob_text:
+                fig.text(
+                    0.72,
+                    log_start,
+                    prob_text,
+                    fontsize=9,
+                    ha="left",
+                    va="top",
+                )
+
+        # Estimate history log
+        est_start = log_start - (len(self._event_history[-10:]) + 1) * 0.04
+        fig.text(0.72, est_start, "Estimates:", fontsize=9, ha="left", va="top")
+        for idx, line in enumerate(self._estimate_history[-10:]):
+            fig.text(
+                0.72,
+                est_start - (idx + 1) * 0.04,
+                line,
                 fontsize=9,
                 ha="left",
                 va="top",

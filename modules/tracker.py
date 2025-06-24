@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import time
 import copy
 import os
+from logger import Logger
+
+log = Logger(__name__, globals().get("log"))
 
 
 
