@@ -272,7 +272,12 @@ class MultiPersonTracker:
         os.makedirs(path, exist_ok=True)
         self._current_event_dir = path
         self._last_event_time = timestamp
-        self._debug_counter = 0
+        # When running under tests with a fixed `test_name`, keep incrementing
+        # the frame counter across events so previously saved images aren't
+        # overwritten.  Without a `test_name` each event gets its own folder and
+        # the counter can safely reset.
+        if not self.test_name:
+            self._debug_counter = 0
         self._event_history = []
         self._estimate_history = []
         self._estimate_paths = defaultdict(list)
