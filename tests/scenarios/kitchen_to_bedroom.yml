@@ -4,9 +4,9 @@ persons:
     events:
       - time: 0
         room: kitchen
-      - time: 15
-        room: hallway
-      - time: 30
-        room: bedroom
+      - time: 480
+        room: hallway  # walk to hallway after eight minutes
+      - time: 600
+        room: bedroom  # arrive two minutes later
 expected_final:
   p1: bedroom
