@@ -1,3 +1,4 @@
+name: two_people_apart
 connections: connections.yml
 persons:
   - id: alice

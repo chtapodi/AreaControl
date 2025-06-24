@@ -1,3 +1,4 @@
+name: walk_across_house
 connections: connections.yml
 persons:
   - id: walker

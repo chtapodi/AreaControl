@@ -1,3 +1,4 @@
+name: two_people_crossing
 connections: connections.yml
 persons:
   - id: p1
