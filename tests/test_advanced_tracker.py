@@ -1,6 +1,7 @@
 import os
 import unittest
 import tempfile
+import datetime
 import pytest
 import yaml
 import json
@@ -51,7 +52,10 @@ class TestAdvancedTracker(unittest.TestCase):
                 if any(f.startswith('frame_') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
-            self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
+            date_dir = datetime.datetime.now().strftime('%Y/%m/%d')
+            self.assertTrue(
+                event_dirs[0].endswith(os.path.join(date_dir, self._testMethodName))
+            )
             contents = os.listdir(event_dirs[0])
             self.assertTrue(
                 any(f.startswith('frame_') and f.endswith('.png') for f in contents)
@@ -90,7 +94,10 @@ class TestAdvancedTracker(unittest.TestCase):
                 if any(f.startswith('frame_') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
-            self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
+            date_dir = datetime.datetime.fromtimestamp(0).strftime('%Y/%m/%d')
+            self.assertTrue(
+                event_dirs[0].endswith(os.path.join(date_dir, self._testMethodName))
+            )
 
     def test_phone_association_and_state(self):
         graph = load_room_graph_from_yaml('connections.yml')
