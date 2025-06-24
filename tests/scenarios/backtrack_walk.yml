@@ -5,15 +5,15 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 300
+      - time: 240
         room: hallway
-      - time: 600
+      - time: 480
         room: kitchen
-      - time: 900
+      - time: 840
         room: dining_room
-      - time: 1200
+      - time: 1080
         room: hallway
-      - time: 1500
+      - time: 1440
         room: bedroom
 expected_final:
   wanderer: bedroom

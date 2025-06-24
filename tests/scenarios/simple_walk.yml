@@ -5,13 +5,13 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 600
+      - time: 300
         room: hallway
-      - time: 1200
+      - time: 540
         room: kitchen
-      - time: 1800
+      - time: 960
         room: hallway
-      - time: 2400
+      - time: 1260
         room: bedroom
 extra_steps: 20
 expected_final:
