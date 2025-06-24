@@ -218,6 +218,7 @@ class MultiPersonTracker:
         debug_dir: str = "debug",
         event_window: int = 600,
         test_name: Optional[str] = None,
+        min_plot_time: float = 5.0,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
@@ -228,9 +229,12 @@ class MultiPersonTracker:
         self.debug_dir = debug_dir
         self.event_window = event_window
         self.test_name = test_name
+        self._min_plot_time = float(min_plot_time)
         self._debug_counter = 0
         self._current_event_dir: Optional[str] = None
         self._last_event_time: float = 0.0
+        self._last_plot_time: float = 0.0
+        self._pending_update: bool = False
         self._event_history: List[str] = []
         self._estimate_history: List[str] = []
         self._highlight_room: Optional[str] = None
@@ -277,6 +281,21 @@ class MultiPersonTracker:
         self._sensor_glow = defaultdict(int)
         self._start_time = timestamp
 
+    def _maybe_visualize(self, now: float) -> None:
+        """Save a debug frame if enough time has passed and there was an update."""
+        if (
+            self._pending_update
+            and now - self._last_plot_time >= self._min_plot_time
+        ):
+            if (
+                self._current_event_dir is None
+                or now - self._last_event_time > self.event_window
+            ):
+                self._start_event(now)
+            self._visualize(now)
+            self._last_plot_time = now
+            self._pending_update = False
+
     def process_event(
         self, person_id: str, room_id: str, timestamp: Optional[float] = None
     ) -> None:
@@ -305,7 +324,8 @@ class MultiPersonTracker:
             self._event_history.append(
                 f"{now:.1f}s: motion {room_id} fired, est={estimate}"
             )
-            self._visualize(now)
+            self._pending_update = True
+            self._maybe_visualize(now)
             self._highlight_room = None
 
     def step(self, timestamp: Optional[float] = None, skip_ids: Optional[set[str]] = None) -> None:
@@ -325,12 +345,8 @@ class MultiPersonTracker:
                     f"{pid}={person.tracker.estimate()}" for pid, person in self.people.items()
                 )
             )
-            if (
-                self._current_event_dir is None
-                or now - self._last_event_time > self.event_window
-            ):
-                self._start_event(now)
-            self._visualize(now)
+            self._pending_update = True
+            self._maybe_visualize(now)
 
     def estimate_locations(self) -> Dict[str, str]:
         return {pid: person.tracker.estimate() for pid, person in self.people.items()}
@@ -361,7 +377,8 @@ class MultiPersonTracker:
             self._event_history.append(
                 f"{now:.1f}s: presence {room_id}={present}"
             )
-            self._visualize(now)
+            self._pending_update = True
+            self._maybe_visualize(now)
             self._highlight_room = None
 
     def add_phone(self, phone_id: str) -> Phone:

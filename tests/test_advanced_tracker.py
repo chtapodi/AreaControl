@@ -42,6 +42,7 @@ class TestAdvancedTracker(unittest.TestCase):
                 debug=True,
                 debug_dir=tmp,
                 test_name=self._testMethodName,
+                min_plot_time=0.0,
             )
             multi.process_event('p1', 'bedroom')
             multi.step()
@@ -81,6 +82,7 @@ class TestAdvancedTracker(unittest.TestCase):
                 debug_dir=tmp,
                 event_window=600,
                 test_name=self._testMethodName,
+                min_plot_time=0.0,
             )
             multi.process_event('p1', 'bedroom', timestamp=0.0)
             multi.process_event('p1', 'kitchen', timestamp=1000.0)
@@ -152,7 +154,12 @@ class TestAdvancedTracker(unittest.TestCase):
 
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
-        multi = MultiPersonTracker(graph, sensor_model, test_name=scenario_name)
+        multi = MultiPersonTracker(
+            graph,
+            sensor_model,
+            test_name=scenario_name,
+            min_plot_time=scenario.get('min_plot_time', 5.0),
+        )
 
         # Build mapping of time -> list of (pid, room)
         time_events = {}
