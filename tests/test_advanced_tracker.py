@@ -159,9 +159,7 @@ class TestAdvancedTracker(unittest.TestCase):
                 multi.process_event(pid, room, timestamp=current)
                 updated.add(pid)
 
-            for pid, tracker in multi.trackers.items():
-                if pid not in updated:
-                    tracker.update(current)
+            multi.step(timestamp=current, skip_ids=updated)
 
             current += 1
 

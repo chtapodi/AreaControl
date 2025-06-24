@@ -48,6 +48,7 @@ probability of presence. The panel also logs every sensor event with a
 timestamp alongside the current location estimate so you can follow the
 sequence that produced the plot. The log now appears on the left of the
 image and the triggered room is highlighted in yellow for that frame.
+Only the most recent ten entries are shown to keep the event log readable.
 Passing a room id to `set_highlight_room()` allows highlighting any node
 manually. When debug mode is enabled the tracker also records event and
 estimate history which can be overlaid on each frame. Presence sensors can

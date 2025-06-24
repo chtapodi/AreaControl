@@ -291,9 +291,13 @@ class MultiPersonTracker:
             self._visualize(now)
             self._highlight_room = None
 
-    def step(self) -> None:
-        now = time.time()
+    def step(self, timestamp: Optional[float] = None, skip_ids: Optional[set[str]] = None) -> None:
+        now = time.time() if timestamp is None else timestamp
         for pid, person in self.people.items():
+            if skip_ids and pid in skip_ids:
+                if self.debug:
+                    self._estimate_paths[pid].append(person.tracker.estimate())
+                continue
             person.tracker.update(now)
             if self.debug:
                 self._estimate_paths[pid].append(person.tracker.estimate())
@@ -304,7 +308,6 @@ class MultiPersonTracker:
                     f"{pid}={person.tracker.estimate()}" for pid, person in self.people.items()
                 )
             )
-        if self.debug:
             if (
                 self._current_event_dir is None
                 or now - self._last_event_time > self.event_window
