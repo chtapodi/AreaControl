@@ -234,9 +234,15 @@ class MultiPersonTracker:
         """Return formatted probability list for the highlighted room."""
         if not self._highlight_room:
             return None
+        now = time.time()
         entries = []
         for pid, tracker in self.trackers.items():
-            prob = tracker.distribution().get(self._highlight_room, 0.0)
+            if tracker.last_sensor_room == self._highlight_room:
+                prob = self.sensor_model.likelihood_still_present(
+                    self._highlight_room, current_time=now
+                )
+            else:
+                prob = 0.0
             entries.append((prob, pid))
         entries.sort(reverse=True)
         lines = [f"{pid}: {int(prob * 100 + 0.5)}%" for prob, pid in entries]

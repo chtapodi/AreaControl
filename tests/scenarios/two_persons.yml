@@ -6,8 +6,8 @@ persons:
         room: bedroom
   - id: bob
     events:
-      - time: 420
-        room: kitchen  # enters the kitchen after seven minutes
+      - time: 360
+        room: kitchen  # enters the kitchen after six minutes
 expected_final:
   alice: kitchen
   bob: kitchen

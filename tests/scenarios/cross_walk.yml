@@ -4,17 +4,17 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 420
-        room: hallway   # moves after seven minutes
       - time: 480
-        room: kitchen   # reaches the kitchen shortly after
+        room: hallway   # moves after eight minutes
+      - time: 540
+        room: kitchen   # reaches the kitchen a minute later
   - id: bob
     events:
-      - time: 60
+      - time: 180
         room: kitchen
-      - time: 480
-        room: hallway
       - time: 540
+        room: hallway
+      - time: 720
         room: bedroom
 expected_final:
   alice: kitchen
