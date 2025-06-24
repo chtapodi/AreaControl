@@ -19,6 +19,10 @@ import yaml
 import matplotlib
 
 matplotlib.use("Agg")
+
+# Default delay between saved debug frames. A larger value keeps the number
+# of generated images manageable during long test scenarios.
+DEFAULT_MIN_PLOT_TIME = 30.0
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as patheffects
 
@@ -218,7 +222,7 @@ class MultiPersonTracker:
         debug_dir: str = "debug",
         event_window: int = 600,
         test_name: Optional[str] = None,
-        min_plot_time: float = 5.0,
+        min_plot_time: float = DEFAULT_MIN_PLOT_TIME,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
