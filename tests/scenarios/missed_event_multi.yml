@@ -5,17 +5,17 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 600
+      - time: 390
         room: kitchen
-      - time: 1200
+      - time: 780
         room: hallway
   - id: bob
     events:
       - time: 0
         room: kitchen
-      - time: 600
+      - time: 330
         room: bedroom
-      - time: 1200
+      - time: 780
         room: hallway
 extra_steps: 20
 expected_final:

@@ -5,9 +5,9 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 600
+      - time: 420
         room: kitchen
-      - time: 1200
+      - time: 870
         room: hallway
 extra_steps: 20
 expected_final:

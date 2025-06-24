@@ -5,33 +5,33 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 300
+      - time: 240
         room: bathroom
-      - time: 600
+      - time: 540
         room: hallway
-      - time: 900
+      - time: 840
         room: office
-      - time: 1200
+      - time: 1080
         room: laundry_room
-      - time: 1500
+      - time: 1440
         room: laundry_room
-      - time: 1800
+      - time: 1680
         room: laundry_room
   - id: bob
     events:
       - time: 0
         room: kitchen
-      - time: 300
+      - time: 210
         room: dining_room_hallway
-      - time: 600
+      - time: 450
         room: dining_room_1
-      - time: 900
+      - time: 720
         room: dining_room_3
-      - time: 1200
+      - time: 1050
         room: living_room_back
-      - time: 1500
+      - time: 1320
         room: living_room_middle
-      - time: 1800
+      - time: 1590
         room: living_room_front
 extra_steps: 20
 expected_final:

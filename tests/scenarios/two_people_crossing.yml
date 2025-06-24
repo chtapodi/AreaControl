@@ -5,21 +5,21 @@ persons:
     events:
       - time: 0
         room: bedroom
-      - time: 300
+      - time: 180
         room: living_room_hallway
-      - time: 600
+      - time: 420
         room: dining_room_hallway
-      - time: 900
+      - time: 660
         room: kitchen
   - id: p2
     events:
       - time: 0
         room: kitchen
-      - time: 300
+      - time: 210
         room: dining_room_hallway
-      - time: 600
+      - time: 450
         room: living_room_hallway
-      - time: 900
+      - time: 690
         room: bedroom
 expected_final:
   p1: kitchen
