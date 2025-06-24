@@ -166,13 +166,13 @@ class TestAdvancedTracker(unittest.TestCase):
             frames = [f for f in os.listdir(tmp) if f.startswith('frame_')]
             self.assertEqual(len(frames), 2)
 
-    def _run_yaml_scenario(self, path: str):
+    def _run_yaml_scenario(self, path: str, *, debug: bool = False):
         with open(path, 'r') as f:
             scenario = yaml.safe_load(f)
 
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
-        multi = MultiPersonTracker(graph, sensor_model, debug=False)
+        multi = MultiPersonTracker(graph, sensor_model, debug=debug)
 
         # Build mapping of time -> list of (pid, room)
         time_events = {}
@@ -200,6 +200,9 @@ class TestAdvancedTracker(unittest.TestCase):
             for pid, tracker in multi.trackers.items():
                 if pid not in updated:
                     tracker.update(current)
+
+            multi._updated_since_plot = True
+            multi._maybe_visualize(current)
 
             current += 1
 

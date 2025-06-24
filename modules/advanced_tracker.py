@@ -274,8 +274,9 @@ class MultiPersonTracker:
         self._updated_since_plot = True
         self._maybe_visualize(now)
 
-    def step(self) -> None:
-        now = time.time()
+    def step(self, timestamp: Optional[float] = None) -> None:
+        """Advance all trackers and maybe render a debug frame."""
+        now = time.time() if timestamp is None else timestamp
         for person in self.people.values():
             person.tracker.update(now)
         self._updated_since_plot = True
