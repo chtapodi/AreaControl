@@ -121,7 +121,7 @@ is created whenever no event has occurred for `event_window` seconds (default
 `600`), making it easy to inspect separate sequences or collect files per
 test case.
 The frequency of saved frames is controlled by `min_plot_time` which defaults
-to five seconds. A new image is only written when at least this much time has
+to 30 seconds. A new image is only written when at least this much time has
 passed since the last frame and the tracker state has changed. Scenario YAML
 files can override the value by including a `min_plot_time` field.
 

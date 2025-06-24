@@ -12,6 +12,7 @@ from modules.advanced_tracker import (
     SensorModel,
     PersonTracker,
     MultiPersonTracker,
+    DEFAULT_MIN_PLOT_TIME,
     Phone,
     Person,
 )
@@ -158,7 +159,7 @@ class TestAdvancedTracker(unittest.TestCase):
             graph,
             sensor_model,
             test_name=scenario_name,
-            min_plot_time=scenario.get('min_plot_time', 5.0),
+            min_plot_time=scenario.get('min_plot_time', DEFAULT_MIN_PLOT_TIME),
         )
 
         # Build mapping of time -> list of (pid, room)
