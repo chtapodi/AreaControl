@@ -113,7 +113,8 @@ To enable or disable visual logging, pass `debug=True` and specify a
 `debug_dir` when calling `init_from_yaml()`. Frames are saved under
 date-based folders inside `debug_dir`. Without a `test_name` the path is
 `YYYY/MM/DD/HHMMSS/frame_000001.png`. When `test_name` is provided, frames
-are written to `YYYY/MM/DD/tests/<test_name>/frame_000001.png`.  A new folder
+are written to `YYYY/MM/DD/<test_name>/frame_000001.png` and all plots remain
+preserved under this dated directory.  A new folder
 is created whenever no event has occurred for `event_window` seconds (default
 `600`), making it easy to inspect separate sequences or collect files per
 test case.
