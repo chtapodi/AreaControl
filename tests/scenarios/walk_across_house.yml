@@ -46,4 +46,4 @@ persons:
         room: laundry_room
 extra_steps: 100
 expected_final:
-  walker: office
+  walker: laundry_room
