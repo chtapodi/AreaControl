@@ -130,9 +130,11 @@ class TestAdvancedTracker(unittest.TestCase):
         with open(path, 'r') as f:
             scenario = yaml.safe_load(f)
 
+        scenario_name = scenario.get('name') or os.path.splitext(os.path.basename(path))[0]
+
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
-        multi = MultiPersonTracker(graph, sensor_model)
+        multi = MultiPersonTracker(graph, sensor_model, test_name=scenario_name)
 
         # Build mapping of time -> list of (pid, room)
         time_events = {}

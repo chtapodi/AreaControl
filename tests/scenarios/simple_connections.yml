@@ -1,3 +1,4 @@
+name: simple_connections
 connections:
   - bedroom: hallway
   - hallway: kitchen

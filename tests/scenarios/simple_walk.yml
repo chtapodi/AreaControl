@@ -1,3 +1,4 @@
+name: simple_walk
 connections: tests/scenarios/simple_connections.yml
 persons:
   - id: p1

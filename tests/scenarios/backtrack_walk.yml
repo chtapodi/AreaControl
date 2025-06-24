@@ -1,3 +1,4 @@
+name: backtrack_walk
 connections: connections.yml
 persons:
   - id: wanderer
