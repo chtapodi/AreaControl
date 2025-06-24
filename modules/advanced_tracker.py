@@ -11,7 +11,7 @@ import time
 import random
 import datetime
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 import json
 import os
@@ -218,6 +218,9 @@ class MultiPersonTracker:
         self._highlight_room: Optional[str] = None
         self._estimate_paths: Dict[str, List[str]] = defaultdict(list)
         self._true_paths: Dict[str, List[str]] = defaultdict(list)
+        self._sensor_events: List[Tuple[float, str]] = []
+        self._sensor_glow: Dict[str, int] = defaultdict(int)
+        self._start_time: float = 0.0
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
             # Use a deterministic spring layout with spacing based on graph size
@@ -252,6 +255,9 @@ class MultiPersonTracker:
         self._estimate_history = []
         self._estimate_paths = defaultdict(list)
         self._true_paths = defaultdict(list)
+        self._sensor_events = []
+        self._sensor_glow = defaultdict(int)
+        self._start_time = timestamp
 
     def process_event(
         self, person_id: str, room_id: str, timestamp: Optional[float] = None
@@ -276,6 +282,8 @@ class MultiPersonTracker:
             self._estimate_paths[person_id].append(estimate)
             self._true_paths[person_id].append(room_id)
             self._highlight_room = room_id
+            self._sensor_events.append((now, room_id))
+            self._sensor_glow[room_id] = 5
             self._event_history.append(
                 f"{now:.1f}s: motion {room_id} fired, est={estimate}"
             )
@@ -327,6 +335,8 @@ class MultiPersonTracker:
             person.tracker.update(now)
         if self.debug:
             self._highlight_room = room_id
+            self._sensor_events.append((now, room_id))
+            self._sensor_glow[room_id] = 5
             self._event_history.append(
                 f"{now:.1f}s: presence {room_id}={present}"
             )
@@ -387,11 +397,18 @@ class MultiPersonTracker:
         return json.dumps(data)
 
     def _visualize(self, current_time: float) -> None:
+        """Create a debug figure showing tracker state."""
         plt.clf()
-        # Bigger figure for improved readability
-        fig, ax = plt.subplots(figsize=(16, 10))
+        fig = plt.figure(figsize=(16, 10))
+        gs = fig.add_gridspec(2, 2, width_ratios=[3, 1], height_ratios=[3, 1])
+        ax = fig.add_subplot(gs[0, 0])
+        timeline_ax = fig.add_subplot(gs[1, 0])
+        info_ax = fig.add_subplot(gs[:, 1])
+        info_ax.axis("off")
+
+        graph = self.room_graph.graph
         nx.draw_networkx(
-            self.room_graph.graph,
+            graph,
             pos=self._layout,
             ax=ax,
             node_color="skyblue",
@@ -401,63 +418,68 @@ class MultiPersonTracker:
             font_color="black",
         )
 
-        colors = {
-            0: (1, 0, 0),
-            1: (0, 1, 0),
-            2: (0, 0, 1),
-        }
+        colors = {0: (1, 0, 0), 1: (0, 1, 0), 2: (0, 0, 1)}
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
-            for node in self.room_graph.graph.nodes:
+            for node in graph.nodes:
                 intensity = dist.get(node, 0.0)
                 base = colors.get(idx % 3, (0, 0, 0))
                 node_colors.append((*base, intensity))
             nx.draw_networkx_nodes(
-                self.room_graph.graph,
+                graph,
                 pos=self._layout,
-                nodelist=list(self.room_graph.graph.nodes),
+                nodelist=list(graph.nodes),
                 node_color=node_colors,
                 node_size=600,
                 ax=ax,
             )
 
-            # Draw estimated path arrows
-            path = self._estimate_paths.get(pid, [])
-            for start, end in zip(path[:-1], path[1:]):
-                start_pos = self._layout[start]
-                end_pos = self._layout[end]
-                ax.annotate(
-                    "",
-                    xy=end_pos,
-                    xytext=start_pos,
-                    arrowprops=dict(
-                        arrowstyle="->",
+            # Numeric probabilities near nodes
+            for node, pos in self._layout.items():
+                prob = dist.get(node, 0.0)
+                if prob > 0.01:
+                    ax.text(
+                        pos[0],
+                        pos[1] + 0.1 + 0.05 * idx,
+                        f"{prob:.2f}",
                         color=colors.get(idx % 3, (0, 0, 0)),
-                        lw=2,
-                    ),
+                        fontsize=7,
+                        ha="center",
+                    )
+
+            # Draw estimated path as a continuous line
+            path = self._estimate_paths.get(pid, [])
+            if len(path) > 1:
+                xs, ys = zip(*(self._layout[p] for p in path))
+                ax.plot(
+                    xs,
+                    ys,
+                    color=colors.get(idx % 3, (0, 0, 0)),
+                    lw=2,
+                    marker="o",
+                    ms=4,
                 )
 
-            # If we have ground truth for tests, draw it too
+            # Ground truth path for tests
             if self.test_name:
                 true_path = self._true_paths.get(pid, [])
-                for start, end in zip(true_path[:-1], true_path[1:]):
-                    start_pos = self._layout[start]
-                    end_pos = self._layout[end]
-                    ax.annotate(
-                        "",
-                        xy=end_pos,
-                        xytext=start_pos,
-                        arrowprops=dict(
-                            arrowstyle="->",
-                            color="orange",
-                            lw=2,
-                            linestyle="dashed",
-                        ),
+                if len(true_path) > 1:
+                    xs, ys = zip(*(self._layout[p] for p in true_path))
+                    ax.plot(
+                        xs,
+                        ys,
+                        color="orange",
+                        lw=2,
+                        ls="dashed",
+                        marker="o",
+                        ms=4,
                     )
+
+        # Highlight current sensor room strongly
         if self._highlight_room:
             nx.draw_networkx_nodes(
-                self.room_graph.graph,
+                graph,
                 pos=self._layout,
                 nodelist=[self._highlight_room],
                 node_color="yellow",
@@ -466,62 +488,80 @@ class MultiPersonTracker:
                 node_size=800,
                 ax=ax,
             )
+
+        # Draw fading glow for recent sensors
+        for room, count in list(self._sensor_glow.items()):
+            if count > 0:
+                nx.draw_networkx_nodes(
+                    graph,
+                    pos=self._layout,
+                    nodelist=[room],
+                    node_color="yellow",
+                    alpha=0.3,
+                    node_size=1000,
+                    ax=ax,
+                )
+                self._sensor_glow[room] -= 1
+            else:
+                del self._sensor_glow[room]
+
         ax.set_title(f"t={current_time:.1f}", fontsize=13)
         ax.axis("off")
 
-        # Debug text overlay
+        # Sensor activation timeline
+        if self._sensor_events:
+            rooms = sorted({r for _, r in self._sensor_events})
+            indices = {r: i for i, r in enumerate(rooms)}
+            times = [t - self._start_time for t, _ in self._sensor_events]
+            ys = [indices[r] for _, r in self._sensor_events]
+            timeline_ax.scatter(times, ys, marker="|", s=200, color="black")
+            timeline_ax.set_yticks(list(indices.values()))
+            timeline_ax.set_yticklabels(rooms)
+            timeline_ax.set_xlabel("Time (s)")
+            timeline_ax.set_title("Sensor activations")
+            timeline_ax.set_xlim(0, max(1.0, current_time - self._start_time + 1))
+            timeline_ax.set_ylim(-1, len(rooms))
+            timeline_ax.axvline(current_time - self._start_time, color="gray", ls="--")
+            timeline_ax.grid(True, axis="x", linestyle="--", alpha=0.5)
+        else:
+            timeline_ax.text(0.5, 0.5, "No sensor data", ha="center", va="center")
+            timeline_ax.set_xticks([])
+            timeline_ax.set_yticks([])
+
+        # Build legend and textual info
         if self._current_event_dir:
             event_name = os.path.relpath(self._current_event_dir, self.debug_dir)
         else:
             event_name = "no_event"
-        fig.suptitle(f"event: {event_name}", y=0.98, fontsize=13)
+        info_ax.text(0.0, 0.98, f"event: {event_name}", fontsize=10, ha="left", va="top")
         for idx, (pid, person) in enumerate(self.people.items()):
             text = f"{pid}: est={person.tracker.estimate()}"
             if person.tracker.last_sensor_room:
                 text += f", last={person.tracker.last_sensor_room}"
-            fig.text(
-                0.01,
-                0.92 - idx * 0.04,
-                text,
-                fontsize=9,
-                ha="left",
-                va="top",
-            )
+            info_ax.text(0.0, 0.92 - idx * 0.05, text, fontsize=9, ha="left", va="top")
 
-        # Legend for node colors and alpha
         legend_lines = [
             "Legend:",
             "  Node color: person id",
             "  Alpha: probability",
         ]
-
         color_names = {0: "red", 1: "green", 2: "blue"}
         for idx, pid in enumerate(self.people.keys()):
             color_name = color_names.get(idx % 3, "unknown")
             legend_lines.append(f"  {pid}: {color_name}")
-
         legend_lines.append("  solid line: estimated path")
         legend_lines.append("  dashed orange: true path (tests only)")
 
-        # Store for unit tests
         self._last_legend_lines = legend_lines
 
         for idx, line in enumerate(legend_lines):
-            fig.text(
-                0.72,
-                0.92 - idx * 0.04,
-                line,
-                fontsize=9,
-                ha="left",
-                va="top",
-            )
+            info_ax.text(0.0, 0.8 - idx * 0.04, line, fontsize=9, ha="left", va="top")
 
-        # Event history log
-        log_start = 0.92 - len(legend_lines) * 0.04 - 0.04
-        fig.text(0.02, log_start, "Event log:", fontsize=9, ha="left", va="top")
+        log_start = 0.8 - len(legend_lines) * 0.04 - 0.04
+        info_ax.text(0.0, log_start, "Event log:", fontsize=9, ha="left", va="top")
         for idx, message in enumerate(self._event_history[-10:]):
-            fig.text(
-                0.02,
+            info_ax.text(
+                0.0,
                 log_start - (idx + 1) * 0.04,
                 message,
                 fontsize=9,
@@ -529,25 +569,19 @@ class MultiPersonTracker:
                 va="top",
             )
 
-        # Highlight probabilities
         if self._highlight_room:
             prob_text = self._format_highlight_probabilities()
             if prob_text:
-                fig.text(
-                    0.72,
-                    log_start,
-                    prob_text,
-                    fontsize=9,
-                    ha="left",
-                    va="top",
-                )
+                info_ax.text(0.0, log_start - (len(self._event_history[-10:]) + 1) * 0.04, prob_text, fontsize=9, ha="left", va="top")
 
-        # Estimate history log
-        est_start = log_start - (len(self._event_history[-10:]) + 1) * 0.04
-        fig.text(0.72, est_start, "Estimates:", fontsize=9, ha="left", va="top")
+        est_start = (
+            log_start
+            - (len(self._event_history[-10:]) + 2) * 0.04
+        )
+        info_ax.text(0.0, est_start, "Estimates:", fontsize=9, ha="left", va="top")
         for idx, line in enumerate(self._estimate_history[-10:]):
-            fig.text(
-                0.72,
+            info_ax.text(
+                0.0,
                 est_start - (idx + 1) * 0.04,
                 line,
                 fontsize=9,
@@ -555,7 +589,7 @@ class MultiPersonTracker:
                 va="top",
             )
 
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
+        plt.tight_layout()
 
         target_dir = self._current_event_dir
         filename = os.path.join(target_dir, f"frame_{self._debug_counter:06d}.png")
