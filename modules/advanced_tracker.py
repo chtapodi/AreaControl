@@ -57,9 +57,24 @@ class SensorModel:
         self.floor_prob = floor_prob
         self.last_fire: Dict[str, float] = defaultdict(lambda: 0.0)
         self.presence: Dict[str, bool] = {}
+        # Track whether motion has been seen recently in a room. The
+        # ``motion_state`` flag remains ``True`` for ``cooldown`` seconds
+        # after the initial trigger.
+        self.motion_state: Dict[str, bool] = defaultdict(lambda: False)
 
     def record_trigger(self, room_id: str, timestamp: Optional[float] = None) -> None:
-        self.last_fire[room_id] = time.time() if timestamp is None else timestamp
+        """Record a motion sensor trigger for *room_id*.
+
+        If the room is already in the active motion state and the cooldown has
+        not yet elapsed, the trigger is ignored so the active period is not
+        extended.
+        """
+        now = time.time() if timestamp is None else timestamp
+        last = self.last_fire.get(room_id, 0.0)
+        if self.motion_state.get(room_id, False) and now - last < self.cooldown:
+            return
+        self.motion_state[room_id] = True
+        self.last_fire[room_id] = now
 
     def set_presence(self, room_id: str, present: bool) -> None:
         """Record explicit presence information."""
@@ -74,12 +89,14 @@ class SensorModel:
         if pres is False:
             return 0.0
         now = time.time() if current_time is None else current_time
-        dt = now - self.last_fire.get(room_id, 0.0)
-        if dt <= 0:
+        last = self.last_fire.get(room_id, 0.0)
+        state = self.motion_state.get(room_id, False)
+        dt = now - last
+        if state and dt < self.cooldown:
             return 1.0
-        if dt >= self.cooldown:
-            return self.floor_prob
-        return 1.0 - (dt / self.cooldown) * (1.0 - self.floor_prob)
+        if state and dt >= self.cooldown:
+            self.motion_state[room_id] = False
+        return self.floor_prob
 
 
 class Particle:

@@ -116,6 +116,24 @@ class TestAdvancedTracker(unittest.TestCase):
         sm.set_presence('bedroom', False)
         self.assertEqual(sm.likelihood_still_present('bedroom', current_time=0.0), 0.0)
 
+    def test_sensor_model_cooldown_and_retrigger(self):
+        sm = SensorModel()
+        start = 0.0
+        sm.record_trigger('bedroom', timestamp=start)
+
+        # Probability stays at 1.0 during the cooldown window
+        mid = start + sm.cooldown / 2
+        self.assertEqual(sm.likelihood_still_present('bedroom', current_time=mid), 1.0)
+
+        # Retrigger before cooldown expiry should not extend the window
+        sm.record_trigger('bedroom', timestamp=start + 100)
+        self.assertEqual(sm.likelihood_still_present('bedroom', current_time=start + sm.cooldown - 1), 1.0)
+
+        # After the original cooldown the state resets
+        end = start + sm.cooldown + 1
+        self.assertEqual(sm.likelihood_still_present('bedroom', current_time=end), sm.floor_prob)
+        self.assertFalse(sm.motion_state['bedroom'])
+
     def test_highlight_probability_formatting(self):
         graph = load_room_graph_from_yaml('connections.yml')
         sensor_model = SensorModel()
