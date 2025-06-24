@@ -214,6 +214,75 @@ class TestAdvancedTracker(unittest.TestCase):
             for pid, room in expected.items():
                 self.assertEqual(result.get(pid), room)
 
+    def _run_yaml_scenario_accuracy(self, path: str) -> float:
+        with open(path, "r") as f:
+            scenario = yaml.safe_load(f)
+
+        graph = load_room_graph_from_yaml(scenario["connections"])
+        sensor_model = SensorModel()
+        multi = MultiPersonTracker(graph, sensor_model, debug=False)
+
+        time_events = {}
+        for person in scenario.get("persons", []):
+            pid = person["id"]
+            for ev in person.get("events", []):
+                t = ev["time"]
+                time_events.setdefault(t, []).append((pid, ev["room"]))
+
+        random_seed = scenario.get("seed", 0)
+        import random
+        random.seed(random_seed)
+
+        max_t = max(time_events) if time_events else 0
+        extra_steps = scenario.get("extra_steps", 10)
+
+        true_locations = {p["id"]: None for p in scenario.get("persons", [])}
+        correct = 0
+        total = 0
+
+        current = 0
+        while current <= max_t + extra_steps:
+            events = time_events.get(current, [])
+            updated = set()
+            for pid, room in events:
+                multi.process_event(pid, room, timestamp=current)
+                true_locations[pid] = room
+                updated.add(pid)
+
+            for pid, tracker in multi.trackers.items():
+                if pid not in updated:
+                    tracker.update(current)
+
+            estimates = multi.estimate_locations()
+            location_counts = {}
+            for pid, room in true_locations.items():
+                if room is not None:
+                    location_counts.setdefault(room, set()).add(pid)
+            ambiguous = set()
+            for room, pids in location_counts.items():
+                if len(pids) > 1:
+                    ambiguous.update(pids)
+            for pid in updated:
+                if true_locations[pid] is None or pid in ambiguous:
+                    continue
+                total += 1
+                if estimates.get(pid) == true_locations[pid]:
+                    correct += 1
+
+            current += 1
+
+        if total == 0:
+            return 1.0
+        return correct / total
+
+    def test_yaml_scenario_accuracy(self):
+        scenario_dir = os.path.join("tests", "scenarios")
+        for fname in os.listdir(scenario_dir):
+            if not fname.endswith(".yml") or "connections" in fname:
+                continue
+            acc = self._run_yaml_scenario_accuracy(os.path.join(scenario_dir, fname))
+            self.assertGreaterEqual(acc, 0.8)
+
 
 if __name__ == '__main__':
     unittest.main()
