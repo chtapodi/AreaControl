@@ -36,4 +36,4 @@ persons:
 extra_steps: 20
 expected_final:
   alice: laundry_room
-  bob: living_room_front
+  bob: living_room_middle

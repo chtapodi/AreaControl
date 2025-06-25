@@ -151,9 +151,14 @@ class PersonTracker:
             self.sensor_model.record_trigger(sensor_room, current_time)
         self.move_particles(sensor_room)
 
+        elapsed = current_time - self.last_sensor_time
         for p in self.particles:
             weight = self.sensor_model.likelihood_still_present(p.room, current_time)
-            if self.last_sensor_room and p.room == self.last_sensor_room:
+            if (
+                self.last_sensor_room
+                and p.room == self.last_sensor_room
+                and elapsed <= self.sensor_model.cooldown
+            ):
                 weight *= 2.0
             p.weight = weight
 

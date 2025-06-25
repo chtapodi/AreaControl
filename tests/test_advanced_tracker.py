@@ -15,6 +15,8 @@ from modules.advanced_tracker import (
     DEFAULT_MIN_PLOT_TIME,
     Phone,
     Person,
+    RoomGraph,
+    Particle,
 )
 
 
@@ -146,6 +148,22 @@ class TestAdvancedTracker(unittest.TestCase):
         text = multi._format_highlight_probabilities()
         self.assertIn('p1', text)
         self.assertIn('bedroom', text)
+
+    def test_weight_boost_expires(self):
+        adjacency = {'bedroom': ['hallway'], 'hallway': ['bedroom']}
+        graph = RoomGraph(adjacency)
+        sensor_model = SensorModel()
+        tracker = PersonTracker(graph, sensor_model, num_particles=1000)
+
+        import random
+        random.seed(0)
+
+        tracker.update(0.0, sensor_room='bedroom')
+        tracker.particles = [Particle('bedroom') for _ in range(500)] + [Particle('hallway') for _ in range(500)]
+        tracker.move_particles = lambda sensor_room=None: None
+        tracker.update(sensor_model.cooldown + 1)
+        dist = tracker.distribution()
+        self.assertLess(dist.get('bedroom', 0.0), 0.6)
 
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:
