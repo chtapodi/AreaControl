@@ -24,11 +24,13 @@ a small floor value until another event occurs.
 
 ### Particle Updates
 
-When `PersonTracker.update()` is called, every particle chooses a random
-adjacent room and its weight is set to the likelihood returned by
-`SensorModel.likelihood_still_present()`.  If the particle lands in the
-same room as the most recent sensor event, its weight receives a small
-boost so the cloud quickly collapses onto the triggered room.
+When `PersonTracker.update()` is called each particle either stays put or
+moves to a neighbouring room. The choice is weighted by recent motion
+events using `SensorModel` so particles tend to drift toward rooms whose
+sensors fired most recently while rarely visiting inactive areas. If the
+particle lands in the same room as the latest sensor event, its weight
+receives a small boost so the cloud quickly collapses onto the triggered
+room.
 
 Particles are then resampled proportionally to their weight.  The room
 with the most particles is the current estimate returned by
@@ -121,7 +123,7 @@ is created whenever no event has occurred for `event_window` seconds (default
 `600`), making it easy to inspect separate sequences or collect files per
 test case.
 The frequency of saved frames is controlled by `min_plot_time` which defaults
-to five seconds. A new image is only written when at least this much time has
+to thirty seconds. A new image is only written when at least this much time has
 passed since the last frame and the tracker state has changed. Scenario YAML
 files can override the value by including a `min_plot_time` field.
 

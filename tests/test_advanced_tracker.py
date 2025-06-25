@@ -158,7 +158,7 @@ class TestAdvancedTracker(unittest.TestCase):
             graph,
             sensor_model,
             test_name=scenario_name,
-            min_plot_time=scenario.get('min_plot_time', 5.0),
+            min_plot_time=scenario.get('min_plot_time', 30.0),
         )
 
         # Build mapping of time -> list of (pid, room)

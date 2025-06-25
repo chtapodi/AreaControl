@@ -132,20 +132,46 @@ class PersonTracker:
             room = random.choice(rooms)
             self.particles.append(Particle(room))
 
-    def move_particles(self, sensor_room: Optional[str] = None) -> None:
+    def _transition_weight(self, room_id: str, now: float) -> float:
+        """Return a movement weight based on recent motion events."""
+        pres = self.sensor_model.presence.get(room_id)
+        if pres is True:
+            return 2.0
+        if pres is False:
+            return 0.0
+        last = self.sensor_model.last_fire.get(room_id, 0.0)
+        active = self.sensor_model.motion_state.get(room_id, False)
+        dt = now - last
+        if active and dt < self.sensor_model.cooldown:
+            return 1.0 + (self.sensor_model.cooldown - dt) / self.sensor_model.cooldown
+        return self.sensor_model.floor_prob
+
+    def move_particles(self, now: float, sensor_room: Optional[str] = None) -> None:
         if sensor_room is not None:
             for p in self.particles:
                 p.room = sensor_room
         else:
             for p in self.particles:
-                p.move(self.room_graph)
+                neighbors = self.room_graph.get_neighbors(p.room)
+                choices = [p.room] + neighbors
+                weights = [self._transition_weight(r, now) for r in choices]
+                total = sum(weights)
+                if total == 0:
+                    continue
+                r = random.random() * total
+                acc = 0.0
+                for room, w in zip(choices, weights):
+                    acc += w
+                    if r <= acc:
+                        p.room = room
+                        break
 
     def update(self, current_time: float, sensor_room: Optional[str] = None) -> None:
         if sensor_room is not None:
             self.last_sensor_room = sensor_room
             self.last_sensor_time = current_time
             self.sensor_model.record_trigger(sensor_room, current_time)
-        self.move_particles(sensor_room)
+        self.move_particles(current_time, sensor_room)
 
         for p in self.particles:
             weight = self.sensor_model.likelihood_still_present(p.room, current_time)
@@ -218,7 +244,7 @@ class MultiPersonTracker:
         debug_dir: str = "debug",
         event_window: int = 600,
         test_name: Optional[str] = None,
-        min_plot_time: float = 5.0,
+        min_plot_time: float = 30.0,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
