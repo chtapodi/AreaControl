@@ -4,6 +4,7 @@ import tempfile
 import pytest
 import yaml
 import json
+import random
 
 pytest.importorskip("scipy")
 
@@ -146,6 +147,27 @@ class TestAdvancedTracker(unittest.TestCase):
         text = multi._format_highlight_probabilities()
         self.assertIn('p1', text)
         self.assertIn('bedroom', text)
+
+    def test_particles_stay_put_without_events(self):
+        graph = load_room_graph_from_yaml('connections.yml')
+        sensor_model = SensorModel()
+        random.seed(0)
+        tracker = PersonTracker(graph, sensor_model, num_particles=10, stay_prob=1.0)
+        visited = {p.room for p in tracker.particles}
+        initial = set(visited)
+        for i in range(5):
+            tracker.update(i)
+            visited.update(p.room for p in tracker.particles)
+        self.assertEqual(visited, initial)
+
+        random.seed(0)
+        mover = PersonTracker(graph, sensor_model, num_particles=10, stay_prob=0.0)
+        visited_move = {p.room for p in mover.particles}
+        initial_move = set(visited_move)
+        for i in range(5):
+            mover.update(i)
+            visited_move.update(p.room for p in mover.particles)
+        self.assertGreater(len(visited_move), len(initial_move))
 
     def _run_yaml_scenario(self, path: str):
         with open(path, 'r') as f:

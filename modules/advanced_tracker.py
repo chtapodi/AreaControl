@@ -108,9 +108,10 @@ class Particle:
         self.room = room
         self.weight = weight
 
-    def move(self, room_graph: RoomGraph) -> None:
+    def move(self, room_graph: RoomGraph, *, stay_prob: float = 0.5) -> None:
+        """Move to a random neighbouring room with probability ``1 - stay_prob``."""
         neighbors = room_graph.get_neighbors(self.room)
-        if neighbors:
+        if neighbors and random.random() > stay_prob:
             self.room = random.choice(neighbors)
 
     def copy(self) -> "Particle":
@@ -121,10 +122,16 @@ class PersonTracker:
     """Particle filter tracker for a single person."""
 
     def __init__(
-        self, room_graph: RoomGraph, sensor_model: SensorModel, num_particles: int = 100
+        self,
+        room_graph: RoomGraph,
+        sensor_model: SensorModel,
+        num_particles: int = 100,
+        *,
+        stay_prob: float = 0.5,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
+        self.stay_prob = stay_prob
         self.particles: List[Particle] = []
         self.last_sensor_room: Optional[str] = None
         self.last_sensor_time: float = 0.0
@@ -142,7 +149,7 @@ class PersonTracker:
                 p.room = sensor_room
         else:
             for p in self.particles:
-                p.move(self.room_graph)
+                p.move(self.room_graph, stay_prob=self.stay_prob)
 
     def update(self, current_time: float, sensor_room: Optional[str] = None) -> None:
         if sensor_room is not None:
@@ -223,9 +230,11 @@ class MultiPersonTracker:
         event_window: int = 600,
         test_name: Optional[str] = None,
         min_plot_time: float = DEFAULT_MIN_PLOT_TIME,
+        stay_prob: float = 0.5,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
+        self.stay_prob = stay_prob
         self.people: Dict[str, Person] = {}
         self.phones: Dict[str, Phone] = {}
         self.trackers: Dict[str, PersonTracker] = {}
@@ -308,7 +317,11 @@ class MultiPersonTracker:
         now = time.time() if timestamp is None else timestamp
         person = self.people.get(person_id)
         if person is None:
-            tracker = PersonTracker(self.room_graph, self.sensor_model)
+            tracker = PersonTracker(
+                self.room_graph,
+                self.sensor_model,
+                stay_prob=self.stay_prob,
+            )
             person = Person(person_id, tracker)
             self.people[person_id] = person
             self.trackers[person_id] = tracker
@@ -417,7 +430,11 @@ class MultiPersonTracker:
         phone = self.add_phone(phone_id)
         person = self.people.get(person_id)
         if person is None:
-            tracker = PersonTracker(self.room_graph, self.sensor_model)
+            tracker = PersonTracker(
+                self.room_graph,
+                self.sensor_model,
+                stay_prob=self.stay_prob,
+            )
             person = Person(person_id, tracker)
             self.people[person_id] = person
             self.trackers[person_id] = tracker
@@ -675,6 +692,7 @@ def init_from_yaml(
     debug: bool = False,
     debug_dir: str = "debug",
     test_name: Optional[str] = None,
+    stay_prob: float = 0.5,
 ) -> MultiPersonTracker:
     graph = load_room_graph_from_yaml(connections_path)
     sensor_model = SensorModel()
@@ -684,4 +702,5 @@ def init_from_yaml(
         debug=debug,
         debug_dir=debug_dir,
         test_name=test_name,
+        stay_prob=stay_prob,
     )
