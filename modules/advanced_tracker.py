@@ -47,6 +47,17 @@ def load_room_graph_from_yaml(path: str) -> RoomGraph:
     return RoomGraph(adjacency)
 
 
+def blend_with_gray(
+    base: Tuple[float, float, float], intensity: float, gray: float = 0.9
+) -> Tuple[float, float, float]:
+    """Blend ``base`` with a light gray background by ``intensity``.
+
+    ``intensity`` of 1.0 returns ``base`` while 0.0 yields the gray color.
+    """
+
+    return tuple(base[i] * intensity + gray * (1.0 - intensity) for i in range(3))
+
+
 class SensorModel:
     """Models room occupancy based on motion and presence sensors."""
 
@@ -376,7 +387,6 @@ class MultiPersonTracker:
             for node in self.room_graph.graph.nodes:
                 intensity = dist.get(node, 0.0)
                 base_color = cmap(idx % cmap.N)[:3]
-                node_colors.append(tuple(intensity * c for c in base_color))
             nx.draw_networkx_nodes(
                 self.room_graph.graph,
                 pos=self._layout,
@@ -394,10 +404,12 @@ class MultiPersonTracker:
             ]
             est_points = [self._layout[r] for _, r in self._estimate_history[pid]]
             if len(est_points) >= 2:
+                confidence = dist.get(est_room, 0.0)
                 ax.plot(
                     [p[0] for p in est_points],
                     [p[1] for p in est_points],
                     color=cmap(idx % cmap.N),
+                    linewidth=1 + 4 * confidence,
                 )
 
             ev_points = []
@@ -424,7 +436,10 @@ class MultiPersonTracker:
             )
 
         legend_handles.append(
-            mlines.Line2D([], [], color="black", label="solid line: estimated path")
+            mlines.Line2D([], [], color="black", label="solid line: estimated path (width=confidence)")
+        )
+        legend_handles.append(
+            mlines.Line2D([], [], color="lightgray", marker="o", linestyle="None", label="node color blends with gray by probability")
         )
         legend_handles.append(
             mlines.Line2D(

@@ -67,7 +67,8 @@ class TestAdvancedTracker(unittest.TestCase):
 
             legend = getattr(multi, '_last_legend_lines', [])
             self.assertTrue(any(line.strip().startswith('p1:') for line in legend))
-            self.assertTrue(any('solid line: estimated path' in line for line in legend))
+            self.assertTrue(any('width=confidence' in line for line in legend))
+            self.assertTrue(any('node color blends with gray' in line for line in legend))
             self.assertTrue(any('dashed orange: true path (tests only)' in line for line in legend))
 
     def test_event_log_includes_timestamp(self):
