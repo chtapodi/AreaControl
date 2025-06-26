@@ -69,7 +69,7 @@ class TestAdvancedTracker(unittest.TestCase):
         multi = MultiPersonTracker(graph, sensor_model, debug=True)
         multi.process_event('p1', 'bedroom', timestamp=5.0)
         self.assertTrue(multi._event_history)
-        self.assertIn('5.0', multi._event_history[0])
+        self.assertIn('00:00', multi._event_history[0])
 
     def test_multiple_event_directories(self):
         graph = load_room_graph_from_yaml('connections.yml')
@@ -300,8 +300,10 @@ class TestAdvancedTracker(unittest.TestCase):
 
         history = multi._event_history
         self.assertGreaterEqual(len(history), len(events))
+        start = events[0][0] if events else 0
         for t, room in events:
-            frag = f"{float(t):.1f}s: motion {room}"
+            m, s = divmod(int(t - start), 60)
+            frag = f"{m:02d}:{s:02d} motion {room}"
             self.assertTrue(any(frag in h for h in history))
 
 
