@@ -259,7 +259,7 @@ class MultiPersonTracker:
         self._estimate_paths: Dict[str, List[str]] = defaultdict(list)
         self._true_paths: Dict[str, List[str]] = defaultdict(list)
         # (timestamp, room_id, person_id) tuples for timeline plotting
-        self._sensor_events: List[Tuple[float, str, Optional[str]]] = []
+        self._sensor_events: List[Tuple[float, str, str]] = []
         self._sensor_glow: Dict[str, int] = defaultdict(int)
         self._start_time: float = 0.0
         self._last_estimates: Dict[str, str] = {}
@@ -420,7 +420,9 @@ class MultiPersonTracker:
             return ""
         return f"{self._highlight_room}: " + ", ".join(parts)
 
-    def record_presence(self, room_id: str, present: bool, timestamp: Optional[float] = None) -> None:
+    def record_presence(
+        self, room_id: str, present: bool, person_id: str, timestamp: Optional[float] = None
+    ) -> None:
         now = time.time() if timestamp is None else timestamp
         self.sensor_model.set_presence(room_id, present)
         for pid, person in self.people.items():
@@ -428,7 +430,7 @@ class MultiPersonTracker:
         self._last_event_time = now
         if self.debug:
             self._highlight_room = room_id
-            self._sensor_events.append((now, room_id, None))
+            self._sensor_events.append((now, room_id, person_id))
             self._sensor_glow[room_id] = 5
             self._event_history.append(
                 f"{now:.1f}s: presence {room_id}={present}"
@@ -644,8 +646,6 @@ class MultiPersonTracker:
             pid_to_idx = {pid: i for i, pid in enumerate(self.people.keys())}
             colors = [
                 PERSON_COLORS[pid_to_idx.get(pid, 0) % len(PERSON_COLORS)]
-                if pid is not None
-                else (0, 0, 0)
                 for _, _, pid in self._sensor_events
             ]
             timeline_ax.scatter(
@@ -690,6 +690,7 @@ class MultiPersonTracker:
         for idx, pid in enumerate(self.people.keys()):
             color_hex = mcolors.to_hex(PERSON_COLORS[idx % len(PERSON_COLORS)])
             legend_lines.append(f"  {pid}: {color_hex}")
+        legend_lines.append("  timeline dot color = person id")
         legend_lines.append("  solid line: estimated path")
         legend_lines.append("  dashed orange: true path (tests only)")
 
