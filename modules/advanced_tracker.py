@@ -515,9 +515,14 @@ class MultiPersonTracker:
             node_color="skyblue",
             edgecolors="black",
         )
+        labels = {
+            node: f"{node} ({int(self.sensor_model.motion_state.get(node, False))})"
+            for node in graph.nodes
+        }
         label_artists = nx.draw_networkx_labels(
             graph,
             pos=self._layout,
+            labels=labels,
             ax=ax,
             font_size=9,
             font_color="black",
@@ -670,6 +675,7 @@ class MultiPersonTracker:
             "Legend:",
             "  Node color: person id",
             "  Size ~ probability",
+            "  label (1/0): motion sensor state",
         ]
         color_names = {0: "red", 1: "green", 2: "blue"}
         for idx, pid in enumerate(self.people.keys()):
