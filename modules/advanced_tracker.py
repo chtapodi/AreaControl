@@ -333,6 +333,7 @@ class MultiPersonTracker:
             ):
                 self._start_event(now)
         tracker.update(now, sensor_room=room_id)
+        self._last_event_time = now
         if self.debug:
             estimate = tracker.estimate()
             self._estimate_paths[person_id].append(estimate)
@@ -406,6 +407,7 @@ class MultiPersonTracker:
         self.sensor_model.set_presence(room_id, present)
         for pid, person in self.people.items():
             person.tracker.update(now)
+        self._last_event_time = now
         if self.debug:
             self._highlight_room = room_id
             self._sensor_events.append((now, room_id))
@@ -452,6 +454,7 @@ class MultiPersonTracker:
         phone.last_seen = now
         if phone.person_id:
             self.process_event(phone.person_id, room_id, timestamp=now)
+        self._last_event_time = now
 
     def dump_state(self) -> str:
         """Return a JSON representation of current tracker state."""
