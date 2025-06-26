@@ -310,6 +310,10 @@ class MultiPersonTracker:
         self._sensor_glow = defaultdict(int)
         self._start_time = timestamp
 
+    def _fmt_time(self, t: float) -> str:
+        m, s = divmod(int(t - self._start_time), 60)
+        return f"{m:02d}:{s:02d}"
+
     def _maybe_visualize(self, now: float, *, force: bool = False) -> None:
         """Save a debug frame if enough time has passed and there was an update.
 
@@ -360,14 +364,14 @@ class MultiPersonTracker:
                 prob = tracker.distribution().get(estimate, 0.0)
                 true_loc = tracker.last_sensor_room or "unknown"
                 self._estimate_history.append(
-                    f"{now:.1f}s: {person_id}: {estimate} ({prob:.2f}) true={true_loc}"
+                    f"{self._fmt_time(now)} {person_id}: {estimate} ({prob:.2f}) true={true_loc}"
                 )
                 self._last_estimates[person_id] = estimate
             self._highlight_room = room_id
             self._sensor_events.append((now, room_id, person_id))
             self._sensor_glow[room_id] = 5
             self._event_history.append(
-                f"{now:.1f}s: motion {room_id} fired, est={estimate}"
+                f"{self._fmt_time(now)} motion {room_id} fired, est={estimate}"
             )
             self._pending_update = True
             self._maybe_visualize(now, force=True)
@@ -397,7 +401,7 @@ class MultiPersonTracker:
                 prob = person.tracker.distribution().get(est, 0.0)
                 true_loc = person.tracker.last_sensor_room or "unknown"
                 self._estimate_history.append(
-                    f"{now:.1f}s: {pid}: {est} ({prob:.2f}) true={true_loc}"
+                    f"{self._fmt_time(now)} {pid}: {est} ({prob:.2f}) true={true_loc}"
                 )
                 self._last_estimates[pid] = est
             self._pending_update = True
@@ -431,7 +435,7 @@ class MultiPersonTracker:
             self._sensor_events.append((now, room_id, None))
             self._sensor_glow[room_id] = 5
             self._event_history.append(
-                f"{now:.1f}s: presence {room_id}={present}"
+                f"{self._fmt_time(now)} presence {room_id}={present}"
             )
             self._pending_update = True
             self._maybe_visualize(now, force=True)
@@ -700,35 +704,72 @@ class MultiPersonTracker:
 
         log_start = 0.8 - len(legend_lines) * 0.04 - 0.04
         info_ax.text(0.0, log_start, "Event log:", fontsize=9, ha="left", va="top")
-        for idx, message in enumerate(self._event_history[-10:]):
+
+        events = self._event_history[-10:]
+        estimates = self._estimate_history[-10:]
+        length = max(len(events), len(estimates))
+        events = [""] * (length - len(events)) + events
+        estimates = [""] * (length - len(estimates)) + estimates
+
+        for idx in range(length):
+            ev = events[idx]
+            est = estimates[idx]
+            time_str = ""
+            ev_text = ""
+            if ev:
+                parts = ev.split(" ", 1)
+                if len(parts) == 2:
+                    time_str, ev_text = parts
+                else:
+                    ev_text = ev
+            est_text = ""
+            if est:
+                parts = est.split(" ", 1)
+                if len(parts) == 2:
+                    ts, est_text = parts
+                    if not time_str:
+                        time_str = ts
+                else:
+                    est_text = est
+
+            line = f"{time_str}  {ev_text:<12} {est_text}"
+            color = "black"
+            if self.test_name and "true=" in est_text:
+                try:
+                    tokens = est_text.split()
+                    predicted = tokens[1]
+                    actual = tokens[-1].split("=")[1]
+                    if predicted == actual:
+                        line += " ✔"
+                        color = "green"
+                    else:
+                        line += " ✘"
+                        color = "red"
+                except Exception:
+                    pass
+
             info_ax.text(
                 0.0,
                 log_start - (idx + 1) * 0.04,
-                message,
+                line,
                 fontsize=9,
                 ha="left",
                 va="top",
+                fontfamily="monospace",
+                color=color,
             )
 
         if self._highlight_room:
             prob_text = self._format_highlight_probabilities()
             if prob_text:
-                info_ax.text(0.0, log_start - (len(self._event_history[-10:]) + 1) * 0.04, prob_text, fontsize=9, ha="left", va="top")
-
-        est_start = (
-            log_start
-            - (len(self._event_history[-10:]) + 2) * 0.04
-        )
-        info_ax.text(0.0, est_start, "Estimates:", fontsize=9, ha="left", va="top")
-        for idx, line in enumerate(self._estimate_history[-10:]):
-            info_ax.text(
-                0.0,
-                est_start - (idx + 1) * 0.04,
-                line,
-                fontsize=9,
-                ha="left",
-                va="top",
-            )
+                info_ax.text(
+                    0.0,
+                    log_start - (length + 1) * 0.04,
+                    prob_text,
+                    fontsize=9,
+                    ha="left",
+                    va="top",
+                )
 
         plt.tight_layout()
 
