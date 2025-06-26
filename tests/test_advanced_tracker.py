@@ -46,19 +46,17 @@ class TestAdvancedTracker(unittest.TestCase):
                 test_name=self._testMethodName,
                 min_plot_time=0.0,
             )
-            multi.process_event('p1', 'bedroom')
-            multi.step()
+            multi.process_event('p1', 'bedroom', timestamp=0.0)
+            multi.step(timestamp=0.0)
             event_dirs = [
                 root
                 for root, _, files in os.walk(tmp)
-                if any(f.startswith('frame_') for f in files)
+                if any(f.endswith('.png') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
             self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
             contents = os.listdir(event_dirs[0])
-            self.assertTrue(
-                any(f.startswith('frame_') and f.endswith('.png') for f in contents)
-            )
+            self.assertIn('0.0.png', contents)
 
             legend = getattr(multi, '_last_legend_lines', [])
             self.assertTrue(any(line.strip().startswith('p1:') for line in legend))
@@ -91,7 +89,7 @@ class TestAdvancedTracker(unittest.TestCase):
             event_dirs = [
                 root
                 for root, _, files in os.walk(tmp)
-                if any(f.startswith('frame_') for f in files)
+                if any(f.endswith('.png') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
             self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
@@ -273,6 +271,38 @@ class TestAdvancedTracker(unittest.TestCase):
             for pid, room in expected.items():
                 self.assertEqual(result.get(pid), room)
             self.assertGreaterEqual(accuracy, 0.8)
+
+    def test_event_history_records_all_events(self):
+        path = os.path.join('tests', 'scenarios', 'walk_across_house.yml')
+        with open(path, 'r') as f:
+            scenario = yaml.safe_load(f)
+
+        graph = load_room_graph_from_yaml(scenario['connections'])
+        sensor_model = SensorModel()
+        multi = MultiPersonTracker(graph, sensor_model, test_name='walk_across_house')
+
+        time_events = {}
+        events = []
+        for person in scenario.get('persons', []):
+            pid = person['id']
+            for ev in person.get('events', []):
+                t = ev['time']
+                time_events.setdefault(t, []).append((pid, ev['room']))
+                events.append((t, ev['room']))
+
+        current = 0
+        max_t = max(time_events) if time_events else 0
+        while current <= max_t:
+            for pid, room in time_events.get(current, []):
+                multi.process_event(pid, room, timestamp=current)
+            multi.step(timestamp=current)
+            current += 1
+
+        history = multi._event_history
+        self.assertGreaterEqual(len(history), len(events))
+        for t, room in events:
+            frag = f"{float(t):.1f}s: motion {room}"
+            self.assertTrue(any(frag in h for h in history))
 
 
 if __name__ == '__main__':

@@ -116,10 +116,10 @@ To enable or disable visual logging, pass `debug=True` and specify a
 date-based folders inside `debug_dir`. Without a `test_name` the path is
 `YYYY/MM/DD/HHMMSS/frame_000001.png`. When `test_name` is provided, frames
 are written to `YYYY/MM/DD/<test_name>/frame_000001.png` and all plots remain
-preserved under this dated directory.  A new folder
-is created whenever no event has occurred for `event_window` seconds (default
-`600`), making it easy to inspect separate sequences or collect files per
-test case.
+preserved under this dated directory.  A new folder is created whenever no
+sensor event has occurred for `event_window` seconds (default `600`). The
+timer refreshes on every motion, presence or phone update, making it easy to
+inspect separate sequences or collect files per test case.
 The frequency of saved frames is controlled by `min_plot_time` which defaults
 to 30 seconds. A new image is only written when at least this much time has
 passed since the last frame and the tracker state has changed. Scenario YAML
