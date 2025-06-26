@@ -6,6 +6,13 @@ import yaml
 import json
 from unittest.mock import patch
 
+VERBOSE_LEVEL = int(os.getenv("TEST_VERBOSITY", "0"))
+
+
+def _vprint(*args, **kwargs):
+    if VERBOSE_LEVEL >= 2:
+        print(*args, **kwargs)
+
 
 def _get_debug_dir(name: str):
     base = os.environ.get("TEST_DEBUG_DIR", os.path.join("tracker_debug", "plots"))
@@ -173,6 +180,11 @@ class TestAdvancedTracker(unittest.TestCase):
 
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
+
+        random_seed = scenario.get('seed', 0)
+        import random
+        random.seed(random_seed)
+
         multi = MultiPersonTracker(graph, sensor_model, debug=debug)
 
         # Build mapping of time -> list of (pid, room)
@@ -183,9 +195,6 @@ class TestAdvancedTracker(unittest.TestCase):
                 t = ev['time']
                 time_events.setdefault(t, []).append((pid, ev['room']))
 
-        random_seed = scenario.get('seed', 0)
-        import random
-        random.seed(random_seed)
 
         max_t = max(time_events) if time_events else 0
         extra_steps = scenario.get('extra_steps', 10)
@@ -197,6 +206,7 @@ class TestAdvancedTracker(unittest.TestCase):
             for pid, room in events:
                 multi.process_event(pid, room, timestamp=current)
                 updated.add(pid)
+                _vprint(f"New motion event: {room} {current}->{current + 1}")
 
             for pid, tracker in multi.trackers.items():
                 if pid not in updated:
@@ -224,6 +234,11 @@ class TestAdvancedTracker(unittest.TestCase):
 
         graph = load_room_graph_from_yaml(scenario["connections"])
         sensor_model = SensorModel()
+
+        random_seed = scenario.get("seed", 0)
+        import random
+        random.seed(random_seed)
+
         multi = MultiPersonTracker(graph, sensor_model, debug=False)
 
         time_events = {}
@@ -233,9 +248,6 @@ class TestAdvancedTracker(unittest.TestCase):
                 t = ev["time"]
                 time_events.setdefault(t, []).append((pid, ev["room"]))
 
-        random_seed = scenario.get("seed", 0)
-        import random
-        random.seed(random_seed)
 
         max_t = max(time_events) if time_events else 0
         extra_steps = scenario.get("extra_steps", 10)
@@ -252,12 +264,22 @@ class TestAdvancedTracker(unittest.TestCase):
                 multi.process_event(pid, room, timestamp=current)
                 true_locations[pid] = room
                 updated.add(pid)
+                _vprint(f"New motion event: {room} {current}->{current + 1}")
 
             for pid, tracker in multi.trackers.items():
                 if pid not in updated:
                     tracker.update(current)
 
             estimates = multi.estimate_locations()
+            if VERBOSE_LEVEL >= 2:
+                _vprint("True locations:")
+                for pid_t, room_t in sorted(true_locations.items()):
+                    if room_t is not None:
+                        _vprint(f"    {pid_t}: {room_t}")
+                _vprint("Estimates:")
+                for pid_e, room_e in sorted(estimates.items()):
+                    _vprint(f"    {pid_e}: {room_e}")
+
             location_counts = {}
             for pid, room in true_locations.items():
                 if room is not None:

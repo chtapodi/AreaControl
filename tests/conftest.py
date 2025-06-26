@@ -4,6 +4,7 @@ import importlib.util
 import copy
 import builtins
 import os
+import pytest
 
 
 def _stub_decorator(*dargs, **dkwargs):
@@ -121,3 +122,11 @@ def load_tracker():
     sys.modules['modules.tracker'] = mod
     exec(code, mod.__dict__)
     return mod
+
+
+def pytest_configure(config):
+    os.environ["TEST_VERBOSITY"] = str(config.getoption("verbose"))
+
+
+def pytest_unconfigure(config):
+    os.environ.pop("TEST_VERBOSITY", None)
