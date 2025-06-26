@@ -353,7 +353,12 @@ class MultiPersonTracker:
 
     def _visualize(self, current_time: float) -> None:
         plt.clf()
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, (ax, ax_time) = plt.subplots(
+            2,
+            1,
+            figsize=(6, 6),
+            gridspec_kw={"height_ratios": [3, 1]},
+        )
         nx.draw_networkx(
             self.room_graph.graph,
             pos=self._layout,
@@ -368,6 +373,8 @@ class MultiPersonTracker:
             2: (0, 0, 1),
         }
         legend_handles = []
+        rooms_sorted = sorted(self.room_graph.graph.nodes)
+        room_to_y = {room: idx for idx, room in enumerate(rooms_sorted)}
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
@@ -398,16 +405,40 @@ class MultiPersonTracker:
                     color=colors.get(idx % 3, (0, 0, 0)),
                 )
 
+            time_points = [t for t, _ in self._estimate_history[pid]]
+            room_points = [room_to_y[r] for _, r in self._estimate_history[pid]]
+            if len(time_points) >= 2:
+                ax_time.plot(
+                    time_points,
+                    room_points,
+                    color=colors.get(idx % 3, (0, 0, 0)),
+                )
+
             ev_points = []
             for entry in self._event_history:
                 ts, pid_e, room_e = entry.split()
                 if pid_e == pid and float(ts) >= cutoff:
                     ev_points.append(self._layout[room_e])
+            time_ev = []
+            room_ev = []
+            for entry in self._event_history:
+                ts, pid_e, room_e = entry.split()
+                ts_f = float(ts)
+                if pid_e == pid and ts_f >= cutoff:
+                    time_ev.append(ts_f)
+                    room_ev.append(room_to_y[room_e])
             if len(ev_points) >= 2:
                 ax.plot(
                     [p[0] for p in ev_points],
                     [p[1] for p in ev_points],
-                    color="orange",
+                    color=colors.get(idx % 3, (0, 0, 0)),
+                    linestyle="--",
+                )
+            if len(time_ev) >= 2:
+                ax_time.plot(
+                    time_ev,
+                    room_ev,
+                    color=colors.get(idx % 3, (0, 0, 0)),
                     linestyle="--",
                 )
 
@@ -426,7 +457,11 @@ class MultiPersonTracker:
         )
         legend_handles.append(
             mlines.Line2D(
-                [], [], color="orange", linestyle="--", label="dashed orange: true path (tests only)"
+                [],
+                [],
+                color="black",
+                linestyle="--",
+                label="dashed line: true path (tests only)",
             )
         )
         ax.legend(handles=legend_handles, loc="upper left", fontsize=8)
@@ -434,6 +469,15 @@ class MultiPersonTracker:
 
         ax.set_title(f"t={current_time:.1f}")
         ax.axis("off")
+
+        start_time = current_time - self.event_window
+        ax_time.set_xlim(start_time, current_time)
+        xticks = list(range(int(start_time // 60) * 60, int(current_time) + 1, 60))
+        ax_time.set_xticks(xticks)
+        ax_time.set_yticks(list(room_to_y.values()))
+        ax_time.set_yticklabels(rooms_sorted)
+        ax_time.set_ylabel("room")
+        ax_time.set_xlabel("time (s)")
 
         highlight_text = self._format_highlight_probabilities()
         if highlight_text:
@@ -445,6 +489,7 @@ class MultiPersonTracker:
                 va="bottom",
                 fontsize=8,
             )
+        fig.tight_layout()
         filename = os.path.join(self.debug_dir, f"frame_{self._debug_counter:06d}.png")
         plt.savefig(filename)
         plt.close(fig)
