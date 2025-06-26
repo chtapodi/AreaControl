@@ -29,6 +29,9 @@ from matplotlib import colors as mcolors
 
 import networkx as nx
 
+# Color palette for differentiating multiple people in plots
+PERSON_COLORS = plt.get_cmap("tab10").colors
+
 
 class RoomGraph:
     """Graph describing connectivity between rooms."""
@@ -255,7 +258,8 @@ class MultiPersonTracker:
         self._highlight_room: Optional[str] = None
         self._estimate_paths: Dict[str, List[str]] = defaultdict(list)
         self._true_paths: Dict[str, List[str]] = defaultdict(list)
-        self._sensor_events: List[Tuple[float, str]] = []
+        # (timestamp, room_id, person_id) tuples for timeline plotting
+        self._sensor_events: List[Tuple[float, str, Optional[str]]] = []
         self._sensor_glow: Dict[str, int] = defaultdict(int)
         self._start_time: float = 0.0
         self._last_estimates: Dict[str, str] = {}
@@ -360,7 +364,7 @@ class MultiPersonTracker:
                 )
                 self._last_estimates[person_id] = estimate
             self._highlight_room = room_id
-            self._sensor_events.append((now, room_id))
+            self._sensor_events.append((now, room_id, person_id))
             self._sensor_glow[room_id] = 5
             self._event_history.append(
                 f"{now:.1f}s: motion {room_id} fired, est={estimate}"
@@ -424,7 +428,7 @@ class MultiPersonTracker:
         self._last_event_time = now
         if self.debug:
             self._highlight_room = room_id
-            self._sensor_events.append((now, room_id))
+            self._sensor_events.append((now, room_id, None))
             self._sensor_glow[room_id] = 5
             self._event_history.append(
                 f"{now:.1f}s: presence {room_id}={present}"
@@ -527,12 +531,11 @@ class MultiPersonTracker:
                 [patheffects.withStroke(linewidth=2, foreground="white")]
             )
 
-        colors = {0: "red", 1: "green", 2: "blue"}
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
             node_sizes = []
-            base_rgb = mcolors.to_rgb(colors.get(idx % 3, "black"))
+            base_rgb = PERSON_COLORS[idx % len(PERSON_COLORS)]
             grey = (0.6, 0.6, 0.6)
             for node in graph.nodes:
                 prob = dist.get(node, 0.0)
@@ -559,7 +562,7 @@ class MultiPersonTracker:
                         pos[0],
                         pos[1] + 0.1 + 0.05 * idx,
                         f"{prob:.2f}",
-                        color=colors.get(idx % 3, (0, 0, 0)),
+                        color=PERSON_COLORS[idx % len(PERSON_COLORS)],
                         fontsize=7,
                         ha="center",
                         path_effects=[
@@ -574,7 +577,7 @@ class MultiPersonTracker:
                 ax.plot(
                     xs,
                     ys,
-                    color=colors.get(idx % 3, (0, 0, 0)),
+                    color=PERSON_COLORS[idx % len(PERSON_COLORS)],
                     lw=2,
                     marker="o",
                     ms=4,
@@ -629,16 +632,23 @@ class MultiPersonTracker:
 
         # Sensor activation timeline
         if self._sensor_events:
-            rooms = sorted({r for _, r in self._sensor_events})
+            rooms = sorted({r for _, r, _ in self._sensor_events})
             indices = {r: i for i, r in enumerate(rooms)}
-            times = [t - self._start_time for t, _ in self._sensor_events]
-            ys = [indices[r] for _, r in self._sensor_events]
+            times = [t - self._start_time for t, _, _ in self._sensor_events]
+            ys = [indices[r] for _, r, _ in self._sensor_events]
+            pid_to_idx = {pid: i for i, pid in enumerate(self.people.keys())}
+            colors = [
+                PERSON_COLORS[pid_to_idx.get(pid, 0) % len(PERSON_COLORS)]
+                if pid is not None
+                else (0, 0, 0)
+                for _, _, pid in self._sensor_events
+            ]
             timeline_ax.scatter(
                 times,
                 ys,
                 marker="o",
                 s=60,
-                color="black",
+                color=colors,
                 zorder=3,
             )
             timeline_ax.set_yticks(list(indices.values()))
@@ -671,10 +681,9 @@ class MultiPersonTracker:
             "  Node color: person id",
             "  Size ~ probability",
         ]
-        color_names = {0: "red", 1: "green", 2: "blue"}
         for idx, pid in enumerate(self.people.keys()):
-            color_name = color_names.get(idx % 3, "unknown")
-            legend_lines.append(f"  {pid}: {color_name}")
+            color_hex = mcolors.to_hex(PERSON_COLORS[idx % len(PERSON_COLORS)])
+            legend_lines.append(f"  {pid}: {color_hex}")
         legend_lines.append("  solid line: estimated path")
         legend_lines.append("  dashed orange: true path (tests only)")
 
