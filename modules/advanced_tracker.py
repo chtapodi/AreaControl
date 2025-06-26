@@ -296,18 +296,22 @@ class MultiPersonTracker:
         self._sensor_glow = defaultdict(int)
         self._start_time = timestamp
 
-    def _maybe_visualize(self, now: float) -> None:
-        """Save a debug frame if enough time has passed and there was an update."""
-        if (
-            self._pending_update
-            and now - self._last_plot_time >= self._min_plot_time
-        ):
+    def _maybe_visualize(self, now: float, *, force: bool = False) -> None:
+        """Save a debug frame if enough time has passed and there was an update.
+
+        When ``force`` is ``True`` a frame is written regardless of the
+        ``min_plot_time`` setting and the image file name is the timestamp of
+        ``now``. This is used so each sensor event produces a standalone
+        visualization.
+        """
+        if self._pending_update and (force or now - self._last_plot_time >= self._min_plot_time):
             if (
                 self._current_event_dir is None
                 or now - self._last_event_time > self.event_window
             ):
                 self._start_event(now)
-            self._visualize(now)
+            filename = f"{now:.1f}.png" if force else None
+            self._visualize(now, filename=filename)
             self._last_plot_time = now
             self._pending_update = False
 
@@ -352,7 +356,7 @@ class MultiPersonTracker:
                 f"{now:.1f}s: motion {room_id} fired, est={estimate}"
             )
             self._pending_update = True
-            self._maybe_visualize(now)
+            self._maybe_visualize(now, force=True)
             self._highlight_room = None
 
     def step(self, timestamp: Optional[float] = None, skip_ids: Optional[set[str]] = None) -> None:
@@ -416,7 +420,7 @@ class MultiPersonTracker:
                 f"{now:.1f}s: presence {room_id}={present}"
             )
             self._pending_update = True
-            self._maybe_visualize(now)
+            self._maybe_visualize(now, force=True)
             self._highlight_room = None
 
     def add_phone(self, phone_id: str) -> Phone:
@@ -477,7 +481,7 @@ class MultiPersonTracker:
         }
         return json.dumps(data)
 
-    def _visualize(self, current_time: float) -> None:
+    def _visualize(self, current_time: float, *, filename: Optional[str] = None) -> None:
         """Create a debug figure showing tracker state."""
         plt.clf()
         fig = plt.figure(figsize=(16, 10))
@@ -683,8 +687,12 @@ class MultiPersonTracker:
         plt.tight_layout()
 
         target_dir = self._current_event_dir
-        filename = os.path.join(target_dir, f"frame_{self._debug_counter:06d}.png")
-        plt.savefig(filename)
+        if filename is None:
+            fname = f"frame_{self._debug_counter:06d}.png"
+        else:
+            fname = filename if filename.endswith(".png") else f"{filename}.png"
+        full_path = os.path.join(target_dir, fname)
+        plt.savefig(full_path)
         plt.close(fig)
         self._debug_counter += 1
 
