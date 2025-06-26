@@ -46,19 +46,17 @@ class TestAdvancedTracker(unittest.TestCase):
                 test_name=self._testMethodName,
                 min_plot_time=0.0,
             )
-            multi.process_event('p1', 'bedroom')
-            multi.step()
+            multi.process_event('p1', 'bedroom', timestamp=0.0)
+            multi.step(timestamp=0.0)
             event_dirs = [
                 root
                 for root, _, files in os.walk(tmp)
-                if any(f.startswith('frame_') for f in files)
+                if any(f.endswith('.png') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
             self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
             contents = os.listdir(event_dirs[0])
-            self.assertTrue(
-                any(f.startswith('frame_') and f.endswith('.png') for f in contents)
-            )
+            self.assertIn('0.0.png', contents)
 
             legend = getattr(multi, '_last_legend_lines', [])
             self.assertTrue(any(line.strip().startswith('p1:') for line in legend))
@@ -91,7 +89,7 @@ class TestAdvancedTracker(unittest.TestCase):
             event_dirs = [
                 root
                 for root, _, files in os.walk(tmp)
-                if any(f.startswith('frame_') for f in files)
+                if any(f.endswith('.png') for f in files)
             ]
             self.assertEqual(len(event_dirs), 1)
             self.assertIn(os.path.join("tests", self._testMethodName), event_dirs[0])
