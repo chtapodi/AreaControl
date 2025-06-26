@@ -231,6 +231,7 @@ class MultiPersonTracker:
         test_name: Optional[str] = None,
         min_plot_time: float = DEFAULT_MIN_PLOT_TIME,
         stay_prob: float = 0.5,
+        layout: Optional[Dict[str, Tuple[float, float]]] = None,
     ):
         self.room_graph = room_graph
         self.sensor_model = sensor_model
@@ -259,17 +260,25 @@ class MultiPersonTracker:
         self._last_estimates: Dict[str, str] = {}
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
-            # Use a deterministic spring layout with spacing based on graph size
-            # so plots remain consistent across runs.
-            num_nodes = len(self.room_graph.graph.nodes)
-            k = 2.5 / (num_nodes**0.5) if num_nodes else 0.6
-            self._layout = nx.spring_layout(
-                self.room_graph.graph,
-                seed=42,
-                k=k,
-                scale=3.0,
-                iterations=100,
-            )
+            if layout is not None:
+                self._layout = layout
+            else:
+                # Generate a deterministic layout
+                num_nodes = len(self.room_graph.graph.nodes)
+                k = 3.0 / (num_nodes ** 0.5) if num_nodes else 0.6
+                spring_pos = nx.spring_layout(
+                    self.room_graph.graph,
+                    seed=42,
+                    k=k,
+                    scale=3.0,
+                    iterations=200,
+                )
+                self._layout = nx.kamada_kawai_layout(
+                    self.room_graph.graph,
+                    pos=spring_pos,
+                    scale=3.0,
+                    weight=None,
+                )
 
     def _start_event(self, timestamp: float) -> None:
         """Create a new directory for debug frames for a sensor event."""
@@ -492,16 +501,30 @@ class MultiPersonTracker:
         info_ax.axis("off")
 
         graph = self.room_graph.graph
-        nx.draw_networkx(
+        nx.draw_networkx_edges(
+            graph,
+            pos=self._layout,
+            ax=ax,
+            edge_color="gray",
+        )
+        nx.draw_networkx_nodes(
             graph,
             pos=self._layout,
             ax=ax,
             node_color="skyblue",
             edgecolors="black",
-            edge_color="gray",
+        )
+        label_artists = nx.draw_networkx_labels(
+            graph,
+            pos=self._layout,
+            ax=ax,
             font_size=9,
             font_color="black",
         )
+        for text in label_artists.values():
+            text.set_path_effects(
+                [patheffects.withStroke(linewidth=2, foreground="white")]
+            )
 
         colors = {0: (1, 0, 0), 1: (0, 1, 0), 2: (0, 0, 1)}
         for idx, (pid, person) in enumerate(self.people.items()):
