@@ -25,6 +25,7 @@ matplotlib.use("Agg")
 DEFAULT_MIN_PLOT_TIME = 30.0
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as patheffects
+from matplotlib import colors as mcolors
 
 import networkx as nx
 
@@ -526,20 +527,27 @@ class MultiPersonTracker:
                 [patheffects.withStroke(linewidth=2, foreground="white")]
             )
 
-        colors = {0: (1, 0, 0), 1: (0, 1, 0), 2: (0, 0, 1)}
+        colors = {0: "red", 1: "green", 2: "blue"}
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
+            node_sizes = []
+            base_rgb = mcolors.to_rgb(colors.get(idx % 3, "black"))
+            grey = (0.6, 0.6, 0.6)
             for node in graph.nodes:
-                intensity = dist.get(node, 0.0)
-                base = colors.get(idx % 3, (0, 0, 0))
-                node_colors.append((*base, intensity))
+                prob = dist.get(node, 0.0)
+                color = tuple(
+                    prob * c + (1 - prob) * g for c, g in zip(base_rgb, grey)
+                )
+                node_colors.append(color)
+                node_sizes.append(400 + prob * 600)
             nx.draw_networkx_nodes(
                 graph,
                 pos=self._layout,
                 nodelist=list(graph.nodes),
                 node_color=node_colors,
-                node_size=600,
+                node_size=node_sizes,
+                alpha=0.9,
                 ax=ax,
             )
 
@@ -661,7 +669,7 @@ class MultiPersonTracker:
         legend_lines = [
             "Legend:",
             "  Node color: person id",
-            "  Alpha: probability",
+            "  Size ~ probability",
         ]
         color_names = {0: "red", 1: "green", 2: "blue"}
         for idx, pid in enumerate(self.people.keys()):
