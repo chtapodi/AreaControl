@@ -141,6 +141,12 @@ class PersonTracker:
             for p in self.particles:
                 p.room = sensor_room
             move_particles = False
+        else:
+            if (
+                self.last_sensor_room is not None
+                and current_time - self.last_sensor_time < self.sensor_model.cooldown
+            ):
+                move_particles = False
 
         for p in self.particles:
             if move_particles:
@@ -373,19 +379,14 @@ class MultiPersonTracker:
             edgecolors="black",
         )
 
-        colors = {
-            0: (1, 0, 0),
-            1: (0, 1, 0),
-            2: (0, 0, 1),
-        }
+        cmap = matplotlib.cm.get_cmap("tab10")
         legend_handles = []
         for idx, (pid, person) in enumerate(self.people.items()):
             dist = person.tracker.distribution()
             node_colors = []
             for node in self.room_graph.graph.nodes:
                 intensity = dist.get(node, 0.0)
-                base = colors.get(idx % 3, (0, 0, 0))
-                node_colors.append(blend_with_gray(base, intensity))
+                base_color = cmap(idx % cmap.N)[:3]
             nx.draw_networkx_nodes(
                 self.room_graph.graph,
                 pos=self._layout,
@@ -407,7 +408,7 @@ class MultiPersonTracker:
                 ax.plot(
                     [p[0] for p in est_points],
                     [p[1] for p in est_points],
-                    color=colors.get(idx % 3, (0, 0, 0)),
+                    color=cmap(idx % cmap.N),
                     linewidth=1 + 4 * confidence,
                 )
 
@@ -429,7 +430,7 @@ class MultiPersonTracker:
                 mlines.Line2D(
                     [],
                     [],
-                    color=colors.get(idx % 3, (0, 0, 0)),
+                    color=cmap(idx % cmap.N),
                     label=f"{pid}: {int(max_prob * 100 + 0.5)}%",
                 )
             )
