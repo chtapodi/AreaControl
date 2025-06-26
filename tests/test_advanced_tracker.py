@@ -174,6 +174,7 @@ class TestAdvancedTracker(unittest.TestCase):
             scenario = yaml.safe_load(f)
 
         scenario_name = scenario.get('name') or os.path.splitext(os.path.basename(path))[0]
+        print(f"\n\nrunning scenario {scenario_name}")
 
         graph = load_room_graph_from_yaml(scenario['connections'])
         sensor_model = SensorModel()
@@ -191,6 +192,10 @@ class TestAdvancedTracker(unittest.TestCase):
             for ev in person.get('events', []):
                 t = ev['time']
                 time_events.setdefault(t, []).append((pid, ev['room']))
+                
+        print("time events")
+        for key, value in time_events.items() :
+            print(f"{key}: \t{value}")
 
         random_seed = scenario.get('seed', 0)
         import random
@@ -216,8 +221,29 @@ class TestAdvancedTracker(unittest.TestCase):
             if events:
                 estimates = multi.estimate_locations()
                 known = list(true_locations.keys())
-                predicted = [estimates.get(pid) for pid in known]
-                actual = [true_locations.get(pid) for pid in known]
+
+                print(f"\n{'='*60}")
+                print(f"[Time {current:>4}]  Events: {', '.join(f'{pid}->{room}' for pid, room in events)}")
+                print(f"{'-'*60}")
+                print(f"{'ID':<12} {'Predicted':<25} {'Actual':<25} {'Match'}")
+
+                correct_this_step = 0
+                for pid in known:
+                    predicted = estimates.get(pid, "∅")
+                    actual = true_locations.get(pid, "∅")
+                    match = "✅" if predicted == actual else "❌"
+                    if predicted == actual:
+                        correct_this_step += 1
+                    print(f"{pid:<12} {predicted:<25} {actual:<25} {match}")
+
+                step_accuracy = correct_this_step / len(known) if known else 1.0
+                total += len(known)
+                correct += correct_this_step
+
+                print(f"{'-'*60}")
+                print(f"Step Accuracy:      {correct_this_step:>3}/{len(known):<3} = {step_accuracy:.1%}")
+                print(f"Cumulative Accuracy:{correct:>3}/{total:<3} = {correct/total:.1%}")
+                
                 if sorted(predicted) == sorted(actual):
                     correct += len(known)
                 else:
