@@ -248,6 +248,38 @@ class TestAdvancedTracker(unittest.TestCase):
                 self.assertEqual(result.get(pid), room)
             self.assertGreaterEqual(accuracy, 0.8)
 
+    def test_event_history_records_all_events(self):
+        path = os.path.join('tests', 'scenarios', 'walk_across_house.yml')
+        with open(path, 'r') as f:
+            scenario = yaml.safe_load(f)
+
+        graph = load_room_graph_from_yaml(scenario['connections'])
+        sensor_model = SensorModel()
+        multi = MultiPersonTracker(graph, sensor_model, test_name='walk_across_house')
+
+        time_events = {}
+        events = []
+        for person in scenario.get('persons', []):
+            pid = person['id']
+            for ev in person.get('events', []):
+                t = ev['time']
+                time_events.setdefault(t, []).append((pid, ev['room']))
+                events.append((t, ev['room']))
+
+        current = 0
+        max_t = max(time_events) if time_events else 0
+        while current <= max_t:
+            for pid, room in time_events.get(current, []):
+                multi.process_event(pid, room, timestamp=current)
+            multi.step(timestamp=current)
+            current += 1
+
+        history = multi._event_history
+        self.assertGreaterEqual(len(history), len(events))
+        for t, room in events:
+            frag = f"{float(t):.1f}s: motion {room}"
+            self.assertTrue(any(frag in h for h in history))
+
 
 if __name__ == '__main__':
     unittest.main()
