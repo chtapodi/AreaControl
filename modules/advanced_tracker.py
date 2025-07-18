@@ -660,6 +660,30 @@ class MultiPersonTracker:
                 color=colors,
                 zorder=3,
             )
+            # Draw horizontal line segments showing the true location of each
+            # person based on the scenario (tests only).
+            if self.test_name:
+                for idx, pid in enumerate(self.people.keys()):
+                    pid_events = [
+                        (t, r)
+                        for t, r, p in self._sensor_events
+                        if p == pid
+                    ]
+                    pid_events.sort()
+                    for j, (t, room) in enumerate(pid_events):
+                        start = t
+                        end = (
+                            pid_events[j + 1][0]
+                            if j + 1 < len(pid_events)
+                            else current_time
+                        )
+                        timeline_ax.plot(
+                            [start - self._start_time, end - self._start_time],
+                            [indices[room], indices[room]],
+                            color=PERSON_COLORS[idx % len(PERSON_COLORS)],
+                            lw=2,
+                            zorder=2,
+                        )
             timeline_ax.set_yticks(list(indices.values()))
             timeline_ax.set_yticklabels(rooms)
             timeline_ax.set_xlabel("Time (s)")
@@ -695,6 +719,7 @@ class MultiPersonTracker:
             color_hex = mcolors.to_hex(PERSON_COLORS[idx % len(PERSON_COLORS)])
             legend_lines.append(f"  {pid}: {color_hex}")
         legend_lines.append("  timeline dot color = person id")
+        legend_lines.append("  timeline line: true location (tests only)")
         legend_lines.append("  solid line: estimated path")
         legend_lines.append("  dashed orange: true path (tests only)")
 
