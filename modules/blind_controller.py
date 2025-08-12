@@ -6,7 +6,11 @@ try:
 except NameError:
     class DummyCover:
         def set_cover_position(self, **kwargs):
-            print("set_cover_position", kwargs)
+            # fall back to print if logger is unavailable
+            try:
+                log.debug("set_cover_position", kwargs)
+            except NameError:
+                print("set_cover_position", kwargs)
 
     cover = DummyCover()
 
