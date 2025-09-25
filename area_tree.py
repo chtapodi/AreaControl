@@ -62,19 +62,49 @@ BLIND_HEIGHTS = {
 }
 
 # Per-device color calibration profiles. Each entry maps a driver keyword
-# to RGB multipliers used to compensate for hardware differences.
+# to RGB calibration settings used to compensate for hardware differences.
+# ``scale`` entries apply multiplicative adjustments, while ``offset``
+# entries apply additive deltas after scaling.  Both settings are optional.
 COLOR_PROFILES = {
-    "kauf": [1.0, 1.0, 1.0],
-    "hue": [1.0, 1.0, 1.0],
+    "kauf": {"scale": [1.0, 1.0, 1.0], "offset": [0, 0, 0]},
+    "hue": {"scale": [1.0, 1.0, 1.0], "offset": [0, 0, 0]},
 }
 
+
 def calibrate_rgb(rgb, profile):
-    """Apply a color calibration profile to an RGB tuple."""
+    """Apply a color calibration profile to an RGB tuple.
+
+    ``profile`` can be either an iterable of scale factors for backward
+    compatibility or a dictionary containing optional ``scale`` and
+    ``offset`` entries.  Values are clamped to the [0, 255] range.
+    """
+
     if rgb is None or profile is None:
         return rgb
+
+    scale = [1.0, 1.0, 1.0]
+    offset = [0, 0, 0]
+
+    if isinstance(profile, dict):
+        if profile.get("scale"):
+            scale = list(profile["scale"])
+        elif profile.get("multiplier"):
+            # legacy support for ``multiplier`` naming
+            scale = list(profile["multiplier"])
+        if profile.get("offset"):
+            offset = list(profile["offset"])
+    else:
+        scale = list(profile)
+
+    # Ensure the calibration vectors have three components.
+    if len(scale) < 3:
+        scale.extend([1.0] * (3 - len(scale)))
+    if len(offset) < 3:
+        offset.extend([0] * (3 - len(offset)))
+
     result = []
-    for comp, factor in zip(rgb, profile):
-        val = int(comp * factor)
+    for comp, factor, delta in zip(rgb, scale, offset):
+        val = int(comp * factor + delta)
         val = max(0, min(255, val))
         result.append(val)
     return result
