@@ -1,0 +1,75 @@
+name: motion_freeze_cycle
+steps:
+  - call: init
+  - call: create_event
+    kwargs:
+      device_name: sensor_living_room_motion
+      tags: [auto, motion_detected]
+  - expect:
+      areas:
+        living_room: {}
+      services:
+        light:
+          - action: "on"
+            entity_id: light.light_living_room_main
+  - call: freeze_area
+    kwargs:
+      area_name: living_room
+  - expect:
+      areas:
+        living_room:
+          frozen: true
+      devices:
+        light_living_room_main:
+          locked: true
+      services:
+        light:
+          - action: "on"
+            entity_id: light.light_living_room_main
+  - call: create_event
+    kwargs:
+      device_name: sensor_living_room_motion
+      tags: [auto, motion_detected]
+  - expect:
+      devices:
+        light_living_room_main:
+          locked: true
+      services:
+        light:
+          - action: "on"
+            entity_id: light.light_living_room_main
+  - call: unfreeze_area
+    kwargs:
+      area_name: living_room
+  - call: create_event
+    kwargs:
+      device_name: sensor_living_room_motion
+      tags: [auto, motion_detected]
+  - expect:
+      areas:
+        living_room:
+          frozen: false
+      devices:
+        light_living_room_main:
+          locked: false
+      services:
+        light:
+          - action: "on"
+            entity_id: light.light_living_room_main
+          - action: "off"
+            entity_id: light.light_living_room_main
+  - call: create_event
+    kwargs:
+      device_name: sensor_hallway_motion
+      tags: [auto, motion_detected]
+  - expect:
+      areas:
+        hallway: {}
+      services:
+        light:
+          - action: "on"
+            entity_id: light.light_living_room_main
+          - action: "off"
+            entity_id: light.light_living_room_main
+          - action: "on"
+            entity_id: light.light_hallway

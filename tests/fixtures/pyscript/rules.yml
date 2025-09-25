@@ -1,0 +1,23 @@
+living_room_motion_auto:
+  trigger_prefix: "sensor_living_room_motion"
+  required_tags:
+    - auto
+  scope_functions:
+    - get_local_scope: []
+  state_functions:
+    - toggle_status: []
+  combination_strategy: "last"
+  functions:
+    - update_tracker: []
+
+hallway_motion_scene:
+  trigger_prefix: "sensor_hallway_motion"
+  required_tags:
+    - auto
+  scope_functions:
+    - get_local_scope: []
+  state_functions:
+    - toggle_status: []
+  combination_strategy: "last"
+  functions:
+    - update_tracker: []

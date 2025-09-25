@@ -1,5 +1,5 @@
 import types
-from tests.test_caching import load_area_tree
+from tests.conftest import load_area_tree
 
 
 def test_plug_driver_on_off():

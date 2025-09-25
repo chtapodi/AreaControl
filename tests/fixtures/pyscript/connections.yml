@@ -1,0 +1,7 @@
+home:
+  - living_room
+  - hallway
+living_room:
+  - hallway
+hallway:
+  - living_room

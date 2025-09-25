@@ -1,0 +1,23 @@
+# Copy this template into tests/service_scenarios/<your_scenario>.yml
+name: example_service_flow
+steps:
+  - call: init
+  - call: create_event
+    kwargs:
+      device_name: sensor_example_motion
+      tags: [auto, motion_detected]
+  - expect:
+      services:
+        light:
+          - action: "on"
+            entity_id: light.light_example
+  - call: freeze_area
+    kwargs:
+      area_name: example_area
+  - expect:
+      areas:
+        example_area:
+          frozen: true
+      devices:
+        light_example:
+          locked: true
