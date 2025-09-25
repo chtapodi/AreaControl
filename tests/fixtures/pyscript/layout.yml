@@ -1,0 +1,31 @@
+home:
+  sub_areas:
+    - living_room
+    - hallway
+  direct_sub_areas: []
+  outputs: []
+  inputs: {}
+
+living_room:
+  sub_areas: []
+  direct_sub_areas: []
+  outputs:
+    - light_living_room_main
+  inputs:
+    motion:
+      - sensor_living_room_motion
+
+hallway:
+  sub_areas: []
+  direct_sub_areas: []
+  outputs:
+    - light_hallway
+  inputs:
+    motion:
+      - sensor_hallway_motion
+
+service_input:
+  sub_areas: []
+  direct_sub_areas: []
+  outputs: []
+  inputs: {}

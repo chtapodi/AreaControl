@@ -214,3 +214,10 @@ so lights ignore any events until unfrozen.
 
 Refer back to [Event and Rule Workflow](#event-and-rule-workflow) to understand how a service call becomes an action inside an area.
 
+## Testing
+
+Automated testing is documented in [TESTING.md](TESTING.md). It covers running
+the stubbed suite, enabling the optional `ha_integration` marker when
+`AREATREE_REAL_DRIVERS=1` is available, and authoring new service scenarios using
+the shared fixtures and templates under `tests/templates/`.
+

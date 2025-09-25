@@ -1,0 +1,13 @@
+light_living_room_main:
+  type: light
+  filters:
+    - hue
+
+light_hallway:
+  type: light
+
+sensor_living_room_motion:
+  type: motion_sensor
+
+sensor_hallway_motion:
+  type: motion_sensor
