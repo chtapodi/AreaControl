@@ -56,7 +56,7 @@ def test_television_driver_on_off():
 def test_hue_light_calibration():
     area_tree = load_area_tree()
     # adjust profile so test has predictable output
-    area_tree.COLOR_PROFILES["hue"] = [0.5, 1.0, 1.0]
+    area_tree.COLOR_PROFILES["hue"] = {"scale": [0.5, 1.0, 1.0], "offset": [0, 0, 0]}
     calls = []
     area_tree.light = types.SimpleNamespace(
         turn_on=lambda **kw: calls.append(kw),
@@ -66,3 +66,17 @@ def test_hue_light_calibration():
     light = HueLight("library_lamp")
     light.apply_values(rgb_color=[100, 100, 100])
     assert calls and calls[0]["rgb_color"] == [50, 100, 100]
+
+
+def test_light_calibration_offset():
+    area_tree = load_area_tree()
+    area_tree.COLOR_PROFILES["kauf"] = {"scale": [1.0, 1.0, 1.0], "offset": [10, -20, 5]}
+    calls = []
+    area_tree.light = types.SimpleNamespace(
+        turn_on=lambda **kw: calls.append(kw),
+        turn_off=lambda **kw: None,
+    )
+    KaufLight = area_tree.KaufLight
+    light = KaufLight("desk_lamp")
+    light.apply_values(rgb_color=[100, 100, 100])
+    assert calls and calls[0]["rgb_color"] == [110, 80, 105]
