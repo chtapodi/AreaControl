@@ -428,144 +428,76 @@ def get_area_local_scope(device, device_area, *args):
 ### State functions
 # Functions that return a state based on some value
 def get_time_based_state(device, scope, *args):
-    """
-    Determines and returns a time-based state for devices within a given scope.
+    now = time.localtime()
+    hour = now.tm_hour
+    minute = now.tm_min
 
-    This function calculates the desired state for devices based on the current
-    hour of the day. The state includes attributes like brightness, RGB color,
-    and color temperature. The state is intended to reflect common lighting
-    preferences for different times of the day, such as early morning, midday,
-    evening, etc.
-
-    Args:
-        device: The device for which the state is being determined.
-        scope: A list of areas containing devices whose states are to be
-               considered.
-        *args: Additional arguments that may be required by the function.
-
-    Returns:
-        dict: A dictionary representing the desired state, including keys for:
-              - "status": Integer, represents the on/off state (1 for on).
-              - "brightness": Integer (optional), represents the brightness level.
-              - "rgb_color": List of integers (optional), represents the RGB color.
-              - "color_temp": Integer (optional), represents the color temperature.
-    """
-    now = time.localtime().tm_hour
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
     scope_state = summarize_state(states)
 
-    step_increment = 20
+    max_brightness = 255
+    overnight_brightness = 60
+    current_minutes = hour * 60 + minute
 
-    state = {}
+    def interpolate_over_quarters(start_minute, end_minute, start_value, end_value):
+        total_minutes = end_minute - start_minute
+        if total_minutes <= 0:
+            return end_value
+        clamped = max(0, min(current_minutes - start_minute, total_minutes))
+        total_quarters = max(1, total_minutes // 15)
+        current_quarter = min(total_quarters, clamped // 15)
+        progress = current_quarter / total_quarters
+        return round(start_value + (end_value - start_value) * progress)
 
-    state["status"] = 1  # want to turn on for all of them
+    if 0 <= current_minutes < 60:  # 00:00-01:00
+        brightness = interpolate_over_quarters(0, 60, max_brightness, overnight_brightness)
+    elif 60 <= current_minutes < 300:  # 01:00-05:00
+        brightness = overnight_brightness
+    elif 300 <= current_minutes < 420:  # 05:00-07:00
+        brightness = interpolate_over_quarters(300, 420, overnight_brightness, max_brightness)
+    else:  # 07:00-24:00
+        brightness = max_brightness
 
-    # using now, have if statements for times of day: early morning, morning, midday, afternoon, evening, night, late night
+    state = {"status": 1, "brightness": brightness}
 
-    if now > 0 and now < 5:
-        log.info("it is late_night")
+    sundown_minutes = 19 * 60  # 19:00 placeholder
 
-        state["brightness"] = 50
+    if current_minutes < 360:  # 00:00-06:00
         state["rgb_color"] = [255, 0, 0]
-
-    elif now >= 5 and now < 7:
-        log.info("it is dawn")
-        state["rgb_color"] = [255, 0, 0]
-
-    elif now >= 7 and now < 8:
-        log.info("it is early morning")
-        state["brightness"] = 255
-
-        goal_color = [255, 200, 185]
-        if "rgb_color" in scope_state:
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )  # scope_state["rgb_color"]
-        else:
-            state["rgb_color"] = goal_color
-
-    elif now >= 8 and now < 11:
-        log.info("it is morning")
-        state["brightness"] = 255
+    elif current_minutes < 450:  # 06:00-07:30
+        state["rgb_color"] = [255, 190, 130]
+    elif current_minutes < 600:  # 07:30-10:00
         state["color_temp"] = 350
-
-    elif now >= 11 and now < 14:  # 11-2
-        log.info("it is midday")
-        state["brightness"] = 255
+    elif current_minutes < 720:  # 10:00-12:00
+        state["color_temp"] = 400
+    elif current_minutes < 900:  # 12:00-15:00
+        state["color_temp"] = 370
+    elif current_minutes < sundown_minutes:  # 15:00-19:00
         state["color_temp"] = 350
-
-    elif now >= 14 and now < 18:  # 2-6
-        log.info("it is afternoon")
-        state["brightness"] = 255
-        state["color_temp"] = 350
-
-
-    elif now >= 18 and now < 20:  # 6-8
-        log.info("it is evening")
-        goal_color = [255, 200, 185]
-        if "rgb_color" in scope_state:
-            log.info(f"combining {scope_state['rgb_color']} with {goal_color}")
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )  # scope_state["rgb_color"]
-        else:
-            log.info("just setting the color")
-            state["rgb_color"] = goal_color
-
-    elif now >= 20 and now < 22:  # 8-10
-        log.info("it is late evening")
-
-        goal_color = [255, 172, 89]
-        if "rgb_color" in scope_state:
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )  # scope_state["rgb_color"]
-        else:
-            state["rgb_color"] = goal_color
-
-    elif now >= 22:  # 10-11
-        log.info("it is night")
-
-        if "rgb_color" in scope_state:
-            log.info("Light is off, darkening color")
-            redder_state = combine_colors(
-                scope_state["rgb_color"],
-                [+step_increment, -step_increment, -step_increment],
-                "add",
-            )
-            state["rgb_color"] = redder_state
-        else:
-            state["rgb_color"] = [255, 80, 0]
-
-    elif now >= 23:  # 23-0
-        if scope_state["status"] == 0:
-            log.info("it is late-ish_night")
-            state["rgb_color"] = [255, 0, 0]
-        else:
-            if "brightness" in scope_state:
-                current_brightness = scope_state["brightness"]
-                if current_brightness > 50:
-                    state["brightness"] = current_brightness - 5
-            else:
-                state["brightness"] = 50
-
-    if "status" in scope_state:
-        if scope_state["status"]:
-            # if the light is on, don't apply rgb_color or temp
-            if "rgb_color" in state:
-                del state["rgb_color"]
-
-            if "color_temp" in state:
-                del state["color_temp"]
     else:
-        log.warning("Status is not in scope_state")
+        goal_color = [255, 190, 130] if hour < 22 else [255, 140, 70]
+        if "rgb_color" in scope_state:
+            state["rgb_color"] = combine_colors(
+                scope_state["rgb_color"], goal_color, strategy="average"
+            )
+        else:
+            state["rgb_color"] = goal_color
 
-    log.info(f"Time based state is {state}")
+    if scope_state.get("status"):
+        state.pop("rgb_color", None)
+        state.pop("color_temp", None)
+
+    log.info(
+        "Time based state: hour=%s minute=%s brightness=%s state=%s",
+        hour,
+        minute,
+        brightness,
+        state,
+    )
     return state
 
-# Gets the most recent state that was manually set
 def get_last_set_state(device, scope, *args):
     return get_cached_last_set_state()
 
