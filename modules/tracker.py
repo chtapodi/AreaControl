@@ -292,13 +292,13 @@ class Track:
 
 
 class TrackManager:
-    def __init__(self, max_track_length=5, oldest_track=30 * 60, max_tracks=10, score_threshold=2.5):
+    def __init__(self, max_track_length=5, oldest_track=30 * 60, max_tracks=10, score_threshold=2.5, connections_config="./pyscript/connections.yml"):
         self.tracks = []
         self.max_track_length = max_track_length
         self.oldest_track = oldest_track
         self.max_tracks = max_tracks
         self.score_threshold = score_threshold # Tracks with score worse than threshold will not be fused
-        self.graph_manager = GraphManager("./pyscript/connections.yml")
+        self.graph_manager = GraphManager(connections_config)
 
     def add_event(self, area, person=None):
         if self.graph_manager.is_area_in_graph(area):

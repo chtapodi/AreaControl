@@ -68,6 +68,39 @@ COLOR_PROFILES = {
     "hue": [1.0, 1.0, 1.0],
 }
 
+# Centralized config paths; falls back to legacy defaults when config is missing.
+DEFAULT_CONFIG_PATH = "./pyscript/config.yml"
+DEFAULT_CONFIG = {
+    "layout": "./pyscript/layout.yml",
+    "rules": "./pyscript/rules.yml",
+    "devices": "devices.yml",
+    "connections": "./pyscript/connections.yml",
+    "sun": "./pyscript/sun_config.yml",
+}
+
+
+def load_config(config_path: str = DEFAULT_CONFIG_PATH):
+    """
+    Load config path map from a central YAML file.
+    Accepts either top-level keys or a ``paths`` section; missing values fall back to defaults.
+    """
+    config_paths = copy.deepcopy(DEFAULT_CONFIG)
+    try:
+        with open(config_path, "r") as f:
+            cfg = yaml.safe_load(f) or {}
+    except Exception as exc:
+        log.warning(f"Could not load config at {config_path}, using defaults: {exc}")
+        return config_paths
+
+    paths = cfg.get("paths", cfg)
+    if isinstance(paths, dict):
+        for key, val in paths.items():
+            if val:
+                config_paths[key] = val
+    else:
+        log.warning(f"Config file {config_path} missing 'paths' mapping, using defaults")
+    return config_paths
+
 def calibrate_rgb(rgb, profile):
     """Apply a color calibration profile to an RGB tuple."""
     if rgb is None or profile is None:
@@ -87,6 +120,7 @@ def reset():
     global event_manager
     global global_triggers
     global verbose_mode
+    global tracker_manager
     area_tree = None
     event_manager = None
     global_triggers = None
@@ -101,10 +135,11 @@ def init():
     global event_manager
     global global_triggers
     global tracker_manager
+    config_paths = load_config()
     global_triggers = []
-    area_tree = AreaTree("./pyscript/layout.yml")
-    event_manager = EventManager("./pyscript/rules.yml", area_tree)
-    tracker_manager = TrackManager()
+    area_tree = AreaTree(config_paths["layout"], devices_file=config_paths["devices"])
+    event_manager = EventManager(config_paths["rules"], area_tree)
+    tracker_manager = TrackManager(connections_config=config_paths["connections"])
 
 
 def get_global_triggers():

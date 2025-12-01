@@ -1,0 +1,6 @@
+paths:
+  layout: "./pyscript/layout.yml"
+  rules: "./pyscript/rules.yml"
+  devices: "devices.yml"
+  connections: "./pyscript/connections.yml"
+  sun: "./pyscript/sun_config.yml"
