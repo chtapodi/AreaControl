@@ -2599,9 +2599,12 @@ def monitor_external_state_setting(**kwargs):
             device_names=[]
             if "entity_id" in data:
 
-                def fix_entity_name(entity_id) :
-                    entity_id=entity_id.strip("light.")
-                    if entity_id.endswith("_"): entity_id+="light"
+                def fix_entity_name(entity_id):
+                    # Strip only the leading domain portion; don't drop inner characters.
+                    if entity_id.startswith("light."):
+                        entity_id = entity_id.split(".", 1)[1]
+                    if entity_id.endswith("_"):
+                        entity_id += "light"
                     return entity_id
 
                 if type(data["entity_id"]) == str:

@@ -134,7 +134,7 @@ living_room_corner_lamp:
     - light
     - hue
 
-living_room_tall_lamp:
+living_room_lamp:
   type: light
   filters:
     - light
