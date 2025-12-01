@@ -128,19 +128,28 @@ kauf_fuzzy_room:
 
 
 # Hue
-library_lamp:
+living_room_corner_lamp:
   type: light
   filters:
     - light
     - hue
 
-living_room_lamp:
+living_room_tall_lamp:
   type: light
   filters:
     - light
     - hue
 
-blind_bedroom_window:
+# Blinds
+
+living_room_blind_cover:
+  type: blind
+  filters:
+    - blind
+  height: 100
+
+
+bedroom_blind_cover:
   type: blind
   filters:
     - blind

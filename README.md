@@ -38,10 +38,9 @@ The two main Python files are [`area_tree.py`](area_tree.py) and [`modules/track
 
 ### Config Paths
 
-All file locations are declared in [`config.yml`](config.yml) under `paths`. If
-`config.yml` is missing, the defaults shown below are used. `init()` in
-[`area_tree.py`](area_tree.py) calls `load_config()` and forwards the resolved
-paths into the respective managers.
+All file locations live in [`config.yml`](config.yml) under `paths`. If the file
+is missing, defaults are used. `init()` in [`area_tree.py`](area_tree.py) calls
+`load_config()` and passes the resolved paths to each manager.
 
 ```yaml
 paths:
@@ -53,44 +52,46 @@ paths:
 ```
 
 ### layout.yml
-Passed to `AreaTree(...)` inside `init()`; `_create_area_tree` builds the area
-hierarchy and instantiates devices based on `outputs/inputs`. *Fill out*: each
-top-level key is an area. `direct_sub_areas` mark immediate children,
-`sub_areas` build the full tree, `outputs` list device ids, and `inputs` is a
-dict of sensor types (`motion`, `presence`, `service`) to lists of entity ids.
-Leave unused sections as `-` or omit.
+- Loader: `AreaTree(...)` in `init()`; parsed in `_create_area_tree`.
+- Use: Builds the area hierarchy; spawns devices for `outputs`; registers sensor
+  callbacks for `inputs`.
+- Fill out: each top-level key is an area. `direct_sub_areas` and `sub_areas`
+  define children; `outputs` list device ids; `inputs` is a dict of sensor types
+  (`motion`, `presence`, `service`) to lists of entity ids. Omit or set `-` when
+  unused.
 
 ### devices.yml
-Passed to `AreaTree(..., devices_file=...)`; entries override driver selection
-and per-device options. *Fill out*: for each device id, include `type` (light,
-blind, speaker, plug, contact_sensor, fan, television), `filters` (e.g., `hue`
-vs `kauf` for lights), and optional `height` for blinds (meters). Missing
-entries fall back to name heuristics.
+- Loader: `AreaTree(..., devices_file=...)`.
+- Use: Overrides driver selection and per-device options (e.g., blind height).
+- Fill out: per device id, set `type` (light, blind, speaker, plug,
+  contact_sensor, fan, television), `filters` (e.g., `hue` vs `kauf`), optional
+  `height` for blinds (meters). Missing entries fall back to name heuristics.
 
 ### rules.yml
-Passed to `EventManager(...)`; parsed in `execute_rule()` to resolve
-scope/state/guard functions. *Fill out*: each rule needs `trigger_prefix`;
-optional `required_tags`/`prohibited_tags`; `scope_functions` and
-`state_functions` as lists of `{function_name: [args]}`; `state` as a partial
-state dict; `combination_strategy` (`first_state`, `last`, `average`);
-`functions` for guards/side-effects.
+- Loader: `EventManager(...)`; read in `execute_rule()`.
+- Use: Defines trigger prefixes, scopes, state builders, and guards.
+- Fill out: `trigger_prefix`; optional `required_tags`/`prohibited_tags`;
+  `scope_functions` and `state_functions` as lists of `{function_name: [args]}`;
+  `state` as a partial state dict; `combination_strategy` (`first_state`, `last`,
+  `average`); `functions` for guard/side-effect helpers.
 
 ### connections.yml
-Passed to `TrackManager(connections_config=...)`; loaded by `GraphManager` in
-`modules/tracker.py` for presence path scoring/visuals. *Fill out*: under
-`connections`, add list items like `{kitchen: hallway}` to create undirected
-edges between areas you track.
+- Loader: `TrackManager(connections_config=...)` → `GraphManager` in
+  `modules/tracker.py`.
+- Use: Presence path scoring, track association, and graph visualization.
+- Fill out: under `connections`, add list items like `{kitchen: hallway}` to add
+  undirected edges between areas being tracked.
 
 ### sun_config.yml
-Consumed by `SunTracker` in `modules/sun_tracker.py` for location/geometry;
-`BlindController` can pair it with blind drivers. *Fill out*:
-`location.latitude`/`longitude`; `max_light_distance` (meters) is the allowed
-sunlight patch length; under `areas`, each window/area needs `bearing`
-(degrees), `window_height` (meters), optional per-window `max_light_distance`,
-and optional `device` id for the associated blind.
+- Loader: `SunTracker` in `modules/sun_tracker.py`; optional pairing via
+  `BlindController`.
+- Use: Location/geometry for sun-facing detection and blind closure math.
+- Fill out: `location.latitude`/`longitude`; `max_light_distance` (meters) for
+  allowed sunlight patch; under `areas`, provide `bearing` (degrees),
+  `window_height` (meters), optional per-window `max_light_distance`, optional
+  `device` id for the associated blind.
 
-These files are loaded at startup and referenced throughout the code paths
-above.
+These files load at startup and power the code paths above.
 
 ## Areas and Devices
 
