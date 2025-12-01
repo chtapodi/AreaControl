@@ -36,20 +36,61 @@ The two main Python files are [`area_tree.py`](area_tree.py) and [`modules/track
 
 ## YAML Configuration
 
-The repository relies on several YAML files:
+### Config Paths
 
-- [`layout.yml`](layout.yml) defines the tree of areas, the devices inside each area, and their relationships.
-- [`devices.yml`](devices.yml) lists device definitions and filters.
-- [`connections.yml`](connections.yml) describes which areas are considered connected for presence tracking.
-- [`rules.yml`](rules.yml) holds automation rules that pair events with actions.
-- [`sun_config.yml`](sun_config.yml) stores location information and the
-  orientation of windows or areas used by the sun tracker. Each window entry can
-  specify a `window_height` in meters. The file also defines
-  `max_light_distance`—the allowed patch of sunlight on the floor (default is
-  roughly one foot). Windows may also define a `device` ID for the blind
-  associated with that opening.
+All file locations are declared in [`config.yml`](config.yml) under `paths`. If
+`config.yml` is missing, the defaults shown below are used. `init()` in
+[`area_tree.py`](area_tree.py) calls `load_config()` and forwards the resolved
+paths into the respective managers.
 
-These files are loaded at startup and are referenced throughout the code.
+```yaml
+paths:
+  layout: "./pyscript/layout.yml"
+  rules: "./pyscript/rules.yml"
+  devices: "devices.yml"
+  connections: "./pyscript/connections.yml"
+  sun: "./pyscript/sun_config.yml"
+```
+
+### layout.yml
+Passed to `AreaTree(...)` inside `init()`; `_create_area_tree` builds the area
+hierarchy and instantiates devices based on `outputs/inputs`. *Fill out*: each
+top-level key is an area. `direct_sub_areas` mark immediate children,
+`sub_areas` build the full tree, `outputs` list device ids, and `inputs` is a
+dict of sensor types (`motion`, `presence`, `service`) to lists of entity ids.
+Leave unused sections as `-` or omit.
+
+### devices.yml
+Passed to `AreaTree(..., devices_file=...)`; entries override driver selection
+and per-device options. *Fill out*: for each device id, include `type` (light,
+blind, speaker, plug, contact_sensor, fan, television), `filters` (e.g., `hue`
+vs `kauf` for lights), and optional `height` for blinds (meters). Missing
+entries fall back to name heuristics.
+
+### rules.yml
+Passed to `EventManager(...)`; parsed in `execute_rule()` to resolve
+scope/state/guard functions. *Fill out*: each rule needs `trigger_prefix`;
+optional `required_tags`/`prohibited_tags`; `scope_functions` and
+`state_functions` as lists of `{function_name: [args]}`; `state` as a partial
+state dict; `combination_strategy` (`first_state`, `last`, `average`);
+`functions` for guards/side-effects.
+
+### connections.yml
+Passed to `TrackManager(connections_config=...)`; loaded by `GraphManager` in
+`modules/tracker.py` for presence path scoring/visuals. *Fill out*: under
+`connections`, add list items like `{kitchen: hallway}` to create undirected
+edges between areas you track.
+
+### sun_config.yml
+Consumed by `SunTracker` in `modules/sun_tracker.py` for location/geometry;
+`BlindController` can pair it with blind drivers. *Fill out*:
+`location.latitude`/`longitude`; `max_light_distance` (meters) is the allowed
+sunlight patch length; under `areas`, each window/area needs `bearing`
+(degrees), `window_height` (meters), optional per-window `max_light_distance`,
+and optional `device` id for the associated blind.
+
+These files are loaded at startup and referenced throughout the code paths
+above.
 
 ## Areas and Devices
 
@@ -213,4 +254,3 @@ service to build the area tree and start processing events. Services like
 so lights ignore any events until unfrozen.
 
 Refer back to [Event and Rule Workflow](#event-and-rule-workflow) to understand how a service call becomes an action inside an area.
-
