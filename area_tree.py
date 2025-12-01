@@ -1,7 +1,10 @@
 import yaml
+import os
+import builtins
 from collections import defaultdict
 import copy
 import time
+
 
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
@@ -78,6 +81,19 @@ DEFAULT_CONFIG = {
     "sun": "./pyscript/sun_config.yml",
 }
 
+def write_area_tree_snapshot(area_tree, path="./pyscript/debug/area_tree.txt"):
+    """Persist the current area tree for inspection."""
+    try:
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        with builtins.open(path, "w", encoding="utf-8") as f:
+            tree_string = area_tree.get_pretty_string()
+            f.write(tree_string)
+        log.info(f"Wrote area tree snapshot to {path}")
+    except Exception as exc:
+        log.warning(f"Failed writing area tree snapshot to {path}: {exc}")
+
 
 def load_config(config_path: str = DEFAULT_CONFIG_PATH):
     """
@@ -140,6 +156,7 @@ def init():
     area_tree = AreaTree(config_paths["layout"], devices_file=config_paths["devices"])
     event_manager = EventManager(config_paths["rules"], area_tree)
     tracker_manager = TrackManager(connections_config=config_paths["connections"])
+    write_area_tree_snapshot(area_tree)
 
 
 def get_global_triggers():
