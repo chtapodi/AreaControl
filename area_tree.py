@@ -53,6 +53,7 @@ area_tree = None
 event_manager = None
 global_triggers = None
 tracker_manager=None
+config_settings = {}
 
 verbose_mode = False
 
@@ -80,6 +81,7 @@ DEFAULT_CONFIG = {
     "connections": "./pyscript/connections.yml",
     "sun": "./pyscript/sun_config.yml",
 }
+DEFAULT_RUN_TESTS_ON_START = True
 
 def write_area_tree_snapshot(area_tree, path="./pyscript/debug/area_tree.txt"):
     """Persist the current area tree for inspection."""
@@ -97,25 +99,31 @@ def write_area_tree_snapshot(area_tree, path="./pyscript/debug/area_tree.txt"):
 
 def load_config(config_path: str = DEFAULT_CONFIG_PATH):
     """
-    Load config path map from a central YAML file.
+    Load config path map and feature flags from a central YAML file.
     Accepts either top-level keys or a ``paths`` section; missing values fall back to defaults.
     """
-    config_paths = copy.deepcopy(DEFAULT_CONFIG)
+    config_paths = dict(DEFAULT_CONFIG)
+    config_flags = {"run_tests_on_start": DEFAULT_RUN_TESTS_ON_START}
     try:
-        with open(config_path, "r") as f:
+        with builtins.open(config_path, "r") as f:
             cfg = yaml.safe_load(f) or {}
+            log.info(f"Loaded {config_path} as config")
     except Exception as exc:
         log.warning(f"Could not load config at {config_path}, using defaults: {exc}")
-        return config_paths
+        return {**config_paths, **config_flags}
 
     paths = cfg.get("paths", cfg)
     if isinstance(paths, dict):
         for key, val in paths.items():
             if val:
                 config_paths[key] = val
+                log.info(f"Config {key}:\t{val}")
     else:
         log.warning(f"Config file {config_path} missing 'paths' mapping, using defaults")
-    return config_paths
+    run_tests_value = cfg.get("run_tests_on_start", cfg.get("run_tests", config_flags["run_tests_on_start"]))
+    config_flags["run_tests_on_start"] = bool(run_tests_value)
+    log.info(f"Config run_tests_on_start:\t{config_flags['run_tests_on_start']}")
+    return {**config_paths, **config_flags}
 
 def calibrate_rgb(rgb, profile):
     """Apply a color calibration profile to an RGB tuple."""
@@ -151,12 +159,14 @@ def init():
     global event_manager
     global global_triggers
     global tracker_manager
-    config_paths = load_config()
+    global config_settings
+    config_settings = load_config()
     global_triggers = []
-    area_tree = AreaTree(config_paths["layout"], devices_file=config_paths["devices"])
-    event_manager = EventManager(config_paths["rules"], area_tree)
-    tracker_manager = TrackManager(connections_config=config_paths["connections"])
+    area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
+    event_manager = EventManager(config_settings["rules"], area_tree)
+    tracker_manager = TrackManager(connections_config=config_settings["connections"])
     write_area_tree_snapshot(area_tree)
+    return config_settings
 
 
 def get_global_triggers():
@@ -835,6 +845,7 @@ class Area:
 
     def add_device(self, device):
         if device is not None and device.name is not None:
+            log.info(f"Area {self.name}: adding device {device.name}")
             self.devices.append(device)
 
     def get_devices(self):
@@ -933,7 +944,7 @@ class Area:
 
 @pyscript_compile
 def load_yaml(path):
-    with open(path, "r") as f:
+    with builtins.open(path, "r") as f:
         data = yaml.safe_load(f)
     return data
 
@@ -1359,33 +1370,45 @@ class AreaTree:
                             new_area = create_area(child)
                             new_area.add_parent(area)
                             area.add_child(new_area, direct=False)
-
+                # TODO: Clean up this logic
                 # Add outputs as children
                 if "outputs" in area_data and area_data["outputs"] is not None:
                     for output in area_data.get("outputs", []):
                         if output is not None:
                             driver = None
+                            driver_label = None
                             info = self.device_defs.get(output, {})
+                            if len(info) is 0 :
+                                log.warning(f"No device config entry for {output}")
+
                             dtype = info.get("type")
                             filters = info.get("filters", [])
-                            if dtype == "light" or (dtype is None and "kauf" in output):
+                            if dtype == "light" or (dtype is None and "kauf" in output): #TODO: Remove this fallback
                                 if "hue" in filters:
                                     driver = HueLight(output)
+                                    driver_label = "HueLight"
                                 else:
                                     driver = KaufLight(output)
+                                    driver_label = "KaufLight"
                             elif dtype == "blind" or (dtype is None and "blind" in output):
                                 height = info.get("height", BLIND_HEIGHTS.get(output, 100))
                                 driver = BlindDriver(output, height)
+                                driver_label = "BlindDriver"
                             elif dtype == "speaker" or (dtype is None and ("speaker" in output or "google_home" in output)):
                                 driver = SpeakerDriver(output)
+                                driver_label = "SpeakerDriver"
                             elif dtype == "plug":
                                 driver = PlugDriver(output)
+                                driver_label = "PlugDriver"
                             elif dtype == "contact_sensor":
                                 driver = ContactSensorDriver(output)
+                                driver_label = "ContactSensorDriver"
                             elif dtype == "fan":
                                 driver = FanDriver(output)
+                                driver_label = "FanDriver"
                             elif dtype == "television":
                                 driver = TelevisionDriver(output)
+                                driver_label = "TelevisionDriver"
 
                             if driver is not None:
                                 new_device = Device(driver)
@@ -1393,7 +1416,8 @@ class AreaTree:
                                 new_device.set_area(area)
                                 area_tree[output] = new_device
 
-                # Add outputs as children
+
+                # Add inputs as children
                 if "inputs" in area_data:
                     inputs = area_data["inputs"]
                     log.info(f"Inputs: {inputs}")
@@ -2600,8 +2624,9 @@ def run_tests() :
 
 
 
-init()
-run_tests()
+init_config = init()
+if init_config.get("run_tests_on_start", DEFAULT_RUN_TESTS_ON_START):
+    run_tests()
 
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_service_calls(**kwargs):

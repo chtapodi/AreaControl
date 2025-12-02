@@ -67,6 +67,9 @@ paths:
   contact_sensor, fan, television), `filters` (e.g., `hue` vs `kauf`), optional
   `height` for blinds (meters). Missing entries fall back to name heuristics.
 
+**NOTE:** A device must be present in both `devices.yml` and `layout.yml` for it to be recognized by the code.
+**NOTE:** Zigbee lights have ids at the light level and at the device(?) level
+
 ### rules.yml
 - Loader: `EventManager(...)`; read in `execute_rule()`.
 - Use: Defines trigger prefixes, scopes, state builders, and guards.

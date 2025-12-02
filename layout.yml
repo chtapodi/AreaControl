@@ -63,7 +63,7 @@ living_room_chair_0:
     presence:
       - "presence_sensor_living_room_chair_0"
   outputs:
-    - library_lamp
+    - living_room_corner_lamp
 
 living_room_chair_1:
   sub_areas:
@@ -73,7 +73,7 @@ living_room_chair_1:
       - "presence_sensor_living_room_chair_0"
 
   outputs:
-    - living_room_lamp
+    # - living_room_lamp
 
 living_room_front:
   direct_sub_areas:
@@ -163,6 +163,9 @@ dining_room:
     - kauf_hanging_1
     - kauf_hanging_2
     - kauf_hanging_3
+    - living_room_lamp
+    - living_room_corner_lamp
+
 
 dining_room_0:
   sub_areas:

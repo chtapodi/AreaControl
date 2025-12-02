@@ -140,6 +140,7 @@ living_room_lamp:
     - light
     - hue
 
+
 # Blinds
 
 living_room_blind_cover:
