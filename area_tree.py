@@ -706,7 +706,7 @@ def merge_data(data):
     data_type = type(data[0])
     for item in data[1:]:
         if not issubclass(type(item), data_type) and not is_similar(item, data[0]):
-            log.error(f"merge_data(): Not all elements are of the same type {data}")
+            log.warning(f"merge_data(): Not all elements are of the same type {data}")
             return None
 
     # Handle integers and floats by averaging
@@ -900,7 +900,7 @@ class Area:
 
         for child in self.get_children():
             child_state = child.get_state()
-            log.info(f"Area:get_state(): Child state: {child_state}")
+            log.info(f"Area:get_state(): Child state: {child.name} {child_state}")
             child_states.append(child_state)
         log.info(f"merging states: {child_states}")
         merged = merge_states(child_states, self.name)
@@ -1225,6 +1225,10 @@ class AreaTree:
             pass
         self.area_tree_lookup = self._create_area_tree(self.config_path)
 
+        log.info(f"AreaTree: Created area tree with children: {list(self.area_tree_lookup.keys())}")
+        log.info(f"DEBUG: living_room_corner_lamp: {self.area_tree_lookup['living_room_corner_lamp']}")
+        log.info(f"DEBUG: living_room_corner_lamp: {self.area_tree_lookup['living_room_corner_lamp'].get_pretty_string(show_state=True)}")
+
         self.root_name = self._find_root_area_name()
 
     def get_state(self, area=None):
@@ -1330,10 +1334,11 @@ class AreaTree:
             yaml_file: Path to the YAML file containing area definitions.
 
         Returns:
-            A dictionary mapping area names to their corresponding Area objects.
+            A dictionary mapping area names to their corresponding Area or Device objects.
         """
 
         data = load_yaml(yaml_file)
+        log.info(f"Loaded area configuration from {yaml_file}, areas={list(data.keys())}")
 
         area_tree = {}
         area_names = set()  # Track unique area names
@@ -1341,6 +1346,7 @@ class AreaTree:
         def create_area(name):
             """Creates an Area object, ensuring unique names."""
             if name not in area_names:
+                log.info(f"Creating new Area: {name}")
                 area = Area(name)
                 area_tree[name] = area
                 area_names.add(name)
@@ -1350,126 +1356,208 @@ class AreaTree:
 
         # Create initial areas
         for area_name, area_data in data.items():
-            if area_name is not None:
-                area = create_area(area_name)
+            if area_name is None:
+                log.warning("Encountered area with name=None in YAML. Skipping.")
+                continue
 
-                # Create direct child relationships
-                if (
-                    "direct_sub_areas" in area_data
-                    and area_data["direct_sub_areas"] is not None
-                ):
-                    for direct_child in area_data["direct_sub_areas"]:
-                        child = create_area(direct_child)
-                        child.add_parent(area)
-                        area.add_child(child, direct=True)
+            if area_data is None:
+                log.warning(f"Area '{area_name}' has no configuration data. Skipping.")
+                continue
 
-                # Create child relationships
-                if "sub_areas" in area_data and area_data["sub_areas"] is not None:
-                    for child in area_data["sub_areas"]:
-                        if child is not None:
-                            new_area = create_area(child)
-                            new_area.add_parent(area)
-                            area.add_child(new_area, direct=False)
-                # TODO: Clean up this logic
-                # Add outputs as children
-                if "outputs" in area_data and area_data["outputs"] is not None:
-                    for output in area_data.get("outputs", []):
-                        if output is not None:
-                            driver = None
-                            driver_label = None
-                            info = self.device_defs.get(output, {})
-                            if len(info) is 0 :
-                                log.warning(f"No device config entry for {output}")
+            area = create_area(area_name)
 
-                            dtype = info.get("type")
-                            filters = info.get("filters", [])
-                            if dtype == "light" or (dtype is None and "kauf" in output): #TODO: Remove this fallback
-                                if "hue" in filters:
-                                    driver = HueLight(output)
-                                    driver_label = "HueLight"
-                                else:
-                                    driver = KaufLight(output)
-                                    driver_label = "KaufLight"
-                            elif dtype == "blind" or (dtype is None and "blind" in output):
-                                height = info.get("height", BLIND_HEIGHTS.get(output, 100))
-                                driver = BlindDriver(output, height)
-                                driver_label = "BlindDriver"
-                            elif dtype == "speaker" or (dtype is None and ("speaker" in output or "google_home" in output)):
-                                driver = SpeakerDriver(output)
-                                driver_label = "SpeakerDriver"
-                            elif dtype == "plug":
-                                driver = PlugDriver(output)
-                                driver_label = "PlugDriver"
-                            elif dtype == "contact_sensor":
-                                driver = ContactSensorDriver(output)
-                                driver_label = "ContactSensorDriver"
-                            elif dtype == "fan":
-                                driver = FanDriver(output)
-                                driver_label = "FanDriver"
-                            elif dtype == "television":
-                                driver = TelevisionDriver(output)
-                                driver_label = "TelevisionDriver"
+            # Create direct child relationships
+            direct_sub_areas = area_data.get("direct_sub_areas")
+            if direct_sub_areas is not None:
+                for direct_child in direct_sub_areas:
+                    if direct_child is None:
+                        log.warning(f"Area '{area_name}' has a None direct_sub_area entry.")
+                        continue
+                    child = create_area(direct_child)
+                    child.add_parent(area)
+                    area.add_child(child, direct=True)
+                    log.info(f"Added direct child area '{direct_child}' to '{area_name}'")
 
-                            if driver is not None:
-                                new_device = Device(driver)
+            # Create child relationships
+            sub_areas = area_data.get("sub_areas")
+            if sub_areas is not None:
+                for child_name in sub_areas:
+                    if child_name is None:
+                        log.warning(f"Area '{area_name}' has a None sub_area entry.")
+                        continue
+                    new_area = create_area(child_name)
+                    new_area.add_parent(area)
+                    area.add_child(new_area, direct=False)
+                    log.info(f"Added child area '{child_name}' to '{area_name}' (indirect)")
+
+            # Add outputs as children
+            outputs = area_data.get("outputs")
+            if outputs is not None:
+                for output in outputs:
+                    if output is None:
+                        log.warning(f"Area '{area_name}' has a None output entry.")
+                        continue
+
+                    driver = None
+                    driver_label = None
+
+                    info = self.device_defs.get(output)
+                    if info is None:
+                        log.warning(
+                            f"Area '{area_name}': No device config entry for output '{output}'. "
+                            f"Device will be skipped."
+                        )
+                        continue
+
+                    dtype = info.get("type")
+                    filters = info.get("filters", [])
+
+                    # Outputs are expected to have filters as a list per your config assumption
+                    if not isinstance(filters, list):
+                        log.warning(
+                            f"Device '{output}' in area '{area_name}' has non-list filters={filters!r}. "
+                            f"Treating as empty."
+                        )
+                        filters = []
+
+                    # Lights
+                    if dtype == "light" or (dtype is None and "kauf" in output):  # TODO: Remove this fallback
+                        if "hue" in filters:
+                            driver = HueLight(output)
+                            driver_label = "HueLight"
+                        else:
+                            driver = KaufLight(output)
+                            driver_label = "KaufLight"
+
+                    # Blinds
+                    elif dtype == "blind" or (dtype is None and "blind" in output):
+                        height = info.get("height", BLIND_HEIGHTS.get(output, 100))
+                        driver = BlindDriver(output, height)
+                        driver_label = "BlindDriver"
+
+                    # Speakers
+                    elif dtype == "speaker" or (
+                        dtype is None and ("speaker" in output or "google_home" in output)
+                    ):
+                        driver = SpeakerDriver(output)
+                        driver_label = "SpeakerDriver"
+
+                    # Plugs
+                    elif dtype == "plug":
+                        driver = PlugDriver(output)
+                        driver_label = "PlugDriver"
+
+                    # Contact sensors
+                    elif dtype == "contact_sensor":
+                        driver = ContactSensorDriver(output)
+                        driver_label = "ContactSensorDriver"
+
+                    # Fans
+                    elif dtype == "fan":
+                        driver = FanDriver(output)
+                        driver_label = "FanDriver"
+
+                    # Televisions
+                    elif dtype == "television":
+                        driver = TelevisionDriver(output)
+                        driver_label = "TelevisionDriver"
+
+                    # Unknown type
+                    else:
+                        log.warning(
+                            f"Area '{area_name}': Unsupported or missing type for output '{output}'. "
+                            f"type={dtype!r}, filters={filters!r}. No driver created."
+                        )
+
+                    if driver is not None:
+                        new_device = Device(driver)
+                        if new_device is None:
+                            log.warning(
+                                f"Area '{area_name}': Failed to create device for output '{output}'."
+                            )
+                        area.add_device(new_device)
+                        new_device.set_area(area)
+                        area_tree[output] = new_device
+                        log.info(
+                            f"Area '{area_name}': Created {driver_label}: {type(new_device)} for output '{output}'."
+                        )
+
+            # Add inputs as children
+            if "inputs" in area_data:
+                inputs = area_data["inputs"]
+                log.info(f"Area '{area_name}': Inputs config: {inputs!r}")
+
+                if isinstance(inputs, list):
+                    if len(inputs) > 0 and inputs[0] is not None:
+                        log.warning(
+                            f"Area '{area_name}': Inputs are a list ({inputs!r}). "
+                            f"List inputs are not supported and will not be processed."
+                        )
+                    else:
+                        log.warning(
+                            f"Area '{area_name}': Inputs is an empty list. Nothing to process."
+                        )
+
+                elif isinstance(inputs, dict):
+                    for input_type, device_id_list in inputs.items():
+                        if input_type is None:
+                            log.warning(
+                                f"Area '{area_name}': Found input entry with input_type=None. Skipping."
+                            )
+                            continue
+                        if device_id_list is None:
+                            log.warning(
+                                f"Area '{area_name}': Input type '{input_type}' has None device list. Skipping."
+                            )
+                            continue
+
+                        for device_id in device_id_list:
+                            if device_id is None:
+                                log.warning(
+                                    f"Area '{area_name}', input_type '{input_type}': "
+                                    f"Encountered None device_id. Skipping."
+                                )
+                                continue
+
+                            new_input = None
+                            if "motion" in device_id:
+                                log.info(f"Area '{area_name}': Creating motion device: {device_id}")
+                                new_input = MotionSensorDriver(input_type, device_id)
+                            elif "presence" in device_id:
+                                log.info(f"Area '{area_name}': Creating presence device: {device_id}")
+                                new_input = PresenceSensorDriver(input_type, device_id)
+                            elif "service" in device_id:
+                                log.info(f"Area '{area_name}': Creating service device: {device_id}")
+                                new_input = ServiceDriver(input_type, device_id)
+                            else:
+                                log.warning(
+                                    f"Area '{area_name}': Input '{device_id}' has no driver mapping. Skipping."
+                                )
+
+                            if new_input is not None:
+                                new_device = Device(new_input)
+                                new_input.add_callback(new_device.input_trigger)
+
                                 area.add_device(new_device)
                                 new_device.set_area(area)
-                                area_tree[output] = new_device
 
-
-                # Add inputs as children
-                if "inputs" in area_data:
-                    inputs = area_data["inputs"]
-                    log.info(f"Inputs: {inputs}")
-
-                    if type(inputs) == list:
-                        if inputs[0] is not None:
-                            log.warning(f"Inputs are a list: {inputs}. Not processing")
-
-                    elif type(inputs) == dict:
-                        for input_type, device_id_list in area_data["inputs"].items():
-                            if input_type is not None and device_id_list is not None:
-                                for device_id in device_id_list:
-                                    if device_id is not None:
-                                        new_input = None
-                                        if "motion" in device_id:
-                                            log.info(f"lumi: {device_id}")
-                                            new_input = MotionSensorDriver(
-                                                input_type, device_id
-                                            )
-                                        elif "presence" in device_id:
-                                            log.info(
-                                                f"Creating presence device: {device_id}"
-                                            )
-                                            new_input = PresenceSensorDriver(
-                                                input_type, device_id
-                                            )
-                                        elif "service" in device_id:
-                                            log.info(
-                                                f"Creating service device: {device_id}"
-                                            )
-                                            new_input = ServiceDriver(
-                                                input_type, device_id
-                                            )
-                                        else:
-                                            log.warning(
-                                                f"Input has no driver: {device_id}"
-                                            )
-
-                                        if new_input is not None:
-                                            new_device = Device(new_input)
-                                            new_input.add_callback(
-                                                new_device.input_trigger
-                                            )
-
-                                            area.add_device(new_device)
-                                            new_device.set_area(area)
-
-                                            area_tree[new_device.name] = new_device
-
+                                area_tree[new_device.name] = new_device
+                                log.info(
+                                    f"Area '{area_name}': Added input device '{new_device.name}'."
+                                )
+                else:
+                    log.warning(
+                        f"Area '{area_name}': 'inputs' has unsupported type {type(inputs)}. "
+                        f"Expected list or dict. Value={inputs!r}"
+                    )
+        for k,v in area_tree.items():
+            log.info(f"AreaTree contains: {k}: {v}")
+            log.info(f"AreaTree contains pretty {k}: {v.get_pretty_string()}")
+        log.info(area_tree)
         return area_tree
 
     def get_pretty_string(self):
+        log.info("DEBUG: Getting pretty string of area tree")
         return self.get_area(self.root_name).get_pretty_string()
 
 
@@ -1602,6 +1690,7 @@ class Device:
         return self.name
 
     def get_pretty_string(self, indent=1, is_direct_child=False, show_state=False):
+        log.info(f"DEBUG: Getting pretty string of {self.name}")
         string_rep = (
             " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
         )
@@ -1609,6 +1698,9 @@ class Device:
         if show_state:
             string_rep += " " * (indent + 2) + f"State: {self.get_state}\n"
 
+        if string_rep is None:
+            string_rep = "FUCK"
+        log.info(f"DEBUG: Getting pretty string of {self.name} -> {string_rep}")
         return string_rep
 
 
@@ -2019,11 +2111,32 @@ class KaufLight:
         return self.last_state
 
 
-class HueLight(KaufLight):
-    """Light driver for Philips Hue bulbs using color calibration."""
+class HueLight:
+    """
+    Standalone light driver for Philips Hue bulbs.
+
+    Mirrors KaufLight behavior via composition instead of inheritance, to avoid any
+    environment quirks around subclassing while keeping hue-specific calibration.
+    """
 
     def __init__(self, name):
-        super().__init__(name, color_profile=COLOR_PROFILES.get("hue"))
+        self.name = name
+        self._delegate = KaufLight(name, color_profile=COLOR_PROFILES.get("hue"))
+
+    def __getattr__(self, attr):
+        return getattr(self._delegate, attr)
+
+    def get_valid_state_keys(self):
+        return self._delegate.get_valid_state_keys()
+
+    def filter_state(self, state):
+        return self._delegate.filter_state(state)
+
+    def set_state(self, state):
+        return self._delegate.set_state(state)
+
+    def get_state(self):
+        return self._delegate.get_state()
 
 
 class BlindDriver:
