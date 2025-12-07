@@ -32,6 +32,16 @@ SUPPORTED_DEVICE_TYPES = {
 }
 
 
+def normalize_category(msg: str) -> str:
+    """Group similar findings by stripping leading name and collapsing quoted content."""
+    if ":" in msg:
+        msg = msg.split(":", 1)[1].strip()
+    msg = re.sub(r"'[^']+'", "'{name}'", msg)
+    msg = re.sub(r'"[^"]+"', '"{name}"', msg)
+    msg = re.sub(r"\[[^\]]+\]", "[{list}]", msg)
+    return msg
+
+
 @dataclass
 class Finding:
     severity: str
@@ -115,10 +125,29 @@ class DiagnosticsReport:
             infos = sum(1 for f in findings if f.severity == "info")
             header = f"{section.capitalize():<11} {errs} error(s), {warns} warning(s), {infos} info"
             lines.append(style(header, "1"))  # bold section header
+
+            grouped: Dict[str, Dict[str, List[Finding]]] = defaultdict(lambda: defaultdict(list))
             for finding in findings:
-                label, code = severities.get(finding.severity, ("INFO", "36"))
-                message = highlight_names(finding.message)
-                lines.append(f"  [{style(label, code)}] {message}")
+                cat = normalize_category(finding.message)
+                grouped[finding.severity][cat].append(finding)
+
+            for severity in ("error", "warning", "info"):
+                severity_findings = grouped.get(severity)
+                if not severity_findings:
+                    continue
+                label, code = severities.get(severity, ("INFO", "36"))
+                first_category = True
+                for category in sorted(severity_findings.keys()):
+                    items = sorted(severity_findings[category], key=lambda f: f.message.lower())
+                    if not first_category:
+                        lines.append("")  # gap between categories for readability
+                    first_category = False
+                    lines.append(
+                        f"  [{style(label, code)}] {category} ({len(items)})"
+                    )
+                    for item in items:
+                        message = highlight_names(item.message)
+                        lines.append(f"    - {message}")
             if findings:
                 lines.append("")  # spacer between sections
         overall = "FAIL" if self.has_errors() else "PASS"
