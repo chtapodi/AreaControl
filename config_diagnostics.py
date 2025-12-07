@@ -8,6 +8,7 @@ type mismatches, and structural issues that would surface at runtime.
 
 import argparse
 import os
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Set, Tuple
@@ -53,20 +54,75 @@ class DiagnosticsReport:
             for finding in findings:
                 yield finding
 
-    def render(self) -> str:
+    def render(self, color: bool = False, areas: Set[str] = None, devices: Set[str] = None) -> str:
+        areas = areas or set()
+        devices = devices or set()
+
+        def style(text: str, code: str) -> str:
+            return f"\033[{code}m{text}\033[0m" if color else text
+
+        def color_name(name: str) -> str:
+            if not color:
+                return name
+            if name in devices:
+                return style(name, "35;1")  # bold magenta for devices
+            if name in areas:
+                return style(name, "36;1")  # bold cyan for areas
+            return style(name, "36")  # default cyan-ish
+
+        def highlight_names(text: str) -> str:
+            """Color substrings in quotes and leading area/device prefixes."""
+            if not color:
+                return text
+
+            # Highlight leading prefix before colon if it looks like a name
+            prefix_match = re.match(r"([^:]+):\s*(.*)", text)
+            if prefix_match:
+                prefix, rest = prefix_match.groups()
+                colored_prefix = color_name(prefix) if prefix in areas or prefix in devices else prefix
+                text = f"{colored_prefix}: {rest}"
+
+            # Highlight anything wrapped in single or double quotes
+            def _replace(match):
+                raw = match.group(0)
+                name = raw.strip("'\"")
+                return raw.replace(name, color_name(name))
+
+            text = re.sub(r"'[^']+'", _replace, text)
+            text = re.sub(r'"[^"]+"', _replace, text)
+
+            # Highlight bare names if they exactly match known areas/devices
+            for name in sorted(areas | devices, key=len, reverse=True):
+                text = re.sub(fr"\b{name}\b", color_name(name), text)
+            return text
+
+        severities = {
+            "error": ("ERROR", "31;1"),  # bold red
+            "warning": ("WARN", "33;1"),  # bold yellow
+            "info": ("INFO", "36"),  # cyan
+        }
+
         lines: List[str] = []
+        severity_rank = {"error": 0, "warning": 1, "info": 2}
         for section in ("layout", "devices", "connections"):
-            findings = self.sections.get(section, [])
+            raw_findings = self.sections.get(section, [])
+            findings = sorted(
+                raw_findings,
+                key=lambda f: (severity_rank.get(f.severity, 99), f.message.lower()),
+            )
             errs = sum(1 for f in findings if f.severity == "error")
             warns = sum(1 for f in findings if f.severity == "warning")
             infos = sum(1 for f in findings if f.severity == "info")
-            lines.append(
-                f"{section.capitalize()}: {errs} error(s), {warns} warning(s), {infos} info"
-            )
+            header = f"{section.capitalize():<11} {errs} error(s), {warns} warning(s), {infos} info"
+            lines.append(style(header, "1"))  # bold section header
             for finding in findings:
-                lines.append(f"  [{finding.severity.upper()}] {finding.message}")
+                label, code = severities.get(finding.severity, ("INFO", "36"))
+                message = highlight_names(finding.message)
+                lines.append(f"  [{style(label, code)}] {message}")
+            if findings:
+                lines.append("")  # spacer between sections
         overall = "FAIL" if self.has_errors() else "PASS"
-        lines.append(f"Overall: {overall}")
+        lines.append(style(f"Overall: {overall}", "32;1" if overall == "PASS" else "31;1"))
         return "\n".join(lines)
 
 
@@ -423,6 +479,11 @@ def parse_args():
     parser.add_argument("--layout", help="Override layout.yml path")
     parser.add_argument("--devices", help="Override devices.yml path")
     parser.add_argument("--connections", help="Override connections.yml path")
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable ANSI color output (auto-disabled when stdout is not a TTY)",
+    )
     return parser.parse_args()
 
 
@@ -444,7 +505,9 @@ def main():
     validate_devices(devices_data, outputs_in_layout, report)
     validate_connections(connections_data, known_areas, report)
 
-    print(report.render())
+    color_enabled = not args.no_color and os.isatty(1)
+    known_devices = set(devices_data.keys()) if isinstance(devices_data, dict) else set()
+    print(report.render(color=color_enabled, areas=known_areas, devices=known_devices))
     return 1 if report.has_errors() else 0
 
 
