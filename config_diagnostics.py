@@ -11,7 +11,7 @@ import os
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import yaml
 
@@ -42,19 +42,27 @@ def normalize_category(msg: str) -> str:
     return msg
 
 
+def format_location(file_path: str, line: Optional[int]) -> Optional[str]:
+    if line is None or not file_path:
+        return None
+    rel_path = os.path.relpath(file_path, os.getcwd())
+    return f"{rel_path}:{line}"
+
+
 @dataclass
 class Finding:
     severity: str
     section: str
     message: str
+    location: Optional[str] = None
 
 
 class DiagnosticsReport:
     def __init__(self):
         self.sections: Dict[str, List[Finding]] = defaultdict(list)
 
-    def add(self, section: str, severity: str, message: str):
-        self.sections[section].append(Finding(severity, section, message))
+    def add(self, section: str, severity: str, message: str, location: Optional[str] = None):
+        self.sections[section].append(Finding(severity, section, message, location))
 
     def has_errors(self) -> bool:
         return any(f.severity == "error" for f in self._all())
@@ -86,11 +94,11 @@ class DiagnosticsReport:
                 return text
 
             # Highlight leading prefix before colon if it looks like a name
-            prefix_match = re.match(r"([^:]+):\s*(.*)", text)
+            prefix_match = re.match(r"([^:]+)(: *)(.*)", text)
             if prefix_match:
-                prefix, rest = prefix_match.groups()
+                prefix, sep, rest = prefix_match.groups()
                 colored_prefix = color_name(prefix) if prefix in areas or prefix in devices else prefix
-                text = f"{colored_prefix}: {rest}"
+                text = f"{colored_prefix}{sep}{rest}"
 
             # Highlight anything wrapped in single or double quotes
             def _replace(match):
@@ -146,7 +154,10 @@ class DiagnosticsReport:
                         f"  [{style(label, code)}] {category} ({len(items)})"
                     )
                     for item in items:
-                        message = highlight_names(item.message)
+                        message = item.message
+                        if item.location:
+                            message = f"{item.location}: {message}"
+                        message = highlight_names(message)
                         lines.append(f"    - {message}")
             if findings:
                 lines.append("")  # spacer between sections
@@ -158,17 +169,40 @@ class DiagnosticsReport:
 def _load_yaml_file(path: str, section: str, report: DiagnosticsReport):
     if not path:
         report.add(section, "error", f"No path provided for {section}")
-        return {}
+        return {}, {}
     expanded = os.path.abspath(os.path.expanduser(path))
     if not os.path.exists(expanded):
         report.add(section, "error", f"{section} file not found: {expanded}")
-        return {}
+        return {}, {}
+
     try:
         with open(expanded, "r", encoding="utf-8") as handle:
-            return yaml.safe_load(handle) or {}
+            content = handle.read()
+        node = yaml.compose(content, Loader=yaml.SafeLoader)
+        data = yaml.safe_load(content) or {}
     except Exception as exc:  # pragma: no cover - defensive for broken configs
         report.add(section, "error", f"Failed to load {expanded}: {exc}")
-        return {}
+        return {}, {}
+
+    meta: Dict[Tuple, int] = {}
+
+    def walk(n, path=()):
+        if hasattr(n, "start_mark"):
+            meta[path] = n.start_mark.line + 1
+        if isinstance(n, yaml.MappingNode):
+            for key_node, value_node in n.value:
+                key = key_node.value
+                child_path = path + (key,)
+                walk(key_node, child_path + ("__key__",))
+                walk(value_node, child_path)
+        elif isinstance(n, yaml.SequenceNode):
+            for idx, item in enumerate(n.value):
+                walk(item, path + (idx,))
+
+    if node is not None:
+        walk(node)
+
+    return data, meta
 
 
 def _resolve_paths(args) -> Dict[str, str]:
@@ -231,7 +265,13 @@ def _detect_cycles(children: Dict[str, Set[str]]) -> List[Tuple[str, List[str]]]
     return cycles
 
 
-def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
+def validate_layout(
+    layout_data,
+    devices_data,
+    report: DiagnosticsReport,
+    meta: Dict[Tuple, int],
+    file_path: str,
+):
     area_defs: Set[str] = set()
     referenced_children: Set[str] = set()
     parents: Dict[str, List[str]] = defaultdict(list)
@@ -239,20 +279,31 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
     output_usage: Dict[str, List[str]] = defaultdict(list)
 
     if not isinstance(layout_data, dict):
-        report.add("layout", "error", "Layout must be a mapping of area name -> config block")
+        report.add(
+            "layout",
+            "error",
+            "Layout must be a mapping of area name -> config block",
+            format_location(file_path, meta.get((), None)),
+        )
         return area_defs, referenced_children, output_usage, children, parents
 
     area_defs.update(layout_data.keys())
 
     for area_name, cfg in layout_data.items():
         if cfg is None:
-            report.add("layout", "warning", f"{area_name}: has no configuration block")
+            report.add(
+                "layout",
+                "warning",
+                f"{area_name}: has no configuration block",
+                format_location(file_path, meta.get((area_name, "__key__"), meta.get((area_name,), None))),
+            )
             cfg = {}
         if not isinstance(cfg, dict):
             report.add(
                 "layout",
                 "error",
                 f"{area_name}: config is {type(cfg).__name__}, expected a mapping; skipping deeper checks",
+                format_location(file_path, meta.get((area_name,), None)),
             )
             continue
 
@@ -260,9 +311,19 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
         direct_sub_areas = _coerce_list(
             cfg.get("direct_sub_areas"), area_name, "direct_sub_areas", "layout", report
         )
-        for child in sub_areas + direct_sub_areas:
+        for idx, child in enumerate(sub_areas + direct_sub_areas):
             if child is None or child == "":
-                report.add("layout", "warning", f"{area_name}: contains an empty sub-area entry")
+                path = (
+                    (area_name, "sub_areas", idx)
+                    if idx < len(sub_areas)
+                    else (area_name, "direct_sub_areas", idx - len(sub_areas))
+                )
+                report.add(
+                    "layout",
+                    "warning",
+                    f"{area_name}: contains an empty sub-area entry",
+                    format_location(file_path, meta.get(path, None)),
+                )
                 continue
             parents[child].append(area_name)
             children[area_name].add(child)
@@ -272,6 +333,13 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                     "layout",
                     "warning",
                     f"{area_name}: references sub-area '{child}' that is not defined elsewhere",
+                    format_location(
+                        file_path,
+                        meta.get(
+                            (area_name, "sub_areas", idx),
+                            meta.get((area_name, "direct_sub_areas", idx - len(sub_areas)), None),
+                        ),
+                    ),
                 )
 
         outputs = cfg.get("outputs")
@@ -281,11 +349,17 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                     "layout",
                     "warning",
                     f"{area_name}: outputs should be a list; found {type(outputs).__name__}",
+                    format_location(file_path, meta.get((area_name, "outputs"), None)),
                 )
             else:
-                for output in outputs:
+                for idx, output in enumerate(outputs):
                     if output is None or output == "":
-                        report.add("layout", "warning", f"{area_name}: outputs contains an empty entry")
+                        report.add(
+                            "layout",
+                            "warning",
+                            f"{area_name}: outputs contains an empty entry",
+                            format_location(file_path, meta.get((area_name, "outputs", idx), None)),
+                        )
                         continue
                     output_usage[output].append(area_name)
                     if isinstance(devices_data, dict) and output not in devices_data:
@@ -293,6 +367,7 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                             "layout",
                             "error",
                             f"{area_name}: output '{output}' missing from devices.yml",
+                            format_location(file_path, meta.get((area_name, "outputs", idx), None)),
                         )
 
         inputs = cfg.get("inputs")
@@ -304,6 +379,7 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                             "layout",
                             "warning",
                             f"{area_name}: input type '{input_type}' has no devices listed",
+                            format_location(file_path, meta.get((area_name, "inputs", input_type), None)),
                         )
                         continue
                     if not isinstance(device_ids, list):
@@ -311,26 +387,32 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                             "layout",
                             "warning",
                             f"{area_name}: input type '{input_type}' should list devices; found {type(device_ids).__name__}",
+                            format_location(file_path, meta.get((area_name, "inputs", input_type), None)),
                         )
                         continue
-                    for device_id in device_ids:
+                    for idx, device_id in enumerate(device_ids):
                         if device_id is None or device_id == "":
                             report.add(
                                 "layout",
                                 "warning",
                                 f"{area_name}: input type '{input_type}' contains an empty device id",
+                                format_location(
+                                    file_path, meta.get((area_name, "inputs", input_type, idx), None)
+                                ),
                             )
             elif isinstance(inputs, list):
                 report.add(
                     "layout",
                     "warning",
                     f"{area_name}: inputs is a list; area_tree ignores list-form inputs",
+                    format_location(file_path, meta.get((area_name, "inputs"), None)),
                 )
             else:
                 report.add(
                     "layout",
                     "warning",
                     f"{area_name}: inputs should be a dict of input_type -> list; found {type(inputs).__name__}",
+                    format_location(file_path, meta.get((area_name, "inputs"), None)),
                 )
 
     for child, parent_list in parents.items():
@@ -339,6 +421,7 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                 "layout",
                 "warning",
                 f"{child}: attached to multiple parents {sorted(set(parent_list))}; only the last one will stick",
+                format_location(file_path, meta.get((child, "__key__"), meta.get((child,), None))),
             )
 
     for output, areas in output_usage.items():
@@ -347,6 +430,7 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
                 "layout",
                 "warning",
                 f"Output '{output}' is assigned to multiple areas {sorted(set(areas))}",
+                None,
             )
 
     roots = [area for area in area_defs if area not in parents]
@@ -355,9 +439,10 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
             "layout",
             "error",
             "No root area detected (every area has a parent). Check for accidental cycles or missing top-level area.",
+            None,
         )
     elif len(roots) > 1:
-        report.add("layout", "warning", f"Multiple roots detected: {sorted(roots)}")
+        report.add("layout", "warning", f"Multiple roots detected: {sorted(roots)}", None)
 
     cycles = _detect_cycles(children)
     for anchor, path in cycles:
@@ -383,20 +468,37 @@ def validate_layout(layout_data, devices_data, report: DiagnosticsReport):
     return area_defs, referenced_children, output_usage, children, parents
 
 
-def validate_devices(devices_data, outputs_in_layout: Set[str], report: DiagnosticsReport):
+def validate_devices(
+    devices_data,
+    outputs_in_layout: Set[str],
+    report: DiagnosticsReport,
+    meta: Dict[Tuple, int],
+    file_path: str,
+):
     if not isinstance(devices_data, dict):
-        report.add("devices", "error", "Devices file must be a mapping of device name -> config block")
+        report.add(
+            "devices",
+            "error",
+            "Devices file must be a mapping of device name -> config block",
+            format_location(file_path, meta.get((), None)),
+        )
         return
 
     for device_name, cfg in devices_data.items():
         if cfg is None:
-            report.add("devices", "warning", f"{device_name}: has no configuration block")
+            report.add(
+                "devices",
+                "warning",
+                f"{device_name}: has no configuration block",
+                format_location(file_path, meta.get((device_name, "__key__"), meta.get((device_name,), None))),
+            )
             continue
         if not isinstance(cfg, dict):
             report.add(
                 "devices",
                 "error",
                 f"{device_name}: config is {type(cfg).__name__}, expected a mapping",
+                format_location(file_path, meta.get((device_name,), None)),
             )
             continue
 
@@ -406,12 +508,14 @@ def validate_devices(devices_data, outputs_in_layout: Set[str], report: Diagnost
                 "devices",
                 "warning",
                 f"{device_name}: has no 'type'; area_tree will fall back to name-based heuristics",
+                format_location(file_path, meta.get((device_name, "type"), None)),
             )
         elif dtype not in SUPPORTED_DEVICE_TYPES:
             report.add(
                 "devices",
                 "warning",
                 f"{device_name}: unsupported type '{dtype}' (expected one of {sorted(SUPPORTED_DEVICE_TYPES)})",
+                format_location(file_path, meta.get((device_name, "type"), None)),
             )
 
         filters = cfg.get("filters")
@@ -420,6 +524,7 @@ def validate_devices(devices_data, outputs_in_layout: Set[str], report: Diagnost
                 "devices",
                 "warning",
                 f"{device_name}: filters should be a list; found {type(filters).__name__}",
+                format_location(file_path, meta.get((device_name, "filters"), None)),
             )
 
     unused = set(devices_data.keys()) - set(outputs_in_layout)
@@ -433,20 +538,32 @@ def validate_devices(devices_data, outputs_in_layout: Set[str], report: Diagnost
         )
 
 
-def validate_connections(connections_data, known_areas: Set[str], report: DiagnosticsReport):
+def validate_connections(
+    connections_data,
+    known_areas: Set[str],
+    report: DiagnosticsReport,
+    meta: Dict[Tuple, int],
+    file_path: str,
+):
     if not isinstance(connections_data, dict):
-        report.add("connections", "error", "Connections file must be a mapping with a 'connections' list")
+        report.add(
+            "connections",
+            "error",
+            "Connections file must be a mapping with a 'connections' list",
+            format_location(file_path, meta.get((), None)),
+        )
         return
 
     entries = connections_data.get("connections")
     if entries is None:
-        report.add("connections", "error", "Missing 'connections' key")
+        report.add("connections", "error", "Missing 'connections' key", format_location(file_path, None))
         return
     if not isinstance(entries, list):
         report.add(
             "connections",
             "error",
             f"'connections' should be a list of area pairs; found {type(entries).__name__}",
+            format_location(file_path, meta.get(("connections",), None)),
         )
         return
 
@@ -458,6 +575,7 @@ def validate_connections(connections_data, known_areas: Set[str], report: Diagno
                 "connections",
                 "warning",
                 f"Entry #{idx + 1} should be a mapping like '- area_a: area_b'; found {type(entry).__name__}",
+                format_location(file_path, meta.get(("connections", idx), None)),
             )
             continue
 
@@ -466,11 +584,17 @@ def validate_connections(connections_data, known_areas: Set[str], report: Diagno
                 "connections",
                 "warning",
                 f"Entry #{idx + 1} should contain exactly one pair; found {len(entry.items())}",
+                format_location(file_path, meta.get(("connections", idx), None)),
             )
 
         for start, end in entry.items():
             if start is None or end is None or start == "" or end == "":
-                report.add("connections", "warning", f"Entry #{idx + 1} has an empty area name")
+                report.add(
+                    "connections",
+                    "warning",
+                    f"Entry #{idx + 1} has an empty area name",
+                    format_location(file_path, meta.get(("connections", idx), None)),
+                )
                 continue
 
             if start not in known_areas:
@@ -478,12 +602,14 @@ def validate_connections(connections_data, known_areas: Set[str], report: Diagno
                     "connections",
                     "warning",
                     f"Entry #{idx + 1}: '{start}' is not defined in layout",
+                    format_location(file_path, meta.get(("connections", idx), None)),
                 )
             if end not in known_areas:
                 report.add(
                     "connections",
                     "warning",
                     f"Entry #{idx + 1}: '{end}' is not defined in layout",
+                    format_location(file_path, meta.get(("connections", idx), None)),
                 )
 
             normalized = tuple(sorted((start, end)))
@@ -521,18 +647,18 @@ def main():
     paths = _resolve_paths(args)
     report = DiagnosticsReport()
 
-    layout_data = _load_yaml_file(paths["layout"], "layout", report)
-    devices_data = _load_yaml_file(paths["devices"], "devices", report)
-    connections_data = _load_yaml_file(paths["connections"], "connections", report)
+    layout_data, layout_meta = _load_yaml_file(paths["layout"], "layout", report)
+    devices_data, devices_meta = _load_yaml_file(paths["devices"], "devices", report)
+    connections_data, connections_meta = _load_yaml_file(paths["connections"], "connections", report)
 
     area_defs, referenced_children, output_usage, children, parents = validate_layout(
-        layout_data, devices_data, report
+        layout_data, devices_data, report, layout_meta, paths["layout"]
     )
     outputs_in_layout = set(output_usage.keys())
     known_areas = set(area_defs | referenced_children)
 
-    validate_devices(devices_data, outputs_in_layout, report)
-    validate_connections(connections_data, known_areas, report)
+    validate_devices(devices_data, outputs_in_layout, report, devices_meta, paths["devices"])
+    validate_connections(connections_data, known_areas, report, connections_meta, paths["connections"])
 
     color_enabled = not args.no_color and os.isatty(1)
     known_devices = set(devices_data.keys()) if isinstance(devices_data, dict) else set()
