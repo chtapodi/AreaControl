@@ -230,6 +230,58 @@ def _resolve_paths(args) -> Dict[str, str]:
     return {k: os.path.abspath(os.path.expanduser(v)) for k, v in paths.items()}
 
 
+def load_device_audit_names(path: str) -> Optional[Set[str]]:
+    """
+    Parse debug/device_audit.txt and return the set of device names listed.
+    Only the bullet list (\"- name (device_id=...)\") and the short summary
+    block are considered; other text is ignored.
+    """
+    expanded = os.path.abspath(os.path.expanduser(path))
+    if not os.path.exists(expanded):
+        return None
+
+    names: Set[str] = set()
+    in_short_list = False
+    def _add_name(candidate: Optional[str]) -> None:
+        if not candidate:
+            return
+        value = candidate.strip()
+        if not value:
+            return
+        names.add(value)
+        names.add(value.lower())
+
+    try:
+        with open(expanded, "r", encoding="utf-8") as handle:
+            for raw_line in handle:
+                line = raw_line.strip()
+                if not line:
+                    in_short_list = False
+                    continue
+                if line.startswith("Missing devices"):
+                    in_short_list = True
+                    continue
+                if in_short_list:
+                    label = line.replace(" (offline)", "").strip()
+                    _add_name(label)
+                    continue
+                if line.startswith("- ") and "(device_id=" in line:
+                    name = line[2:].split(" (device_id=", 1)[0].strip()
+                    for marker in ("[MISSING]", "[KNOWN]"):
+                        if name.endswith(marker):
+                            name = name[: -len(marker)].strip()
+                    _add_name(name)
+                    continue
+                if line.startswith("* "):
+                    entity_id = line[2:].split(" ->", 1)[0].strip()
+                    if "." in entity_id:
+                        _, object_id = entity_id.split(".", 1)
+                        _add_name(object_id)
+    except Exception:
+        return None
+    return names
+
+
 def _coerce_list(value, area_name: str, field: str, section: str, report: DiagnosticsReport):
     if value is None:
         return []
@@ -277,6 +329,7 @@ def validate_layout(
     parents: Dict[str, List[str]] = defaultdict(list)
     children: Dict[str, Set[str]] = defaultdict(set)
     output_usage: Dict[str, List[str]] = defaultdict(list)
+    input_usage: Dict[str, List[str]] = defaultdict(list)
 
     if not isinstance(layout_data, dict):
         report.add(
@@ -285,7 +338,7 @@ def validate_layout(
             "Layout must be a mapping of area name -> config block",
             format_location(file_path, meta.get((), None)),
         )
-        return area_defs, referenced_children, output_usage, children, parents
+        return area_defs, referenced_children, output_usage, input_usage, children, parents
 
     area_defs.update(layout_data.keys())
 
@@ -400,6 +453,8 @@ def validate_layout(
                                     file_path, meta.get((area_name, "inputs", input_type, idx), None)
                                 ),
                             )
+                            continue
+                        input_usage[device_id].append(area_name)
             elif isinstance(inputs, list):
                 report.add(
                     "layout",
@@ -465,7 +520,7 @@ def validate_layout(
             f"Areas defined but not reachable from any root: {sorted(disconnected)}",
         )
 
-    return area_defs, referenced_children, output_usage, children, parents
+    return area_defs, referenced_children, output_usage, input_usage, children, parents
 
 
 def validate_devices(
@@ -651,10 +706,18 @@ def main():
     devices_data, devices_meta = _load_yaml_file(paths["devices"], "devices", report)
     connections_data, connections_meta = _load_yaml_file(paths["connections"], "connections", report)
 
-    area_defs, referenced_children, output_usage, children, parents = validate_layout(
+    (
+        area_defs,
+        referenced_children,
+        output_usage,
+        input_usage,
+        children,
+        parents,
+    ) = validate_layout(
         layout_data, devices_data, report, layout_meta, paths["layout"]
     )
     outputs_in_layout = set(output_usage.keys())
+    inputs_in_layout = set(input_usage.keys())
     known_areas = set(area_defs | referenced_children)
 
     validate_devices(devices_data, outputs_in_layout, report, devices_meta, paths["devices"])
@@ -663,6 +726,28 @@ def main():
     color_enabled = not args.no_color and os.isatty(1)
     known_devices = set(devices_data.keys()) if isinstance(devices_data, dict) else set()
     print(report.render(color=color_enabled, areas=known_areas, devices=known_devices))
+
+    config_device_ids: Set[str] = set(known_devices)
+    config_device_ids.update(outputs_in_layout)
+    config_device_ids.update(inputs_in_layout)
+    audit_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug", "device_audit.txt")
+    audit_names = load_device_audit_names(audit_path)
+    print("")  # spacer before audit summary
+    if audit_names is None:
+        print(f"Device audit summary: unable to read {audit_path}; skipping cross-check.")
+    else:
+        unmatched = sorted(device_id for device_id in config_device_ids if device_id not in audit_names)
+        matched = len(config_device_ids) - len(unmatched)
+        total = len(config_device_ids)
+        print(
+            f"Device audit summary: {matched}/{total} config device ids appeared in debug/device_audit.txt."
+        )
+        if unmatched:
+            print("Devices missing from audit listing:")
+            for name in unmatched:
+                print(f"  - {name}")
+        else:
+            print("All configured device ids had entries in the latest audit file.")
     return 1 if report.has_errors() else 0
 
 

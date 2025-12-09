@@ -34,6 +34,13 @@ except ImportError:
     from modules.logger import Logger
 import unittest
 
+try:
+    from homeassistant.helpers import device_registry as ha_device_registry
+    from homeassistant.helpers import entity_registry as ha_entity_registry
+except Exception:  # pragma: no cover - these modules exist only in HA
+    ha_device_registry = None
+    ha_entity_registry = None
+
 log = Logger(__name__, globals().get("log"))
 
 
@@ -82,6 +89,7 @@ DEFAULT_CONFIG = {
     "sun": "./pyscript/sun_config.yml",
 }
 DEFAULT_RUN_TESTS_ON_START = True
+DEFAULT_DEVICE_AUDIT_PATH = "./pyscript/debug/device_audit.txt"
 
 def write_area_tree_snapshot(area_tree, path="./pyscript/debug/area_tree.txt"):
     """Persist the current area tree for inspection."""
@@ -95,6 +103,201 @@ def write_area_tree_snapshot(area_tree, path="./pyscript/debug/area_tree.txt"):
         log.info(f"Wrote area tree snapshot to {path}")
     except Exception as exc:
         log.warning(f"Failed writing area tree snapshot to {path}: {exc}")
+
+
+def audit_homeassistant_devices(area_tree_obj, path=DEFAULT_DEVICE_AUDIT_PATH):
+    """Compare HA device registry against devices.yml entries and persist a text report."""
+    if area_tree_obj is None:
+        log.warning("Device audit skipped: area tree not initialized")
+        return None
+
+    if ha_device_registry is None or ha_entity_registry is None:
+        log.info("Device audit skipped: Home Assistant registries unavailable")
+        return None
+
+    hass_obj = globals().get("hass")
+    if hass_obj is None:
+        log.info("Device audit skipped: hass object unavailable")
+        return None
+
+    try:
+        device_registry = ha_device_registry.async_get(hass_obj)
+        entity_registry = ha_entity_registry.async_get(hass_obj)
+    except Exception as exc:  # pragma: no cover - depends on HA internals
+        log.warning(f"Device audit skipped: registry lookup failed ({exc})")
+        return None
+
+    known_ids = set((area_tree_obj.device_defs or {}).keys())
+    entities_by_device = defaultdict(list)
+    for entity in entity_registry.entities.values():
+        if entity.device_id is not None:
+            entities_by_device[entity.device_id].append(entity)
+
+    missing_devices = []
+    all_devices = []
+    for device_id, device in device_registry.devices.items():
+        entity_entries = entities_by_device.get(device_id, [])
+        if not entity_entries:
+            continue
+
+        entity_object_ids = set()
+        entity_details = []
+        online = False
+        entity_domains = set()
+
+        for entity in entity_entries:
+            entity_id = entity.entity_id
+            if entity_id and "." in entity_id:
+                domain, object_id = entity_id.split(".", 1)
+                entity_domains.add(domain)
+                entity_object_ids.add(object_id)
+            else:
+                entity_object_ids.add(entity_id)
+
+            try:
+                entity_state = state.get(entity_id)
+            except Exception:
+                entity_state = None
+
+            if entity_state not in (None, "unknown", "unavailable"):
+                online = True
+
+            entity_details.append(
+                {
+                    "entity_id": entity_id,
+                    "state": entity_state,
+                    "disabled_by": str(entity.disabled_by) if entity.disabled_by else None,
+                    "original_name": entity.original_name,
+                }
+            )
+
+        known_match = bool(entity_object_ids & known_ids)
+        entry = {
+            "device_id": device_id,
+            "name": device.name_by_user or device.name or device_id,
+            "manufacturer": device.manufacturer,
+            "model": device.model,
+            "area_id": device.area_id,
+            "online": online,
+            "domains": sorted(entity_domains),
+            "entities": entity_details,
+            "is_missing": not known_match,
+        }
+        all_devices.append(entry)
+        if entry["is_missing"]:
+            missing_devices.append(entry)
+
+    report = {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "known_device_count": len(known_ids),
+        "home_assistant_device_count": len(device_registry.devices),
+        "missing_device_count": len(missing_devices),
+        "missing_devices": missing_devices,
+        "devices": all_devices,
+    }
+
+    summary_lines = [
+        "Home Assistant Device Audit",
+        "===========================",
+        f"Generated: {report['generated_at']}",
+        "",
+        f"Known devices (devices.yml): {report['known_device_count']}",
+        f"Devices in Home Assistant: {report['home_assistant_device_count']}",
+        f"Devices missing from devices.yml: {report['missing_device_count']}",
+        "",
+    ]
+
+    if not missing_devices:
+        summary_lines.append("All Home Assistant devices are represented in devices.yml.")
+    else:
+        sorted_missing = sorted(
+            [
+                {
+                    "name": (entry.get("name") or entry.get("device_id") or "unknown").strip(),
+                    "online": bool(entry.get("online")),
+                }
+                for entry in missing_devices
+            ],
+            key=lambda info: info["name"].lower(),
+        )
+        summary_lines.append("Missing devices (sorted by name):")
+        for entry in sorted_missing:
+            suffix = "" if entry["online"] else " (offline)"
+            summary_lines.append(f"{entry['name']}{suffix}")
+        summary_lines.append("")
+        category_map = defaultdict(list)
+        for entry in missing_devices:
+            if entry["domains"]:
+                category = entry["domains"][0]
+            else:
+                category = "unknown"
+            category_map[category].append(entry)
+
+        for category in sorted(category_map.keys()):
+            devices = category_map[category]
+            summary_lines.append(f"=== Category: {category} ({len(devices)} devices) ===")
+            for device in sorted(devices, key=lambda d: (d['name'] or "", d['device_id'])):
+                summary_lines.append(
+                    f"- {device['name']} (device_id={device['device_id']}, online={'yes' if device['online'] else 'no'})"
+                )
+                manufacturer = device.get("manufacturer") or "Unknown Manufacturer"
+                model = device.get("model") or "Unknown Model"
+                area_id = device.get("area_id") or "Unknown Area"
+                domains = ", ".join(device.get("domains") or ["unknown"])
+                summary_lines.append(f"    Manufacturer/Model: {manufacturer} / {model}")
+                summary_lines.append(f"    Area ID: {area_id}")
+                summary_lines.append(f"    Domains: {domains}")
+                summary_lines.append("    Entities:")
+                for entity in device["entities"]:
+                    state_value = entity["state"]
+                    summary_lines.append(
+                        f"      * {entity['entity_id']} -> state={state_value}, disabled_by={entity['disabled_by']}"
+                    )
+                summary_lines.append("")
+
+    if all_devices:
+        summary_lines.append("All Home Assistant devices (missing first):")
+        summary_lines.append("")
+        sorted_all = sorted(
+            all_devices,
+            key=lambda entry: (
+                0 if entry["is_missing"] else 1,
+                (entry.get("name") or entry.get("device_id") or "unknown").lower(),
+            ),
+        )
+        for device in sorted_all:
+            status = "MISSING" if device["is_missing"] else "KNOWN"
+            summary_lines.append(
+                f"- {device['name']} [{status}] (device_id={device['device_id']}, online={'yes' if device['online'] else 'no'})"
+            )
+            manufacturer = device.get("manufacturer") or "Unknown Manufacturer"
+            model = device.get("model") or "Unknown Model"
+            area_id = device.get("area_id") or "Unknown Area"
+            domains = ", ".join(device.get("domains") or ["unknown"])
+            summary_lines.append(f"    Manufacturer/Model: {manufacturer} / {model}")
+            summary_lines.append(f"    Area ID: {area_id}")
+            summary_lines.append(f"    Domains: {domains}")
+            summary_lines.append("    Entities:")
+            for entity in device["entities"]:
+                state_value = entity["state"]
+                summary_lines.append(
+                    f"      * {entity['entity_id']} -> state={state_value}, disabled_by={entity['disabled_by']}"
+                )
+            summary_lines.append("")
+
+    summary_text = "\n".join(summary_lines).rstrip() + "\n"
+
+    try:
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        with builtins.open(path, "w", encoding="utf-8") as handle:
+            handle.write(summary_text)
+        log.info(f"Wrote device audit report to {path}")
+    except Exception as exc:
+        log.warning(f"Failed writing device audit to {path}: {exc}")
+
+    return report
 
 
 def load_config(config_path: str = DEFAULT_CONFIG_PATH):
@@ -166,6 +369,7 @@ def init():
     event_manager = EventManager(config_settings["rules"], area_tree)
     tracker_manager = TrackManager(connections_config=config_settings["connections"])
     write_area_tree_snapshot(area_tree)
+    audit_homeassistant_devices(area_tree)
     return config_settings
 
 
