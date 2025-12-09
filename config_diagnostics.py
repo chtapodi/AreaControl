@@ -282,6 +282,16 @@ def load_device_audit_names(path: str) -> Optional[Set[str]]:
     return names
 
 
+def audit_presence_suffix(name: Optional[str], audit_names: Optional[Set[str]]) -> str:
+    """Return a short suffix describing whether ``name`` is listed in the audit output."""
+    if audit_names is None or not name:
+        return ""
+    normalized = name.lower()
+    if name in audit_names or normalized in audit_names:
+        return " (present in audit listing)"
+    return " (not in audit listing)"
+
+
 def _coerce_list(value, area_name: str, field: str, section: str, report: DiagnosticsReport):
     if value is None:
         return []
@@ -323,6 +333,7 @@ def validate_layout(
     report: DiagnosticsReport,
     meta: Dict[Tuple, int],
     file_path: str,
+    audit_names: Optional[Set[str]] = None,
 ):
     area_defs: Set[str] = set()
     referenced_children: Set[str] = set()
@@ -416,10 +427,11 @@ def validate_layout(
                         continue
                     output_usage[output].append(area_name)
                     if isinstance(devices_data, dict) and output not in devices_data:
+                        suffix = audit_presence_suffix(output, audit_names)
                         report.add(
                             "layout",
                             "error",
-                            f"{area_name}: output '{output}' missing from devices.yml",
+                            f"{area_name}: output '{output}' missing from devices.yml{suffix}",
                             format_location(file_path, meta.get((area_name, "outputs", idx), None)),
                         )
 
@@ -701,6 +713,8 @@ def main():
     args = parse_args()
     paths = _resolve_paths(args)
     report = DiagnosticsReport()
+    audit_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug", "device_audit.txt")
+    audit_names = load_device_audit_names(audit_path)
 
     layout_data, layout_meta = _load_yaml_file(paths["layout"], "layout", report)
     devices_data, devices_meta = _load_yaml_file(paths["devices"], "devices", report)
@@ -714,7 +728,7 @@ def main():
         children,
         parents,
     ) = validate_layout(
-        layout_data, devices_data, report, layout_meta, paths["layout"]
+        layout_data, devices_data, report, layout_meta, paths["layout"], audit_names=audit_names
     )
     outputs_in_layout = set(output_usage.keys())
     inputs_in_layout = set(input_usage.keys())
@@ -730,8 +744,6 @@ def main():
     config_device_ids: Set[str] = set(known_devices)
     config_device_ids.update(outputs_in_layout)
     config_device_ids.update(inputs_in_layout)
-    audit_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug", "device_audit.txt")
-    audit_names = load_device_audit_names(audit_path)
     print("")  # spacer before audit summary
     if audit_names is None:
         print(f"Device audit summary: unable to read {audit_path}; skipping cross-check.")
