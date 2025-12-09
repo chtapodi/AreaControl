@@ -83,11 +83,11 @@ kauf_tube:
     - light
     - kauf
 
-kauf_kitchen_ball:
+hue_kitchen_ball:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
 kauf_kitchen_corner:
   type: light

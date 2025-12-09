@@ -148,7 +148,7 @@ kitchen:
     motion:
       - motion_sensor_kitchen
   outputs:
-    - kauf_kitchen_ball
+    - hue_kitchen_ball
     - kauf_kitchen_corner
 
 back:
