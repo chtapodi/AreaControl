@@ -192,7 +192,7 @@ bathroom:
     - kauf_bathroom_0
     - kauf_bathroom_1
     - kauf_bathroom_2
-    - kauf_bathroom_center
+    - hue_bathroom_center
 
 bedroom:
   outputs:

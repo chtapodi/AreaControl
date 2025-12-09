@@ -29,11 +29,11 @@ kauf_bathroom_2:
     - light
     - kauf
 
-kauf_bathroom_center:
+hue_bathroom_center:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
 kauf_bedroom_0:
   type: light
