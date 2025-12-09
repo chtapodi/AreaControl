@@ -101,11 +101,6 @@ kauf_office_light:
     - light
     - kauf
 
-kauf_square_lamp:
-  type: light
-  filters:
-    - light
-    - kauf
 
 kauf_sconce_0:
   type: light
@@ -163,6 +158,13 @@ living_room_lamp:
   filters:
     - light
     - hue
+
+hue_square_lamp:
+  type: light
+  filters:
+    - light
+    - hue
+
 
 
 # Blinds

@@ -175,7 +175,7 @@ office:
       - "motion_sensor_office"
   outputs:
     - kauf_office_light
-    - kauf_square_lamp
+    - hue_square_lamp
 
 hallway:
   inputs:
