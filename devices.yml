@@ -95,11 +95,11 @@ kauf_kitchen_corner:
     - light
     - kauf
 
-kauf_office_light:
+hue_office_light:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
 
 kauf_sconce_0:

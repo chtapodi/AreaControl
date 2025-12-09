@@ -174,7 +174,7 @@ office:
     motion:
       - "motion_sensor_office"
   outputs:
-    - kauf_office_light
+    - hue_office_light
     - hue_square_lamp
 
 hallway:
