@@ -29,6 +29,12 @@ kauf_bathroom_2:
     - light
     - kauf
 
+kauf_bathroom_center:
+  type: light
+  filters:
+    - light
+    - kauf
+
 kauf_bedroom_0:
   type: light
   filters:
@@ -83,7 +89,19 @@ kauf_kitchen_ball:
     - light
     - kauf
 
+kauf_kitchen_corner:
+  type: light
+  filters:
+    - light
+    - kauf
+
 kauf_office_light:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_square_lamp:
   type: light
   filters:
     - light
@@ -114,6 +132,12 @@ kauf_laundry_room_1:
     - kauf
 
 kauf_laundry_room_2:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_laundry_room_3:
   type: light
   filters:
     - light
@@ -150,7 +174,7 @@ living_room_blind_cover:
   height: 100
 
 
-bedroom_blind_cover:
+bedroom_blind:
   type: blind
   filters:
     - blind
@@ -164,4 +188,3 @@ google_home_speaker:
   filters:
     - speaker
     - google_home
-

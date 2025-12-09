@@ -9,20 +9,10 @@ home:
   sub_areas:
     - front
     - back
-  inputs:
-    -
-  outputs:
-    -
-
 front:
   sub_areas:
     - front_room
     - kitchen
-  inputs:
-    -
-  outputs:
-    -
-
 front_room:
   direct_sub_areas:
     - living_room
@@ -30,9 +20,6 @@ front_room:
   inputs:
     presence:
       - "presence_sensor_living_room_front_room"
-
-  outputs:
-    -
 
 living_room:
   direct_sub_areas:
@@ -46,19 +33,13 @@ living_room:
 
   outputs:
     - google_home_speaker
+    - living_room_blind_cover
 
 living_room_chairs:
   direct_sub_areas:
     - living_room_chair_0
     - living_room_chair_1
-  inputs:
-    -
-  outputs:
-    -
-
 living_room_chair_0:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_chair_0"
@@ -66,8 +47,6 @@ living_room_chair_0:
     - living_room_corner_lamp
 
 living_room_chair_1:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_chair_0"
@@ -78,14 +57,7 @@ living_room_chair_1:
 living_room_front:
   direct_sub_areas:
     - living_room_hallway
-  inputs:
-    -
-  outputs:
-    -
-
 living_room_hallway:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_hallway"
@@ -101,9 +73,6 @@ living_room_middle:
     presence:
       - "presence_sensor_living_room_middle"
 
-  outputs:
-    -
-
 living_room_couch:
   sub_areas:
     - living_room_couch_0
@@ -114,32 +83,18 @@ living_room_couch:
     - kauf_tube
 
 living_room_couch_0:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_couch_0"
-  outputs:
-
 living_room_couch_1:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_couch_1"
-  outputs:
-
 living_room_couch_2:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_couch_2"
-  outputs:
-
 living_room_back:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_back"
@@ -155,56 +110,40 @@ dining_room:
     - dining_room_1
     - dining_room_2
     - dining_room_3
-  inputs:
-    motion:
-
   outputs:
     - kauf_hanging_0
     - kauf_hanging_1
     - kauf_hanging_2
     - kauf_hanging_3
     - living_room_lamp
-    - living_room_corner_lamp
 
 
 dining_room_0:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_dining_room_0"
 
 dining_room_1:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_dining_room_1"
 
 dining_room_2:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_dining_room_2"
 
 dining_room_3:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_dining_room_3"
 
 dining_room_hallway:
-  sub_areas:
-    -
   inputs:
     presence:
       - "presence_sensor_living_room_dining_room_hallway"
 
 kitchen:
-  sub_areas:
-    -
   inputs:
     motion:
       - motion_sensor_kitchen
@@ -221,19 +160,16 @@ back:
     - bedroom
 
 laundry_room:
-  sub_areas:
-    -
   inputs:
     motion:
       - motion_sensor_laundry_room
   outputs:
     - kauf_laundry_room_0
+    - kauf_laundry_room_1
     - kauf_laundry_room_2
     - kauf_laundry_room_3
 
 office:
-  sub_areas:
-    -
   inputs:
     motion:
       - "motion_sensor_office"
@@ -242,8 +178,6 @@ office:
     - kauf_square_lamp
 
 hallway:
-  sub_areas:
-    -
   inputs:
     motion:
       - "motion_sensor_hallway"
@@ -251,25 +185,21 @@ hallway:
     - kauf_hallway
 
 bathroom:
-  sub_areas:
-    -
   inputs:
     motion:
       - "motion_sensor_bathroom"
   outputs:
     - kauf_bathroom_0
     - kauf_bathroom_1
+    - kauf_bathroom_2
     - kauf_bathroom_center
 
 bedroom:
-  sub_areas:
-    -
-  inputs:
-    -
   outputs:
     - kauf_bedroom_0
     - kauf_bedroom_1
-    - blind_bedroom_window
+    - bedroom_blind
+    - kauf_fuzzy_room
 
 outside:
   sub_areas:
@@ -277,5 +207,3 @@ outside:
     - saildrone
     - twelve
     - other
-  inputs:
-    -

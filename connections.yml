@@ -12,20 +12,21 @@ connections:
   - office: laundry_room
 
   - living_room_hallway: bedroom
-  - living_room_hallway: living_room_door
-  - living_room_door: bedroom
-  - living_room_door: outside
-  - living_room_door: living_room_front
+  # TODO: Do I want to implement doors?
+  # - living_room_hallway: living_room_door
+  # - living_room_door: bedroom
+  # - living_room_door: outside
+  # - living_room_door: living_room_front
   - living_room_front: living_room_hallway
-  - living_room_front: chair_0
-  - living_room_front: chair_1
-  - chair_1: living_room_back
+  - living_room_front: living_room_chair_0
+  - living_room_front: living_room_chair_1
+  - living_room_chair_1: living_room_back
   - living_room_front: living_room_middle
-  - living_room_middle: couch_0
-  - living_room_middle: couch_1
-  - living_room_middle: couch_2
-  - couch_0: couch_1 
-  - couch_0: couch_2
+  - living_room_middle: living_room_couch_0
+  - living_room_middle: living_room_couch_1
+  - living_room_middle: living_room_couch_2
+  - living_room_couch_0: living_room_couch_1 
+  - living_room_couch_0: living_room_couch_2
   - living_room_hallway: dining_room_hallway
   - dining_room_hallway: dining_room_0
   - dining_room_hallway: dining_room_1

@@ -600,7 +600,7 @@ def validate_devices(
         preview = sample if len(sample) <= 6 else sample[:6] + ["..."]
         report.add(
             "devices",
-            "info",
+            "error",
             f"{len(unused)} device(s) are not referenced in layout outputs: {preview}",
         )
 
