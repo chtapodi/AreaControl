@@ -1,0 +1,5 @@
+{
+    "python.linting.pylintArgs": [
+        "--disable=E0401,E0602"
+    ]
+}

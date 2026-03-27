@@ -1,0 +1,1104 @@
+2025-12-01 16:52:02.313 INFO (MainThread) [area_tree] KaufLight<kauf_office_light>:is_on(): Returning True: on
+2025-12-01 16:52:02.313 INFO (MainThread) [area_tree] KaufLight<kauf_office_light>:get_status(): Getting status on
+2025-12-01 16:52:02.313 INFO (MainThread) [area_tree] KaufLight<kauf_office_light>:is_on(): Returning True: on
+2025-12-01 16:52:02.313 INFO (MainThread) [area_tree] KaufLight<kauf_office_light>:get_state(): Returning state: {'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:52:02.313 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_office_light state:{'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:52:02.313 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_office_light'} from cache: {'color_temp': 350, 'brightness': 255}
+2025-12-01 16:52:02.314 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_office_light'}
+2025-12-01 16:52:02.314 INFO (MainThread) [area_tree] SETTING DEVICE kauf_office_light TO {'status': False}
+2025-12-01 16:52:02.314 INFO (MainThread) [area_tree] got EVENT_CALL_SERVICE with kwargs={'trigger_type': 'event', 'event_type': 'call_service', 'context': <homeassistant.core.Context object at 0x7f28dc91a610>, 'domain': 'light', 'service': 'turn_off', 'service_data': {'entity_id': 'light.kauf_square_lamp'}}
+2025-12-01 16:52:02.314 INFO (MainThread) [area_tree] got EVENT_CALL_SERVICE with kwargs={'trigger_type': 'event', 'event_type': 'call_service', 'context': <homeassistant.core.Context object at 0x7f28dc91a610>, 'domain': 'light', 'service': 'turn_off', 'service_data': {'entity_id': 'light.kauf_office_light'}}
+2025-12-01 16:55:32.871 INFO (MainThread) [area_tree] Loaded ./pyscript/config.yml as config
+2025-12-01 16:55:32.871 INFO (MainThread) [area_tree] Config layout:	./pyscript/layout.yml
+2025-12-01 16:55:32.871 INFO (MainThread) [area_tree] Config rules:	./pyscript/rules.yml
+2025-12-01 16:55:32.871 INFO (MainThread) [area_tree] Config devices:	./pyscript/devices.yml
+2025-12-01 16:55:32.871 INFO (MainThread) [area_tree] Config connections:	./pyscript/connections.yml
+2025-12-01 16:55:32.871 INFO (MainThread) [area_tree] Config sun:	./pyscript/sun_config.yml
+2025-12-01 16:55:32.892 INFO (MainThread) [area_tree] Inputs: {'service': ['service_input']}
+2025-12-01 16:55:32.892 INFO (MainThread) [area_tree] Creating service device: service_input
+2025-12-01 16:55:32.893 INFO (MainThread) [area_tree] Creating Service Input: service_input
+2025-12-01 16:55:32.894 INFO (MainThread) [area_tree] Inputs: [None]
+2025-12-01 16:55:32.894 INFO (MainThread) [area_tree] Inputs: [None]
+2025-12-01 16:55:32.895 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_front_room']}
+2025-12-01 16:55:32.895 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_front_room
+2025-12-01 16:55:32.895 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_front_room
+2025-12-01 16:55:32.895 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_front_room
+2025-12-01 16:55:32.895 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_front_room
+2025-12-01 16:55:32.895 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_front_room == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95cb4d0>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.896 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_front_room == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95cb4d0>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.897 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room']}
+2025-12-01 16:55:32.898 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room
+2025-12-01 16:55:32.898 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room
+2025-12-01 16:55:32.898 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room
+2025-12-01 16:55:32.898 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room
+2025-12-01 16:55:32.898 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d955ecf0>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.898 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d955ecf0>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.899 INFO (MainThread) [area_tree] Inputs: [None]
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_chair_0']}
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_chair_0 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9571550>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.900 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_chair_0 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9571550>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.901 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_chair_0']}
+2025-12-01 16:55:32.901 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.902 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.902 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.902 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_chair_0
+2025-12-01 16:55:32.902 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_chair_0 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9572f90>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.902 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_chair_0 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9572f90>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.903 INFO (MainThread) [area_tree] Inputs: [None]
+2025-12-01 16:55:32.904 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_hallway']}
+2025-12-01 16:55:32.904 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_hallway
+2025-12-01 16:55:32.904 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_hallway
+2025-12-01 16:55:32.904 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_hallway
+2025-12-01 16:55:32.904 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_hallway
+2025-12-01 16:55:32.905 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_hallway == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9585bb0>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.905 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_hallway == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9585bb0>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_middle']}
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_middle
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_middle
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_middle
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_middle
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_middle == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9586f90>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.906 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_middle == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d9586f90>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_couch_0']}
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_couch_0
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_couch_0
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_couch_0
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_couch_0
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_couch_0 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d958a090>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.909 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_couch_0 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d958a090>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.910 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_couch_1']}
+2025-12-01 16:55:32.910 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_couch_1
+2025-12-01 16:55:32.910 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_couch_1
+2025-12-01 16:55:32.910 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_couch_1
+2025-12-01 16:55:32.910 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_couch_1
+2025-12-01 16:55:32.910 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_couch_1 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d958ae70>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.911 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_couch_1 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d958ae70>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.911 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_couch_2']}
+2025-12-01 16:55:32.912 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_couch_2
+2025-12-01 16:55:32.912 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_couch_2
+2025-12-01 16:55:32.912 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_couch_2
+2025-12-01 16:55:32.912 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_couch_2
+2025-12-01 16:55:32.912 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_couch_2 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d958bc50>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.912 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_couch_2 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d958bc50>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.913 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_back']}
+2025-12-01 16:55:32.914 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_back
+2025-12-01 16:55:32.914 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_back
+2025-12-01 16:55:32.914 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_back
+2025-12-01 16:55:32.914 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_back
+2025-12-01 16:55:32.914 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_back == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d959a270>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.915 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_back == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d959a270>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] Inputs: {'motion': None}
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_dining_room_0']}
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_dining_room_0
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_0
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_0
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_dining_room_0
+2025-12-01 16:55:32.918 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_0 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95ac170>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.919 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_0 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95ac170>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.919 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_dining_room_1']}
+2025-12-01 16:55:32.919 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_dining_room_1
+2025-12-01 16:55:32.919 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_1
+2025-12-01 16:55:32.920 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_1
+2025-12-01 16:55:32.920 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_dining_room_1
+2025-12-01 16:55:32.920 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_1 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95acf50>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.920 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_1 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95acf50>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.921 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_dining_room_2']}
+2025-12-01 16:55:32.921 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_dining_room_2
+2025-12-01 16:55:32.921 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_2
+2025-12-01 16:55:32.921 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_2
+2025-12-01 16:55:32.921 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_dining_room_2
+2025-12-01 16:55:32.921 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_2 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95adeb0>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.922 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_2 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95adeb0>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.922 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_dining_room_3']}
+2025-12-01 16:55:32.922 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_dining_room_3
+2025-12-01 16:55:32.923 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_3
+2025-12-01 16:55:32.923 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_3
+2025-12-01 16:55:32.923 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_dining_room_3
+2025-12-01 16:55:32.923 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_3 == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95aec90>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.923 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_3 == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95aec90>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.924 INFO (MainThread) [area_tree] Inputs: {'presence': ['presence_sensor_living_room_dining_room_hallway']}
+2025-12-01 16:55:32.924 INFO (MainThread) [area_tree] Creating presence device: presence_sensor_living_room_dining_room_hallway
+2025-12-01 16:55:32.924 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_hallway
+2025-12-01 16:55:32.924 INFO (MainThread) [area_tree] Creating Presence Sensor: presence_sensor_living_room_dining_room_hallway
+2025-12-01 16:55:32.924 INFO (MainThread) [area_tree] Generating trigger for: presence_sensor_living_room_dining_room_hallway
+2025-12-01 16:55:32.924 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_hallway == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95afa10>( {'tags': ['on', 'presence']} )
+2025-12-01 16:55:32.925 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.presence_sensor_living_room_dining_room_hallway == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28d95afa10>( {'tags': ['off', 'presence']} )
+2025-12-01 16:55:32.926 INFO (MainThread) [area_tree] Inputs: {'motion': ['motion_sensor_kitchen']}
+2025-12-01 16:55:32.926 INFO (MainThread) [area_tree] lumi: motion_sensor_kitchen
+2025-12-01 16:55:32.926 INFO (MainThread) [area_tree] Generating trigger for: motion_sensor_kitchen
+2025-12-01 16:55:32.927 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_kitchen_ias_zone == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f8a330>( {'tags': ['on', 'motion_detected']} )
+2025-12-01 16:55:32.927 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_kitchen_ias_zone == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f8a330>( {'tags': ['off', 'motion_detected']} )
+2025-12-01 16:55:32.927 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_kitchen_occupancy == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f8a330>( {'tags': ['on', 'motion_occupancy']} )
+2025-12-01 16:55:32.928 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_kitchen_occupancy == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f8a330>( {'tags': ['off', 'motion_occupancy']} )
+2025-12-01 16:55:32.930 INFO (MainThread) [area_tree] Inputs: {'motion': ['motion_sensor_laundry_room']}
+2025-12-01 16:55:32.930 INFO (MainThread) [area_tree] lumi: motion_sensor_laundry_room
+2025-12-01 16:55:32.930 INFO (MainThread) [area_tree] Generating trigger for: motion_sensor_laundry_room
+2025-12-01 16:55:32.931 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_laundry_room_ias_zone == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f97ad0>( {'tags': ['on', 'motion_detected']} )
+2025-12-01 16:55:32.931 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_laundry_room_ias_zone == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f97ad0>( {'tags': ['off', 'motion_detected']} )
+2025-12-01 16:55:32.931 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_laundry_room_occupancy == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f97ad0>( {'tags': ['on', 'motion_occupancy']} )
+2025-12-01 16:55:32.932 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_laundry_room_occupancy == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f97ad0>( {'tags': ['off', 'motion_occupancy']} )
+2025-12-01 16:55:32.933 INFO (MainThread) [area_tree] Inputs: {'motion': ['motion_sensor_office']}
+2025-12-01 16:55:32.933 INFO (MainThread) [area_tree] lumi: motion_sensor_office
+2025-12-01 16:55:32.933 INFO (MainThread) [area_tree] Generating trigger for: motion_sensor_office
+2025-12-01 16:55:32.934 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_office_ias_zone == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f9a990>( {'tags': ['on', 'motion_detected']} )
+2025-12-01 16:55:32.934 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_office_ias_zone == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f9a990>( {'tags': ['off', 'motion_detected']} )
+2025-12-01 16:55:32.934 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_office_occupancy == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f9a990>( {'tags': ['on', 'motion_occupancy']} )
+2025-12-01 16:55:32.935 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_office_occupancy == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3f9a990>( {'tags': ['off', 'motion_occupancy']} )
+2025-12-01 16:55:32.936 INFO (MainThread) [area_tree] Inputs: {'motion': ['motion_sensor_hallway']}
+2025-12-01 16:55:32.936 INFO (MainThread) [area_tree] lumi: motion_sensor_hallway
+2025-12-01 16:55:32.936 INFO (MainThread) [area_tree] Generating trigger for: motion_sensor_hallway
+2025-12-01 16:55:32.936 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_hallway_ias_zone == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fa4b30>( {'tags': ['on', 'motion_detected']} )
+2025-12-01 16:55:32.936 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_hallway_ias_zone == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fa4b30>( {'tags': ['off', 'motion_detected']} )
+2025-12-01 16:55:32.937 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_hallway_occupancy == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fa4b30>( {'tags': ['on', 'motion_occupancy']} )
+2025-12-01 16:55:32.937 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_hallway_occupancy == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fa4b30>( {'tags': ['off', 'motion_occupancy']} )
+2025-12-01 16:55:32.939 INFO (MainThread) [area_tree] Inputs: {'motion': ['motion_sensor_bathroom']}
+2025-12-01 16:55:32.939 INFO (MainThread) [area_tree] lumi: motion_sensor_bathroom
+2025-12-01 16:55:32.939 INFO (MainThread) [area_tree] Generating trigger for: motion_sensor_bathroom
+2025-12-01 16:55:32.939 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_bathroom_ias_zone == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fac7d0>( {'tags': ['on', 'motion_detected']} )
+2025-12-01 16:55:32.940 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_bathroom_ias_zone == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fac7d0>( {'tags': ['off', 'motion_detected']} )
+2025-12-01 16:55:32.940 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_bathroom_occupancy == 'on' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fac7d0>( {'tags': ['on', 'motion_occupancy']} )
+2025-12-01 16:55:32.940 INFO (MainThread) [area_tree] generating state trigger @binary_sensor.motion_sensor_bathroom_occupancy == 'off' <custom_components.pyscript.eval.EvalFuncVarClassInst object at 0x7f28a3fac7d0>( {'tags': ['off', 'motion_occupancy']} )
+2025-12-01 16:55:32.942 INFO (MainThread) [area_tree] Inputs: [None]
+2025-12-01 16:55:32.943 INFO (MainThread) [area_tree] Inputs: [None]
+2025-12-01 16:55:32.954 INFO (MainThread) [tracker] CONNECTIONS: {'connections': [{'bedroom': 'bathroom'}, {'dining_room': 'hallway'}, {'dining_room': 'kitchen'}, {'dining_room': 'outside'}, {'kitchen': 'outside'}, {'kitchen': 'hallway'}, {'hallway': 'bathroom'}, {'hallway': 'office'}, {'office': 'laundry_room'}, {'living_room_hallway': 'bedroom'}, {'living_room_hallway': 'living_room_door'}, {'living_room_door': 'bedroom'}, {'living_room_door': 'outside'}, {'living_room_door': 'living_room_front'}, {'living_room_front': 'living_room_hallway'}, {'living_room_front': 'chair_0'}, {'living_room_front': 'chair_1'}, {'chair_1': 'living_room_back'}, {'living_room_front': 'living_room_middle'}, {'living_room_middle': 'couch_0'}, {'living_room_middle': 'couch_1'}, {'living_room_middle': 'couch_2'}, {'couch_0': 'couch_1'}, {'couch_0': 'couch_2'}, {'living_room_hallway': 'dining_room_hallway'}, {'dining_room_hallway': 'dining_room_0'}, {'dining_room_hallway': 'dining_room_1'}, {'dining_room_0': 'dining_room_1'}, {'dining_room_0': 'dining_room_2'}, {'dining_room_1': 'dining_room_3'}, {'dining_room_3': 'living_room_back'}, {'living_room_back': 'living_room_middle'}, {'dining_room_2': 'outside'}, {'dining_room_0': 'kitchen'}, {'dining_room_hallway': 'kitchen'}]}
+2025-12-01 16:55:32.955 INFO (MainThread) [tracker] connection_pairs: [('bedroom', 'bathroom'), ('dining_room', 'hallway'), ('dining_room', 'kitchen'), ('dining_room', 'outside'), ('kitchen', 'outside'), ('kitchen', 'hallway'), ('hallway', 'bathroom'), ('hallway', 'office'), ('office', 'laundry_room'), ('living_room_hallway', 'bedroom'), ('living_room_hallway', 'living_room_door'), ('living_room_door', 'bedroom'), ('living_room_door', 'outside'), ('living_room_door', 'living_room_front'), ('living_room_front', 'living_room_hallway'), ('living_room_front', 'chair_0'), ('living_room_front', 'chair_1'), ('chair_1', 'living_room_back'), ('living_room_front', 'living_room_middle'), ('living_room_middle', 'couch_0'), ('living_room_middle', 'couch_1'), ('living_room_middle', 'couch_2'), ('couch_0', 'couch_1'), ('couch_0', 'couch_2'), ('living_room_hallway', 'dining_room_hallway'), ('dining_room_hallway', 'dining_room_0'), ('dining_room_hallway', 'dining_room_1'), ('dining_room_0', 'dining_room_1'), ('dining_room_0', 'dining_room_2'), ('dining_room_1', 'dining_room_3'), ('dining_room_3', 'living_room_back'), ('living_room_back', 'living_room_middle'), ('dining_room_2', 'outside'), ('dining_room_0', 'kitchen'), ('dining_room_hallway', 'kitchen')]
+2025-12-01 16:55:32.965 INFO (MainThread) [area_tree] Wrote area tree snapshot to ./pyscript/debug/area_tree.txt
+2025-12-01 16:55:32.965 INFO (MainThread) [area_tree] TEST
+2025-12-01 16:55:32.966 INFO (MainThread) [area_tree] AREA DEVICES: [<custom_components.pyscript.eval.Device object at 0x7f28a1ba4af0>, <custom_components.pyscript.eval.Device object at 0x7f28a0983bd0>, <custom_components.pyscript.eval.Device object at 0x7f28a0981590>, <custom_components.pyscript.eval.Device object at 0x7f28a09806b0>]
+2025-12-01 16:55:32.966 INFO (MainThread) [area_tree] ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init__evalfunc_wrap__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_find_light', '_find_motion_sensor', 'area_tree', 'default_motion_sensor', 'default_test_area', 'default_test_light', 'default_test_room', 'event_manager', 'run_tests', 'test_combine_states', 'test_merge_data_dicts', 'test_merge_data_empty_list', 'test_merge_data_floats', 'test_merge_data_integers', 'test_merge_data_lists', 'test_merge_data_lists_with_different_lengths', 'test_merge_data_mixed_numbers', 'test_merge_states', 'test_merge_states_no_status', 'test_motion_sensor', 'test_set_and_get_color', 'test_set_setting_status', 'test_setting_cache']
+2025-12-01 16:55:32.966 INFO (MainThread) [area_tree] STARTING TEST COMBINE STATES
+2025-12-01 16:55:32.967 INFO (MainThread) [area_tree] Combining states with strategy first: [{'status': 1, 'brightness': 255, 'rgb_color': [255, 255, 0]}, {'status': 1, 'rgb_color': [255, 0, 0]}, {'status': 0, 'brightness': 100, 'rgb_color': [0, 255, 255]}]
+2025-12-01 16:55:32.967 INFO (MainThread) [area_tree] COMBINING states with strategy first: [{'status': 0, 'brightness': 100, 'rgb_color': [0, 255, 255]}, {'status': 1, 'rgb_color': [255, 0, 0]}, {'status': 1, 'brightness': 255, 'rgb_color': [255, 255, 0]}]
+2025-12-01 16:55:32.967 INFO (MainThread) [area_tree] Combining states with strategy last: [{'status': 1, 'brightness': 255, 'rgb_color': [255, 255, 0]}, {'status': 1, 'rgb_color': [255, 0, 0]}, {'status': 0, 'brightness': 100, 'rgb_color': [0, 255, 255]}]
+2025-12-01 16:55:32.967 INFO (MainThread) [area_tree] COMBINING states with strategy last: [{'status': 1, 'brightness': 255, 'rgb_color': [255, 255, 0]}, {'status': 1, 'rgb_color': [255, 0, 0]}, {'status': 0, 'brightness': 100, 'rgb_color': [0, 255, 255]}]
+2025-12-01 16:55:32.967 INFO (MainThread) [area_tree] Combining states with strategy average: [{'status': 1, 'brightness': 255, 'rgb_color': [255, 255, 0]}, {'status': 1, 'rgb_color': [255, 0, 0]}, {'status': 0, 'brightness': 100, 'rgb_color': [0, 255, 255]}]
+2025-12-01 16:55:32.968 INFO (MainThread) [area_tree] SUMDICT {'status': 2, 'brightness': 355, 'rgb_color': [510, 510, 255]} COUNTDICT {'status': 3, 'brightness': 2, 'rgb_color': [3, 3, 3]}
+2025-12-01 16:55:32.969 INFO (MainThread) [area_tree] FINAL STATE {'status': 1, 'brightness': 177.5, 'rgb_color': [170.0, 170.0, 85.0]}
+2025-12-01 16:55:32.969 INFO (MainThread) [area_tree] Test 1: test_combine_states PASSED
+2025-12-01 16:55:32.970 INFO (MainThread) [area_tree] Test 2: test_merge_data_dicts PASSED
+2025-12-01 16:55:32.970 INFO (MainThread) [area_tree] Test 3: test_merge_data_empty_list PASSED
+2025-12-01 16:55:32.970 INFO (MainThread) [area_tree] Test 4: test_merge_data_floats PASSED
+2025-12-01 16:55:32.971 INFO (MainThread) [area_tree] Test 5: test_merge_data_integers PASSED
+2025-12-01 16:55:32.972 INFO (MainThread) [area_tree] Test 6: test_merge_data_lists PASSED
+2025-12-01 16:55:32.973 INFO (MainThread) [area_tree] Test 7: test_merge_data_lists_with_different_lengths PASSED
+2025-12-01 16:55:32.973 INFO (MainThread) [area_tree] Test 8: test_merge_data_mixed_numbers PASSED
+2025-12-01 16:55:32.974 INFO (MainThread) [area_tree] merged_state: {'status': 1}
+2025-12-01 16:55:32.974 INFO (MainThread) [area_tree] Test 9: test_merge_states PASSED
+2025-12-01 16:55:32.975 INFO (MainThread) [area_tree] merged_state: {'other': 7.5, 'status': 0}
+2025-12-01 16:55:32.975 INFO (MainThread) [area_tree] Test 10: test_merge_states_no_status PASSED
+2025-12-01 16:55:32.975 INFO (MainThread) [area_tree] test_motion_sensor: starting: Area <custom_components.pyscript.eval.Area object at 0x7f28a1ba7f00>
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False}
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_3'}
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_3'}
+2025-12-01 16:55:32.976 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_2'}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_2'}
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:32.977 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:32.978 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False}
+2025-12-01 16:55:32.978 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_0'}
+2025-12-01 16:55:32.978 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_0'}
+2025-12-01 16:55:32.978 INFO (MainThread) [area_tree] merging states: [{'status': False, 'name': 'kauf_laundry_room_3'}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'name': 'kauf_laundry_room_2'}, {'status': False, 'name': 'kauf_laundry_room_0'}]
+2025-12-01 16:55:32.979 INFO (MainThread) [area_tree] merged_state: {'status': 0}
+2025-12-01 16:55:32.979 INFO (MainThread) [area_tree] test_motion_sensor: initial state: {'status': 0}
+2025-12-01 16:55:32.979 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]} on kauf_laundry_room_3
+2025-12-01 16:55:32.979 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.979 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): kauf_laundry_room_3 {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.980 INFO (MainThread) [area_tree] Applied state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.980 INFO (MainThread) [area_tree] add_to_cache: Added {'brightness': 255, 'rgb_color': [255, 72, 35]} to None to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.980 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.980 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]} on motion_sensor_laundry_room
+2025-12-01 16:55:32.981 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]} on kauf_laundry_room_2
+2025-12-01 16:55:32.981 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.981 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): kauf_laundry_room_2 {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.981 INFO (MainThread) [area_tree] Applied state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.982 INFO (MainThread) [area_tree] add_to_cache: Added {'brightness': 255, 'rgb_color': [255, 72, 35]} to None to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.982 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.982 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]} on kauf_laundry_room_0
+2025-12-01 16:55:32.982 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.983 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): kauf_laundry_room_0 {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.983 INFO (MainThread) [area_tree] Applied state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.983 INFO (MainThread) [area_tree] add_to_cache: Added {'brightness': 255, 'rgb_color': [255, 72, 35]} to None to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.983 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:32.983 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2555 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:33.085 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_3
+2025-12-01 16:55:33.085 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:33.085 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:33.085 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): rgb_color not in new_args. self rgb is (255, 72, 35)
+2025-12-01 16:55:33.086 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): Supplimenting rgb_color to (255, 72, 35)
+2025-12-01 16:55:33.087 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 72, 35], 'status': 0}
+2025-12-01 16:55:33.088 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 72, 35]} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.088 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.088 INFO (MainThread) [area_tree] Setting state: {'status': 0} on motion_sensor_laundry_room
+2025-12-01 16:55:33.089 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_2
+2025-12-01 16:55:33.089 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:33.089 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:33.090 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is (255, 72, 35)
+2025-12-01 16:55:33.090 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): Supplimenting rgb_color to (255, 72, 35)
+2025-12-01 16:55:33.091 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 72, 35], 'status': 0}
+2025-12-01 16:55:33.092 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 72, 35]} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.092 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.092 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_0
+2025-12-01 16:55:33.092 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:33.092 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:33.092 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): rgb_color not in new_args. self rgb is (255, 72, 35)
+2025-12-01 16:55:33.093 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): Supplimenting rgb_color to (255, 72, 35)
+2025-12-01 16:55:33.094 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 72, 35], 'status': 0}
+2025-12-01 16:55:33.095 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 72, 35]} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.095 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.095 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2558 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:33.197 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:33.197 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:33.198 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:33.198 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False}
+2025-12-01 16:55:33.198 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.198 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_3', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.199 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_3', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.199 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.199 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.199 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.199 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:33.200 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:33.200 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False}
+2025-12-01 16:55:33.200 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.200 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_2', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.200 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_2', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.201 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:33.201 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:33.201 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False}
+2025-12-01 16:55:33.202 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.202 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_0', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.202 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_0', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.202 INFO (MainThread) [area_tree] merging states: [{'status': False, 'name': 'kauf_laundry_room_3', 'brightness': 255, 'rgb_color': [255, 72, 35]}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'name': 'kauf_laundry_room_2', 'brightness': 255, 'rgb_color': [255, 72, 35]}, {'status': False, 'name': 'kauf_laundry_room_0', 'brightness': 255, 'rgb_color': [255, 72, 35]}]
+2025-12-01 16:55:33.208 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0}
+2025-12-01 16:55:33.208 INFO (MainThread) [area_tree] test_motion_sensor: state after off: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0}
+2025-12-01 16:55:33.208 INFO (MainThread) [area_tree] EventManager: New event: {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.210 INFO (MainThread) [area_tree] EventManager:check_event():  Event: {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']} Matches:['motion_on_tracker', 'motion_on'] Rules
+2025-12-01 16:55:33.210 INFO (MainThread) [area_tree] EventManager:check_event():  Rule: {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'update_tracker': []}]}
+2025-12-01 16:55:33.210 INFO (MainThread) [area_tree] EventManager:execute_rule(): {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.211 INFO (MainThread) [area_tree] EventManager:execute_rule(): updating {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'update_tracker': []}]} with {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.211 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event scope is ['laundry_room']
+2025-12-01 16:55:33.211 INFO (MainThread) [area_tree] Combining states with strategy average: [{}]
+2025-12-01 16:55:33.212 INFO (MainThread) [area_tree] SUMDICT {} COUNTDICT {}
+2025-12-01 16:55:33.212 INFO (MainThread) [area_tree] FINAL STATE {}
+2025-12-01 16:55:33.212 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event state is {}
+2025-12-01 16:55:33.213 INFO (MainThread) [tracker] TrackManager: add event: laundry_room
+2025-12-01 16:55:33.214 INFO (MainThread) [tracker] NEW EVENT ADDED ⚬laundry_room(0.000)
+2025-12-01 16:55:33.214 INFO (MainThread) [tracker] trying to associate track: [<custom_components.pyscript.eval.Event object at 0x7f28d2ee6f90>] with []
+2025-12-01 16:55:33.214 INFO (MainThread) [tracker] First, Adding new track
+2025-12-01 16:55:33.214 INFO (MainThread) [tracker] track_data: ⚬laundry_room(0.000)
+
+2025-12-01 16:55:33.215 INFO (MainThread) [tracker] graph: Graph with 23 nodes and 35 edges
+2025-12-01 16:55:33.243 INFO (MainThread) [tracker] Saving graph to pyscript/graph2.png
+2025-12-01 16:55:33.289 INFO (MainThread) [area_tree] update_tracker: Current tracks
+2025-12-01 16:55:33.290 INFO (MainThread) [area_tree] update_tracker: ⚬laundry_room(0.000)
+2025-12-01 16:55:33.290 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event passed all functions
+2025-12-01 16:55:33.290 INFO (MainThread) [area_tree] EventManager:execute_rule(): Applying {} to ['laundry_room']
+2025-12-01 16:55:33.290 INFO (MainThread) [area_tree] Setting state: {} on kauf_laundry_room_3
+2025-12-01 16:55:33.290 INFO (MainThread) [area_tree] filled out state from cache: {}
+2025-12-01 16:55:33.290 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:33.291 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:33.291 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:33.291 INFO (MainThread) [area_tree] Applied state: {'status': 0}
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] Setting state: {} on motion_sensor_laundry_room
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] Setting state: {} on kauf_laundry_room_2
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] filled out state from cache: {}
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:33.292 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:33.293 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:33.293 INFO (MainThread) [area_tree] Applied state: {'status': 0}
+2025-12-01 16:55:33.293 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.293 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.293 INFO (MainThread) [area_tree] Setting state: {} on kauf_laundry_room_0
+2025-12-01 16:55:33.293 INFO (MainThread) [area_tree] filled out state from cache: {}
+2025-12-01 16:55:33.294 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:33.294 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:33.294 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:33.294 INFO (MainThread) [area_tree] Applied state: {'status': 0}
+2025-12-01 16:55:33.294 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.295 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.296 INFO (MainThread) [area_tree] EventManager:check_event():  Rule: {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'motion_sensor_mode': []}], 'scope_functions': [{'get_local_scope': []}], 'state': {'status': 1}, 'state_functions': [{'get_time_based_state': []}], 'combination_strategy': 'first_state'}
+2025-12-01 16:55:33.296 INFO (MainThread) [area_tree] EventManager:execute_rule(): {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.296 INFO (MainThread) [area_tree] EventManager:execute_rule(): updating {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'motion_sensor_mode': []}], 'scope_functions': [{'get_local_scope': []}], 'state': {'status': 1}, 'state_functions': [{'get_time_based_state': []}], 'combination_strategy': 'first_state'} with {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.296 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event scope is ['laundry_room']
+2025-12-01 16:55:33.296 INFO (MainThread) [area_tree] EventManager:execute_rule(): State functions: [{'get_time_based_state': []}]
+2025-12-01 16:55:33.297 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:33.297 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_3', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_3', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.298 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_2', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_2', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False}
+2025-12-01 16:55:33.299 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.300 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'name': 'kauf_laundry_room_0', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.300 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'name': 'kauf_laundry_room_0', 'brightness': 255, 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.300 INFO (MainThread) [area_tree] merging states: [{'status': False, 'name': 'kauf_laundry_room_3', 'brightness': 255, 'rgb_color': [255, 72, 35]}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'name': 'kauf_laundry_room_2', 'brightness': 255, 'rgb_color': [255, 72, 35]}, {'status': False, 'name': 'kauf_laundry_room_0', 'brightness': 255, 'rgb_color': [255, 72, 35]}]
+2025-12-01 16:55:33.302 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0}
+2025-12-01 16:55:33.303 INFO (MainThread) [area_tree] Combining states with strategy average: [{}, {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0}]
+2025-12-01 16:55:33.303 INFO (MainThread) [area_tree] SUMDICT {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0} COUNTDICT {'brightness': 1, 'rgb_color': [1, 1, 1], 'status': 1}
+2025-12-01 16:55:33.304 INFO (MainThread) [area_tree] FINAL STATE {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0.0}
+2025-12-01 16:55:33.304 INFO (MainThread) [area_tree] Time based state: hour=16 minute=55 brightness=255 state={'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.304 INFO (MainThread) [area_tree] EventManager:execute_rule(): Function get_time_based_state provided: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.304 INFO (MainThread) [area_tree] EventManager:execute_rule(): Function states: [{'get_time_based_state': []}] provided  [{'status': 1, 'brightness': 255, 'color_temp': 350}]
+2025-12-01 16:55:33.304 INFO (MainThread) [area_tree] Combining states with strategy first_state: [{'status': 1, 'brightness': 255, 'color_temp': 350}, {'status': 1}]
+2025-12-01 16:55:33.304 INFO (MainThread) [area_tree] Found first state: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.305 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event state is {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.305 INFO (MainThread) [area_tree] motion_sensor_mode on
+2025-12-01 16:55:33.305 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event passed all functions
+2025-12-01 16:55:33.305 INFO (MainThread) [area_tree] EventManager:execute_rule(): Applying {'status': 1, 'brightness': 255, 'color_temp': 350} to ['laundry_room']
+2025-12-01 16:55:33.305 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'color_temp': 350} on kauf_laundry_room_3
+2025-12-01 16:55:33.305 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.306 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): kauf_laundry_room_3 {'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.306 WARNING (MainThread) [homeassistant.components.light] Got `color_temp` argument in `turn_on` service, which is deprecated and will break in Home Assistant 2026.1, please use `color_temp_kelvin` argument
+2025-12-01 16:55:33.307 INFO (MainThread) [area_tree] Applied state: {'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.307 INFO (MainThread) [area_tree] add_to_cache: Added {'brightness': 255, 'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.307 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.308 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'color_temp': 350} on motion_sensor_laundry_room
+2025-12-01 16:55:33.308 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'color_temp': 350} on kauf_laundry_room_2
+2025-12-01 16:55:33.308 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.308 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): kauf_laundry_room_2 {'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.308 WARNING (MainThread) [homeassistant.components.light] Got `color_temp` argument in `turn_on` service, which is deprecated and will break in Home Assistant 2026.1, please use `color_temp_kelvin` argument
+2025-12-01 16:55:33.309 INFO (MainThread) [area_tree] Applied state: {'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.310 INFO (MainThread) [area_tree] add_to_cache: Added {'brightness': 255, 'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.310 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.310 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'brightness': 255, 'color_temp': 350} on kauf_laundry_room_0
+2025-12-01 16:55:33.310 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.310 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): kauf_laundry_room_0 {'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.310 WARNING (MainThread) [homeassistant.components.light] Got `color_temp` argument in `turn_on` service, which is deprecated and will break in Home Assistant 2026.1, please use `color_temp_kelvin` argument
+2025-12-01 16:55:33.312 INFO (MainThread) [area_tree] Applied state: {'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.312 INFO (MainThread) [area_tree] add_to_cache: Added {'brightness': 255, 'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35]} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.312 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.313 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2562 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:33.515 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:33.515 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:33.515 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:33.516 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:33.516 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:33.516 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.516 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.517 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.517 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.517 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.517 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.518 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.518 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.518 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:33.518 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:33.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:33.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:33.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.519 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.519 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.519 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.520 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.520 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:33.520 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:33.520 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:33.520 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:33.521 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.521 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': True, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.521 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.521 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.521 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.521 INFO (MainThread) [area_tree] merging states: [{'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}, {'name': 'motion_sensor_laundry_room'}, {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}, {'status': True, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}]
+2025-12-01 16:55:33.526 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:33.526 INFO (MainThread) [area_tree] test_motion_sensor: state after motion: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:33.526 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_3
+2025-12-01 16:55:33.527 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:33.527 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is temp -> {'off': 1}
+2025-12-01 16:55:33.527 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_temp not in new_args. self color_temp is 350
+2025-12-01 16:55:33.527 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): Supplimenting color_temp to 350
+2025-12-01 16:55:33.527 INFO (MainThread) [area_tree] Applied state: {'color_temp': 350, 'status': 0}
+2025-12-01 16:55:33.528 INFO (MainThread) [area_tree] add_to_cache: Added {'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.528 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.528 INFO (MainThread) [area_tree] Setting state: {'status': 0} on motion_sensor_laundry_room
+2025-12-01 16:55:33.528 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_2
+2025-12-01 16:55:33.528 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:33.528 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is temp -> {'off': 1}
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_temp not in new_args. self color_temp is 350
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): Supplimenting color_temp to 350
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] Applied state: {'color_temp': 350, 'status': 0}
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] add_to_cache: Added {'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_0
+2025-12-01 16:55:33.529 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:33.530 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is temp -> {'off': 1}
+2025-12-01 16:55:33.530 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_temp not in new_args. self color_temp is 350
+2025-12-01 16:55:33.530 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): Supplimenting color_temp to 350
+2025-12-01 16:55:33.530 INFO (MainThread) [area_tree] Applied state: {'color_temp': 350, 'status': 0}
+2025-12-01 16:55:33.530 INFO (MainThread) [area_tree] add_to_cache: Added {'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.531 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.531 INFO (MainThread) [area_tree] set_motion_sensor_mode on
+2025-12-01 16:55:33.531 INFO (MainThread) [area_tree] set_motion_sensor_mode is now off
+2025-12-01 16:55:33.531 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2582 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:33.732 INFO (MainThread) [area_tree] EventManager: New event: {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.734 INFO (MainThread) [area_tree] EventManager:check_event():  Event: {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']} Matches:['motion_on_tracker', 'motion_on'] Rules
+2025-12-01 16:55:33.734 INFO (MainThread) [area_tree] EventManager:check_event():  Rule: {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'update_tracker': []}]}
+2025-12-01 16:55:33.734 INFO (MainThread) [area_tree] EventManager:execute_rule(): {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.735 INFO (MainThread) [area_tree] EventManager:execute_rule(): updating {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'update_tracker': []}]} with {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.735 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event scope is ['laundry_room']
+2025-12-01 16:55:33.736 INFO (MainThread) [area_tree] Combining states with strategy average: [{}]
+2025-12-01 16:55:33.736 INFO (MainThread) [area_tree] SUMDICT {} COUNTDICT {}
+2025-12-01 16:55:33.736 INFO (MainThread) [area_tree] FINAL STATE {}
+2025-12-01 16:55:33.736 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event state is {}
+2025-12-01 16:55:33.737 INFO (MainThread) [tracker] TrackManager: add event: laundry_room
+2025-12-01 16:55:33.738 INFO (MainThread) [tracker] NEW EVENT ADDED ⚬laundry_room(0.000)
+2025-12-01 16:55:33.738 INFO (MainThread) [tracker] trying to associate track: [<custom_components.pyscript.eval.Event object at 0x7f28b4beb850>] with [[<custom_components.pyscript.eval.Event object at 0x7f28d2ee6f90>]]
+2025-12-01 16:55:33.740 INFO (MainThread) [tracker] Merging [<custom_components.pyscript.eval.Event object at 0x7f28d2ee6f90>]
+2025-12-01 16:55:33.740 INFO (MainThread) [tracker] Let us merge
+2025-12-01 16:55:33.740 INFO (MainThread) [tracker] Current track: [<custom_components.pyscript.eval.Event object at 0x7f28b4be98d0>]
+2025-12-01 16:55:33.741 INFO (MainThread) [tracker] merging ⚬laundry_room(0.000) with ⚬laundry_room(0.000)
+2025-12-01 16:55:33.742 INFO (MainThread) [tracker] ENDING
+2025-12-01 16:55:33.742 INFO (MainThread) [tracker] track_data: ⚬laundry_room(0.000) <- laundry_room(0.524)
+
+2025-12-01 16:55:33.743 INFO (MainThread) [tracker] graph: Graph with 23 nodes and 35 edges
+2025-12-01 16:55:33.766 INFO (MainThread) [tracker] Saving graph to pyscript/graph2.png
+2025-12-01 16:55:33.817 INFO (MainThread) [area_tree] update_tracker: Current tracks
+2025-12-01 16:55:33.817 INFO (MainThread) [area_tree] update_tracker: ⚬laundry_room(0.000) <- laundry_room(0.524)
+2025-12-01 16:55:33.817 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event passed all functions
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] EventManager:execute_rule(): Applying {} to ['laundry_room']
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] Setting state: {} on kauf_laundry_room_3
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] filled out state from cache: {}
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is temp -> {'off': 1}
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:33.818 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_temp not in new_args. self color_temp is 350
+2025-12-01 16:55:33.819 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): Supplimenting color_temp to 350
+2025-12-01 16:55:33.819 INFO (MainThread) [area_tree] Applied state: {'color_temp': 350, 'status': 0}
+2025-12-01 16:55:33.819 INFO (MainThread) [area_tree] add_to_cache: Added {'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.819 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] Setting state: {} on motion_sensor_laundry_room
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] Setting state: {} on kauf_laundry_room_2
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] filled out state from cache: {}
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is temp -> {'off': 1}
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_temp not in new_args. self color_temp is 350
+2025-12-01 16:55:33.820 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): Supplimenting color_temp to 350
+2025-12-01 16:55:33.821 INFO (MainThread) [area_tree] Applied state: {'color_temp': 350, 'status': 0}
+2025-12-01 16:55:33.821 INFO (MainThread) [area_tree] add_to_cache: Added {'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.821 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.821 INFO (MainThread) [area_tree] Setting state: {} on kauf_laundry_room_0
+2025-12-01 16:55:33.821 INFO (MainThread) [area_tree] filled out state from cache: {}
+2025-12-01 16:55:33.821 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:33.822 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is temp -> {'off': 1}
+2025-12-01 16:55:33.822 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:33.822 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_temp not in new_args. self color_temp is 350
+2025-12-01 16:55:33.822 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): Supplimenting color_temp to 350
+2025-12-01 16:55:33.822 INFO (MainThread) [area_tree] Applied state: {'color_temp': 350, 'status': 0}
+2025-12-01 16:55:33.823 INFO (MainThread) [area_tree] add_to_cache: Added {'color_temp': 350} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.823 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.824 INFO (MainThread) [area_tree] EventManager:check_event():  Rule: {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'motion_sensor_mode': []}], 'scope_functions': [{'get_local_scope': []}], 'state': {'status': 1}, 'state_functions': [{'get_time_based_state': []}], 'combination_strategy': 'first_state'}
+2025-12-01 16:55:33.824 INFO (MainThread) [area_tree] EventManager:execute_rule(): {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.824 INFO (MainThread) [area_tree] EventManager:execute_rule(): updating {'trigger_prefix': 'motion_', 'required_tags': ['on'], 'functions': [{'motion_sensor_mode': []}], 'scope_functions': [{'get_local_scope': []}], 'state': {'status': 1}, 'state_functions': [{'get_time_based_state': []}], 'combination_strategy': 'first_state'} with {'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']}
+2025-12-01 16:55:33.825 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event scope is ['laundry_room']
+2025-12-01 16:55:33.825 INFO (MainThread) [area_tree] EventManager:execute_rule(): State functions: [{'get_time_based_state': []}]
+2025-12-01 16:55:33.825 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.826 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.827 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:33.828 INFO (MainThread) [area_tree] merging states: [{'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}, {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}]
+2025-12-01 16:55:33.831 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:33.831 INFO (MainThread) [area_tree] Combining states with strategy average: [{}, {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0, 'color_temp': 350.0}]
+2025-12-01 16:55:33.832 INFO (MainThread) [area_tree] SUMDICT {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0, 'color_temp': 350.0} COUNTDICT {'brightness': 1, 'rgb_color': [1, 1, 1], 'status': 1, 'color_temp': 1}
+2025-12-01 16:55:33.833 INFO (MainThread) [area_tree] FINAL STATE {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0.0, 'color_temp': 350.0}
+2025-12-01 16:55:33.833 INFO (MainThread) [area_tree] Time based state: hour=16 minute=55 brightness=255 state={'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.833 INFO (MainThread) [area_tree] EventManager:execute_rule(): Function get_time_based_state provided: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.833 INFO (MainThread) [area_tree] EventManager:execute_rule(): Function states: [{'get_time_based_state': []}] provided  [{'status': 1, 'brightness': 255, 'color_temp': 350}]
+2025-12-01 16:55:33.833 INFO (MainThread) [area_tree] Combining states with strategy first_state: [{'status': 1, 'brightness': 255, 'color_temp': 350}, {'status': 1}]
+2025-12-01 16:55:33.833 INFO (MainThread) [area_tree] Found first state: {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.834 INFO (MainThread) [area_tree] EventManager:execute_rule(): Event state is {'status': 1, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:33.834 INFO (MainThread) [area_tree] motion_sensor_mode off
+2025-12-01 16:55:33.834 INFO (MainThread) [area_tree] Fuction 'motion_sensor_mode' failed, not running rule.
+2025-12-01 16:55:33.834 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2585 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.037 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.037 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:34.038 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:34.038 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:34.038 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:34.038 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:34.038 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:34.039 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:34.039 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.039 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.039 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.039 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.040 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:34.040 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:34.040 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:34.040 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:34.041 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:34.041 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:34.041 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:34.041 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_temperature(): temperature is None. Getting cached temperature
+2025-12-01 16:55:34.042 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:34.042 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False, 'brightness': 255, 'color_temp': 350}
+2025-12-01 16:55:34.042 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350}
+2025-12-01 16:55:34.042 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:34.042 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}
+2025-12-01 16:55:34.042 INFO (MainThread) [area_tree] merging states: [{'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 72, 35]}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 72, 35]}, {'status': False, 'brightness': 255, 'color_temp': 350, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 72, 35]}]
+2025-12-01 16:55:34.047 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 72.0, 35.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:34.047 INFO (MainThread) [area_tree] set_motion_sensor_mode off
+2025-12-01 16:55:34.048 INFO (MainThread) [area_tree] set_motion_sensor_mode is now on
+2025-12-01 16:55:34.048 INFO (MainThread) [area_tree] Test 11: test_motion_sensor PASSED
+2025-12-01 16:55:34.048 INFO (MainThread) [area_tree] TEST SETTING AND GETTING COLOR
+2025-12-01 16:55:34.048 INFO (MainThread) [area_tree] TEST: setting status 0 and rgb 000
+2025-12-01 16:55:34.048 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [0, 0, 0], 'status': 0} on kauf_laundry_room_3
+2025-12-01 16:55:34.048 INFO (MainThread) [area_tree] filled out state from cache: {'rgb_color': [0, 0, 0], 'status': 0}
+2025-12-01 16:55:34.049 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [0, 0, 0], 'status': 0}
+2025-12-01 16:55:34.050 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [0, 0, 0]} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.050 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.050 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [0, 0, 0], 'status': 0} on motion_sensor_laundry_room
+2025-12-01 16:55:34.050 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [0, 0, 0], 'status': 0} on kauf_laundry_room_2
+2025-12-01 16:55:34.050 INFO (MainThread) [area_tree] filled out state from cache: {'rgb_color': [0, 0, 0], 'status': 0}
+2025-12-01 16:55:34.051 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [0, 0, 0], 'status': 0}
+2025-12-01 16:55:34.052 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [0, 0, 0]} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.052 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.052 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [0, 0, 0], 'status': 0} on kauf_laundry_room_0
+2025-12-01 16:55:34.052 INFO (MainThread) [area_tree] filled out state from cache: {'rgb_color': [0, 0, 0], 'status': 0}
+2025-12-01 16:55:34.053 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [0, 0, 0], 'status': 0}
+2025-12-01 16:55:34.053 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [0, 0, 0]} to {'brightness': 255, 'rgb_color': [255, 72, 35], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.053 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.053 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2447 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.154 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.154 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:34.155 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.155 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.155 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.156 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.156 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.156 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.156 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.156 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.157 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.157 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.157 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.157 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.158 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.158 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.158 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:34.159 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.159 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.159 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.159 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.159 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [0, 0, 0], 'color_temp': 350}
+2025-12-01 16:55:34.159 INFO (MainThread) [area_tree] merging states: [{'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [0, 0, 0], 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [0, 0, 0], 'color_temp': 350}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [0, 0, 0], 'color_temp': 350}]
+2025-12-01 16:55:34.165 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [0.0, 0.0, 0.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:34.165 INFO (MainThread) [area_tree] TEST: setting rgb while off
+2025-12-01 16:55:34.165 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [255, 255, 255]} on kauf_laundry_room_3
+2025-12-01 16:55:34.166 INFO (MainThread) [area_tree] filled out state from cache: {'rgb_color': [255, 255, 255]}
+2025-12-01 16:55:34.166 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:34.166 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 255, 255], 'status': 0}
+2025-12-01 16:55:34.167 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 255, 255]} to {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.167 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.167 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [255, 255, 255]} on motion_sensor_laundry_room
+2025-12-01 16:55:34.167 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [255, 255, 255]} on kauf_laundry_room_2
+2025-12-01 16:55:34.167 INFO (MainThread) [area_tree] filled out state from cache: {'rgb_color': [255, 255, 255]}
+2025-12-01 16:55:34.167 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.168 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 255, 255], 'status': 0}
+2025-12-01 16:55:34.168 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 255, 255]} to {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.168 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.168 INFO (MainThread) [area_tree] Setting state: {'rgb_color': [255, 255, 255]} on kauf_laundry_room_0
+2025-12-01 16:55:34.169 INFO (MainThread) [area_tree] filled out state from cache: {'rgb_color': [255, 255, 255]}
+2025-12-01 16:55:34.169 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:34.169 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 255, 255], 'status': 0}
+2025-12-01 16:55:34.170 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 255, 255]} to {'brightness': 255, 'rgb_color': [0, 0, 0], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.170 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.170 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2462 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.272 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.272 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:34.273 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.273 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.273 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.273 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.273 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.274 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.274 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.274 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.274 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.275 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.275 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.275 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.275 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.275 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.276 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:34.276 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.276 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.276 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.277 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.277 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.277 INFO (MainThread) [area_tree] merging states: [{'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 255, 255], 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 255, 255], 'color_temp': 350}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 255, 255], 'color_temp': 350}]
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 255.0, 255.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] TEST: turning on
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_3
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:34.281 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): kauf_laundry_room_3 {}
+2025-12-01 16:55:34.282 INFO (MainThread) [area_tree] Applied state: {}
+2025-12-01 16:55:34.282 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.282 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.282 INFO (MainThread) [area_tree] Setting state: {'status': 1} on motion_sensor_laundry_room
+2025-12-01 16:55:34.282 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_2
+2025-12-01 16:55:34.282 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.283 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.283 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:34.283 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): kauf_laundry_room_2 {}
+2025-12-01 16:55:34.283 INFO (MainThread) [area_tree] Applied state: {}
+2025-12-01 16:55:34.283 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.283 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_0
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): kauf_laundry_room_0 {}
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] Applied state: {}
+2025-12-01 16:55:34.284 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.285 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.285 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2473 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.386 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.387 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.387 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.387 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.387 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.388 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.388 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.388 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.388 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.389 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.389 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.389 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.389 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.389 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.390 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.390 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.390 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.390 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.391 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.391 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.391 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.391 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.391 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.392 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.392 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.392 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.393 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.393 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.393 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.393 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.393 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.393 INFO (MainThread) [area_tree] merging states: [{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}]
+2025-12-01 16:55:34.398 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:34.399 WARNING (MainThread) [area_tree] TEST: Failed to keep color that was set while off {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:34.399 INFO (MainThread) [area_tree] Test 12: test_set_and_get_color FAILED
+2025-12-01 16:55:34.399 INFO (MainThread) [area_tree] STARTING TEST SETTING STATUS
+2025-12-01 16:55:34.399 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.399 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.400 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.401 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.402 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.403 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.403 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.403 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.403 INFO (MainThread) [area_tree] merging states: [{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}]
+2025-12-01 16:55:34.406 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:34.406 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_3
+2025-12-01 16:55:34.406 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.406 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.406 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): rgb_color not in new_args. self rgb is (255, 172, 100)
+2025-12-01 16:55:34.407 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): Supplimenting rgb_color to (255, 172, 100)
+2025-12-01 16:55:34.407 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): kauf_laundry_room_3 {'rgb_color': [255, 172, 100]}
+2025-12-01 16:55:34.407 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 172, 100]}
+2025-12-01 16:55:34.407 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 172, 100]} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.407 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] Setting state: {'status': 1} on motion_sensor_laundry_room
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_2
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is (255, 172, 100)
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): Supplimenting rgb_color to (255, 172, 100)
+2025-12-01 16:55:34.408 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): kauf_laundry_room_2 {'rgb_color': [255, 172, 100]}
+2025-12-01 16:55:34.409 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 172, 100]}
+2025-12-01 16:55:34.409 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 172, 100]} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.409 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.409 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_0
+2025-12-01 16:55:34.409 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.409 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.410 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): rgb_color not in new_args. self rgb is (255, 172, 100)
+2025-12-01 16:55:34.410 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): Supplimenting rgb_color to (255, 172, 100)
+2025-12-01 16:55:34.410 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): kauf_laundry_room_0 {'rgb_color': [255, 172, 100]}
+2025-12-01 16:55:34.410 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 172, 100]}
+2025-12-01 16:55:34.411 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 172, 100]} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.411 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.411 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2391 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.512 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.513 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.513 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.514 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.514 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.514 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.514 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.515 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.515 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.515 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.515 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.516 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.516 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.516 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.516 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.517 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.517 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.517 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.517 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.518 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.518 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.518 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.519 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.520 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.520 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.520 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.521 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.521 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.521 INFO (MainThread) [area_tree] merging states: [{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}]
+2025-12-01 16:55:34.524 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:34.525 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_3
+2025-12-01 16:55:34.525 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:34.525 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:34.525 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): rgb_color not in new_args. self rgb is (255, 172, 100)
+2025-12-01 16:55:34.525 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): Supplimenting rgb_color to (255, 172, 100)
+2025-12-01 16:55:34.526 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 172, 100], 'status': 0}
+2025-12-01 16:55:34.526 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 172, 100]} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.526 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.526 INFO (MainThread) [area_tree] Setting state: {'status': 0} on motion_sensor_laundry_room
+2025-12-01 16:55:34.527 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_2
+2025-12-01 16:55:34.527 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:34.527 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:34.527 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is (255, 172, 100)
+2025-12-01 16:55:34.527 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): Supplimenting rgb_color to (255, 172, 100)
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 172, 100], 'status': 0}
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 172, 100]} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_0
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:34.528 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): rgb_color not in new_args. self rgb is (255, 172, 100)
+2025-12-01 16:55:34.529 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): Supplimenting rgb_color to (255, 172, 100)
+2025-12-01 16:55:34.529 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 172, 100], 'status': 0}
+2025-12-01 16:55:34.529 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 172, 100]} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.529 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.529 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2398 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.631 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.631 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:34.632 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.632 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.632 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.632 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.632 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.633 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.633 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.633 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.633 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.634 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.634 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.634 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.634 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.634 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.635 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:34.635 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.635 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.635 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.636 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.636 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.636 INFO (MainThread) [area_tree] merging states: [{'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 172, 100], 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 172, 100], 'color_temp': 350}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 172, 100], 'color_temp': 350}]
+2025-12-01 16:55:34.641 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:34.641 INFO (MainThread) [area_tree] Test testting test: current state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:34.642 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.642 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status off
+2025-12-01 16:55:34.642 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.642 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.642 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.643 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status off
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.644 INFO (MainThread) [area_tree] merging states: [{'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_3', 'rgb_color': [255, 172, 100], 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 172, 100], 'color_temp': 350}, {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_0', 'rgb_color': [255, 172, 100], 'color_temp': 350}]
+2025-12-01 16:55:34.647 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 0, 'color_temp': 350.0}
+2025-12-01 16:55:34.647 INFO (MainThread) [area_tree] current state: 0
+2025-12-01 16:55:34.648 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_3
+2025-12-01 16:55:34.648 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.648 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.648 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:34.648 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:apply_values(): kauf_laundry_room_3 {}
+2025-12-01 16:55:34.648 INFO (MainThread) [area_tree] Applied state: {}
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] Setting state: {'status': 1} on motion_sensor_laundry_room
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_2
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:34.649 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): kauf_laundry_room_2 {}
+2025-12-01 16:55:34.650 INFO (MainThread) [area_tree] Applied state: {}
+2025-12-01 16:55:34.650 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.650 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.650 INFO (MainThread) [area_tree] Setting state: {'status': 1} on kauf_laundry_room_0
+2025-12-01 16:55:34.650 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1}
+2025-12-01 16:55:34.650 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): color_type is rgb -> {}
+2025-12-01 16:55:34.651 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): rgb_color not in new_args. self rgb is None
+2025-12-01 16:55:34.651 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:apply_values(): kauf_laundry_room_0 {}
+2025-12-01 16:55:34.651 INFO (MainThread) [area_tree] Applied state: {}
+2025-12-01 16:55:34.652 INFO (MainThread) [area_tree] add_to_cache: Added {} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.652 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.652 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2409 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.753 INFO (MainThread) [area_tree] Area:get_state(): Getting state for 
+ laundry_room:
+  │
+   kauf_laundry_room_3:
+   motion_sensor_laundry_room:
+   kauf_laundry_room_2:
+   kauf_laundry_room_0:
+
+2025-12-01 16:55:34.754 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.754 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.754 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_status(): Getting status on
+2025-12-01 16:55:34.755 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:is_on(): Returning True: on
+2025-12-01 16:55:34.755 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_3>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.755 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_3 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.755 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.756 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.756 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}
+2025-12-01 16:55:34.756 INFO (MainThread) [area_tree] Device:get_state(): Getting state for motion_sensor_laundry_room state:{'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.756 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.757 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'name': 'motion_sensor_laundry_room'}
+2025-12-01 16:55:34.757 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.757 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.757 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status on
+2025-12-01 16:55:34.758 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:is_on(): Returning True: on
+2025-12-01 16:55:34.758 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.758 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.759 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.759 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.759 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}
+2025-12-01 16:55:34.759 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_status(): Getting status on
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:is_on(): Returning True: on
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_0>:get_state(): Returning state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_0 state:{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100)}
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0'} from cache: {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350}
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] Area:get_state(): Child state: {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}
+2025-12-01 16:55:34.760 INFO (MainThread) [area_tree] merging states: [{'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_3', 'color_temp': 350}, {'name': 'motion_sensor_laundry_room'}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_2', 'color_temp': 350}, {'status': True, 'brightness': 255, 'rgb_color': (255, 172, 100), 'name': 'kauf_laundry_room_0', 'color_temp': 350}]
+2025-12-01 16:55:34.763 INFO (MainThread) [area_tree] merged_state: {'brightness': 255.0, 'rgb_color': [255.0, 172.0, 100.0], 'status': 1, 'color_temp': 350.0}
+2025-12-01 16:55:34.763 INFO (MainThread) [area_tree] Test 13: test_set_setting_status PASSED
+2025-12-01 16:55:34.763 INFO (MainThread) [area_tree] STARTING TEST SETTING CACHE
+2025-12-01 16:55:34.764 INFO (MainThread) [area_tree] Setting state: {'status': 1, 'rgb_color': [255, 255, 255]} on kauf_laundry_room_2
+2025-12-01 16:55:34.764 INFO (MainThread) [area_tree] filled out state from cache: {'status': 1, 'rgb_color': [255, 255, 255]}
+2025-12-01 16:55:34.764 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): kauf_laundry_room_2 {'rgb_color': [255, 255, 255]}
+2025-12-01 16:55:34.765 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 255, 255]}
+2025-12-01 16:55:34.765 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 255, 255]} to {'brightness': 255, 'rgb_color': [255, 172, 100], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.765 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.765 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2420 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.866 INFO (MainThread) [area_tree] Setting state: {'status': 0} on kauf_laundry_room_2
+2025-12-01 16:55:34.866 INFO (MainThread) [area_tree] filled out state from cache: {'status': 0}
+2025-12-01 16:55:34.867 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): color_type is rgb -> {'off': 1}
+2025-12-01 16:55:34.867 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): rgb_color not in new_args. self rgb is (255, 255, 255)
+2025-12-01 16:55:34.867 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:apply_values(): Supplimenting rgb_color to (255, 255, 255)
+2025-12-01 16:55:34.868 INFO (MainThread) [area_tree] Applied state: {'rgb_color': [255, 255, 255], 'status': 0}
+2025-12-01 16:55:34.869 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 255, 255]} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.869 INFO (MainThread) [area_tree] Updated cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.869 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2422 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:34.969 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:34.970 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:34.970 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:34.970 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.970 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 255, 255], 'color_temp': 350}
+2025-12-01 16:55:34.971 INFO (MainThread) [area_tree] test_setting_cache: Setting cache to {'rgb_color': [255, 0, 255]}
+2025-12-01 16:55:34.971 INFO (MainThread) [area_tree] add_to_cache: Added {'rgb_color': [255, 0, 255]} to {'brightness': 255, 'rgb_color': [255, 255, 255], 'color_temp': 350} to create Cached state: {'brightness': 255, 'rgb_color': [255, 0, 255], 'color_temp': 350}
+2025-12-01 16:55:34.971 WARNING (MainThread) [custom_components.pyscript.eval] /config/pyscript/area_tree.py line 2434 calls blocking time.sleep(); replaced with asyncio.sleep()
+2025-12-01 16:55:35.072 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_status(): Getting status off
+2025-12-01 16:55:35.072 INFO (MainThread) [area_tree] KaufLight<kauf_laundry_room_2>:get_state(): Returning state: {'status': False, 'brightness': 255}
+2025-12-01 16:55:35.072 INFO (MainThread) [area_tree] Device:get_state(): Getting state for kauf_laundry_room_2 state:{'status': False, 'brightness': 255}
+2025-12-01 16:55:35.072 INFO (MainThread) [area_tree] Device:fillout_state_from_cache(): Filling out state {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2'} from cache: {'brightness': 255, 'rgb_color': [255, 0, 255], 'color_temp': 350}
+2025-12-01 16:55:35.073 INFO (MainThread) [area_tree] Device:get_state(): filled out state: {'status': False, 'brightness': 255, 'name': 'kauf_laundry_room_2', 'rgb_color': [255, 0, 255], 'color_temp': 350}
+2025-12-01 16:55:35.073 INFO (MainThread) [area_tree] Test 14: test_setting_cache PASSED
+2025-12-01 16:55:35.073 INFO (MainThread) [area_tree] Tests passed: 13/14
+2025-12-01 16:55:35.073 INFO (MainThread) [area_tree] Failed tests: ['test_set_and_get_color']
+2025-12-01 16:55:35.074 INFO (MainThread) [custom_components.pyscript.global_ctx] Reloaded /config/pyscript/area_tree.py
