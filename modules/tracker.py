@@ -1,3 +1,25 @@
+"""
+Person Tracking System using Graph-based Path Association
+
+This module tracks person presence across areas using motion/presence sensors
+and associates events into coherent tracks using a graph of room connections.
+
+Components:
+    - Event: Represents a presence event in an area with timing information
+    - Track: A sequence of events representing a person's movement
+    - TrackManager: Manages multiple tracks and handles track association/merging
+    - GraphManager: Maintains the room connection graph for path prediction
+
+Track Association:
+    New events are associated with existing tracks based on:
+    1. Graph distance between areas (shorter = better match)
+    2. Direction alignment (does the new event continue in the same direction?)
+    3. Speed consistency (does the timing match expected travel speed?)
+
+Configuration:
+    - connections.yml defines which areas are adjacent (undirected graph edges)
+    - TrackManager parameters: max_track_length, oldest_track, max_tracks, score_threshold
+"""
 import yaml
 import networkx as nx
 import matplotlib.pyplot as plt

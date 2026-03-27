@@ -1,3 +1,27 @@
+"""
+Home Assistant Pyscript Automation System
+
+This module provides the core automation infrastructure for managing smart home
+devices through a hierarchical area model.
+
+Architecture:
+    - AreaTree: Hierarchical structure of rooms/zones with parent-child relationships
+    - Device: Wrapper around device drivers (lights, blinds, speakers, etc.)
+    - EventManager: Processes events and executes matching automation rules
+    - Device Drivers: Hardware-specific interfaces (KaufLight, HueLight, BlindDriver, etc.)
+
+State Management:
+    - States are represented as dictionaries with keys like 'status', 'brightness',
+      'rgb_color', 'color_temp', etc.
+    - States are combined using strategies: 'first', 'last', 'average', 'first_state'
+    - The cache system tracks last known state for each device
+
+Rule System:
+    - Rules are defined in rules.yml with trigger_prefix, scope_functions,
+      state_functions, and combination_strategy
+    - Scope functions determine which areas a rule applies to
+    - State functions generate dynamic states based on time, presence, etc.
+"""
 import yaml
 import os
 import builtins

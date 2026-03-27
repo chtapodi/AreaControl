@@ -1,11 +1,19 @@
-# Rule_Id: 
-#   trigger_prefix: The start of the devices name you want to trigger this rule
-#   required_tags: Tags that must be in the event for the rule to trigger
-#   functions: # functions that need to pass in order for the rule to trigger
-#   scope_functions: #Determines the area the state is applied to
-#   state: The state that is the basis for what is applied
-#     status: 1
-#   state_functions: #functions that return states that are combined with the provided state (if any)
+# Rule Structure:
+#   Rule_Id:
+#     trigger_prefix:   Device name prefix that triggers this rule (e.g., "motion_", "service_input_button_")
+#     required_tags:    List of tags that must be present in the event for the rule to match
+#     prohibited_tags:  List of tags that must NOT be present in the event
+#     functions:        List of functions that must return True for the rule to execute
+#     scope_functions:  Functions that determine which areas the state applies to
+#                      (e.g., get_local_scope, get_entire_scope, get_area_local_scope)
+#     state:            Base state dictionary to apply (e.g., {status: 1})
+#     state_functions:  Functions that generate dynamic states (combined with 'state')
+#                       (e.g., get_time_based_state, toggle_state, toggle_status)
+#     combination_strategy: How to merge states from multiple sources:
+#                          - "first": First non-empty state wins (reversed order)
+#                          - "last": Last non-empty state wins
+#                          - "average": Numeric values averaged, dicts merged recursively
+#                          - "first_state": First valid state in list order
 
 toggle_light_color:
   trigger_prefix: "service_input_button_double"
