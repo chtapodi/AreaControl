@@ -75,8 +75,13 @@ paths:
 - Use: Defines trigger prefixes, scopes, state builders, and guards.
 - Fill out: `trigger_prefix`; optional `required_tags`/`prohibited_tags`;
   `scope_functions` and `state_functions` as lists of `{function_name: [args]}`;
-  `state` as a partial state dict; `combination_strategy` (`first_state`, `last`,
-  `average`); `functions` for guard/side-effect helpers.
+  `state` as a partial state dict; `combination_strategy`; `functions` for guard/side-effect helpers.
+
+**Combination Strategies:**
+- `first_state` - Uses the first valid (non-empty) state in the list order (recommended for most rules)
+- `last` - The last non-empty state wins
+- `average` - Numeric values averaged, dicts merged recursively
+- `first` - Legacy alias for `first_state` (prefer explicit `first_state`)
 
 ### connections.yml
 - Loader: `TrackManager(connections_config=...)` → `GraphManager` in
@@ -153,6 +158,10 @@ the full implementations.
   and reports the currently playing media.
 - **`HueLight`** – Light driver for Philips Hue bulbs. Uses color calibration so
   lights with different hardware show consistent colors.
+- **`KaufLight`** – Light driver for Kauf bulbs with RGB-to-color_temp mapping.
+- **`MotionSensorDriver`** – Handles motion sensor inputs, generates on/off events.
+- **`PresenceSensorDriver`** – Handles presence sensor inputs (more nuanced than motion).
+- **`ServiceDriver`** – Handles service input triggers (buttons, service calls).
 
 ## Event and Rule Workflow
 
@@ -165,6 +174,27 @@ Automation behavior is driven by the rules in [`rules.yml`](rules.yml). When a d
 5. **Applying state.** After combining all states, the manager calls `set_state` on each area in the scope, which in turn updates child devices.
 
 See the [`execute_rule`](area_tree.py) method for the full logic.
+
+### Available Scope Functions
+
+- **`get_area_local_scope`** - Get the specific area associated with the device
+- **`get_local_scope`** - Get the immediate area containing the device
+- **`get_immediate_scope`** - Alias for get_local_scope
+- **`get_entire_scope`** - Get all areas in the house (global control)
+
+### Available State Functions
+
+- **`get_time_based_state`** - Returns brightness/color based on time of day
+- **`toggle_state`** - Toggles on/off state
+- **`toggle_status`** - Toggles status (0/1)
+- **`get_last_set_state`** - Returns the last manually set state
+- **`get_last_track_state`** - Returns state based on presence tracking
+
+### Available Guard Functions
+
+- **`update_tracker`** - Update presence tracker with the event
+- **`motion_sensor_mode`** - Apply motion sensor rules
+- **`set_cached_last_set_state`** - Cache the current state as "manually set"
 
 ## Presence Tracking
 
@@ -239,6 +269,22 @@ Key principles:
 * **Modular events.** Manual state from an incoming event is merged with state
   functions and the rule's default to create a final result. Additional
   functions may veto the rule entirely if conditions are not met.
+
+## Control Services
+
+The following services are available for runtime control:
+
+- **`init`** - Load YAML configs, build AreaTree, instantiate EventManager & TrackManager. Called automatically on startup.
+- **`reset`** - Clear all globals and re-run init. Use for hard reloads during development.
+- **`create_event(**kwargs)`** - Forward sensor/service events to EventManager. Accepts:
+  - `device_name` - Trigger prefix for rule matching
+  - `tags` - List of tags (e.g., `["on"]`, `["off"]`)
+  - `state` - State dictionary to apply
+  - `scope_functions` - List of scope function calls
+  - `state_functions` - List of state function calls
+- **`freeze_area(area_name, recursive=True)`** - Mark an area frozen so Device.set_state ignores future writes. Useful for calibration or testing.
+- **`unfreeze_area(area_name, recursive=True)`** - Resume updates for a previously frozen area.
+- **`get_total_average_state(key=None)`** - Get aggregated state from all devices.
 
 ## Running with Home Assistant
 
