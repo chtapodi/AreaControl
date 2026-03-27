@@ -621,9 +621,9 @@ def combine_colors(color_one, color_two, strategy="add"):
         color[1] = (color_one[1] + color_two[1]) / 2
         color[2] = (color_one[2] + color_two[2]) / 2
     elif strategy == "add":
+        color[0] = color_one[0] + color_two[0]
         color[1] = color_one[1] + color_two[1]
         color[2] = color_one[2] + color_two[2]
-        color[0] = color_one[0] + color_two[0]
     else:
         log.warning(f"Strategy {strategy} not found")
 
@@ -988,7 +988,7 @@ def get_state_similarity(state1, state2):
 
     matching_vals=0
     for key in shared_keys:
-        if  type(state2[key]) != type(state2[key]):
+        if  type(state1[key]) != type(state2[key]):
             log.info(f"State keys '{key}' have mismatched types: {state1[key]} vs {state2[key]}")
             num_shared-=1
 
@@ -1244,14 +1244,17 @@ class EventManager:
 
     # Looks for keywords in args and replaces them with values
     def expand_args(self, args, event_data, state):
-        for arg in args :
-            if type(arg) is str:
-                if arg.startswith("$") :
-                    if arg == "$state" :
-                        log.info(f"Expanding $state to {state}")
-                        del args[args.index("$state")]
-                        args.append(state)
-        return args
+        result = []
+        for arg in args:
+            if isinstance(arg, str) and arg.startswith("$"):
+                if arg == "$state":
+                    log.info(f"Expanding $state to {state}")
+                    result.append(state)
+                else:
+                    result.append(arg)
+            else:
+                result.append(arg)
+        return result
 
     def execute_rule(self, event_data, rule, rule_name=None):
         device_name = event_data["device_name"]

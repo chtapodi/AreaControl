@@ -243,6 +243,7 @@ class Track:
     def get_duration(self):
         start=self.get_first_event().get_time_since_first_trigger()
         end=self.get_last_event().get_time_since_last_trigger()
+        return end - start
 
 
     def get_first_event(self) :

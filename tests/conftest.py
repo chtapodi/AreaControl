@@ -14,6 +14,13 @@ def _stub_decorator(*dargs, **dkwargs):
     return wrapper
 
 
+def _state_trigger(*args, **kwargs):
+    """Stub for pyscript state_trigger decorator."""
+    def decorator(func):
+        return func
+    return decorator
+
+
 class DummyLog:
     def info(self, *a, **k):
         pass
@@ -68,7 +75,9 @@ def load_area_tree(use_real_drivers: bool | None = None):
 
     with open('area_tree.py') as f:
         lines = [line for line in f.readlines()
-                 if not (line.strip() in {"init()", "run_tests()"} and not line.startswith(" "))]
+                 if not (line.strip() in {"init()", "run_tests()"} and not line.startswith(" "))
+                 and not line.strip().startswith("init_config = init()")
+                 and not line.strip().startswith("if init_config.get")]
     code = ''.join(lines)
 
     spec = importlib.util.spec_from_loader('area_tree', loader=None)
@@ -77,6 +86,7 @@ def load_area_tree(use_real_drivers: bool | None = None):
     mod.service = _stub_decorator
     mod.event_trigger = _stub_decorator
     mod.pyscript_compile = _stub_decorator
+    mod.state_trigger = _state_trigger
     sys.modules['area_tree'] = mod
     exec(code, mod.__dict__)
     if use_real_drivers and hasattr(mod, "init"):
