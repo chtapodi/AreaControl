@@ -393,8 +393,10 @@ def init():
     event_manager = EventManager(config_settings["rules"], area_tree)
     tracker_manager = TrackManager(connections_config=config_settings["connections"])
     
-    # Turn on all power monitoring devices
-    power_on_all_power_monitoring_devices()
+    # NOTE: power_on_all_power_monitoring_devices() is available as a
+    # manual @service call but is intentionally NOT run on every reload.
+    # Running it here caused devices to toggle during pyscript's rapid
+    # file-watcher reloads.
     
     write_area_tree_snapshot(area_tree)
     audit_homeassistant_devices(area_tree)
