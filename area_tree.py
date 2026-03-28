@@ -392,9 +392,30 @@ def init():
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
     tracker_manager = TrackManager(connections_config=config_settings["connections"])
+    
+    # Turn on all power monitoring devices
+    power_on_all_power_monitoring_devices()
+    
     write_area_tree_snapshot(area_tree)
     audit_homeassistant_devices(area_tree)
     return config_settings
+
+
+@service
+def power_on_all_power_monitoring_devices():
+    """Turn on all power-monitoring devices so they stay powered for passive monitoring."""
+    global area_tree
+    if area_tree is None:
+        log.warning("power_on_all_power_monitoring_devices: area_tree not initialized yet.")
+        return
+    lookup = area_tree.area_tree_lookup
+    for name, device in lookup.items():
+        if isinstance(device, Device) and device.power_monitoring:
+            log.info(f"power_on_all_power_monitoring_devices: Turning ON {name}")
+            try:
+                device.set_state({"status": 1})
+            except Exception as e:
+                log.warning(f"power_on_all_power_monitoring_devices: Failed to turn on {name}: {e}")
 
 
 def get_global_triggers():
@@ -981,6 +1002,16 @@ def merge_data(data):
 
 
 def merge_states(state_list, name=None):
+    """Merge multiple device states into one by averaging values.
+
+    Uses ``merge_data`` for the heavy lifting, then clamps ``status`` to
+    binary 0/1. This is intended for aggregating the actual states of
+    multiple devices in the same area (e.g. "what is the average color of
+    all lights in the living room?").
+
+    For combining *candidate* states from rules/functions use
+    ``combine_states`` which supports first/last/average strategies.
+    """
     for state in state_list :
         if "name" in state.keys(): del state["name"]
     merged_state=merge_data(state_list)
@@ -1015,19 +1046,26 @@ def get_state_similarity(state1, state2):
         if  type(state1[key]) != type(state2[key]):
             log.info(f"State keys '{key}' have mismatched types: {state1[key]} vs {state2[key]}")
             num_shared-=1
+            continue
 
         if type(state1[key]) == dict:
             matching_vals+=get_state_similarity(state1[key], state2[key])
 
         elif type(state1[key]) == list:
-            for i in range(len(state1[key])):
-                if state1[key][i] == state2[key][i]:
-                    matching_vals+=1
-                    num_shared+=1  # Add one to num shared because each item in list is unique
+            # Compare element-wise: replace the single key with per-element scoring
+            list_len = max(len(state1[key]), len(state2[key]))
+            if list_len > 0:
+                num_shared += list_len - 1  # replace 1 key with N element slots
+                for i in range(min(len(state1[key]), len(state2[key]))):
+                    if state1[key][i] == state2[key][i]:
+                        matching_vals += 1
         elif state1[key] == state2[key]:
             matching_vals+=1
 
-    similarity = matching_vals / (num_shared+len(unique_keys))
+    total = num_shared + len(unique_keys)
+    if total == 0:
+        return 0.0
+    similarity = matching_vals / total
     return similarity
 
 # Color helpers
@@ -1120,6 +1158,10 @@ class Area:
             log.info(f"Area {self.name} is frozen; skipping state change {state}")
             return
         for child in self.get_children():
+            # Skip power-monitoring devices -- they should never be toggled by area state changes
+            if isinstance(child, Device) and child.power_monitoring:
+                log.info(f"Area {self.name}: Skipping power-monitoring device {child.name}")
+                continue
             child.set_state(copy.deepcopy(state))
 
     def get_state(self):
@@ -1457,8 +1499,9 @@ class AreaTree:
         self.area_tree_lookup = self._create_area_tree(self.config_path)
 
         log.info(f"AreaTree: Created area tree with children: {list(self.area_tree_lookup.keys())}")
-        log.info(f"DEBUG: living_room_corner_lamp: {self.area_tree_lookup['living_room_corner_lamp']}")
-        log.info(f"DEBUG: living_room_corner_lamp: {self.area_tree_lookup['living_room_corner_lamp'].get_pretty_string(show_state=True)}")
+        if 'living_room_corner_lamp' in self.area_tree_lookup:
+            log.info(f"DEBUG: living_room_corner_lamp: {self.area_tree_lookup['living_room_corner_lamp']}")
+            log.info(f"DEBUG: living_room_corner_lamp: {self.area_tree_lookup['living_room_corner_lamp'].get_pretty_string(show_state=True)}")
 
         self.root_name = self._find_root_area_name()
 
@@ -1652,7 +1695,7 @@ class AreaTree:
                         filters = []
 
                     # Lights
-                    if dtype == "light" or (dtype is None and "kauf" in output):  # TODO: Remove this fallback
+                    if dtype == "light":
                         if "hue" in filters:
                             driver = HueLight(output)
                             driver_label = "HueLight"
@@ -1712,6 +1755,32 @@ class AreaTree:
                         log.info(
                             f"Area '{area_name}': Created {driver_label}: {type(new_device)} for output '{output}'."
                         )
+
+            # Add power_outputs as power-monitoring devices (never toggled by motion)
+            power_outputs = area_data.get("power_outputs")
+            if power_outputs is not None:
+                for output in power_outputs:
+                    if output is None:
+                        log.warning(f"Area '{area_name}' has a None power_output entry.")
+                        continue
+
+                    info = self.device_defs.get(output)
+                    if info is None:
+                        log.warning(
+                            f"Area '{area_name}': No device config entry for power_output '{output}'. "
+                            f"Device will be skipped."
+                        )
+                        continue
+
+                    driver = PlugDriver(output)
+                    new_device = Device(driver)
+                    new_device.power_monitoring = True
+                    area.add_device(new_device)
+                    new_device.set_area(area)
+                    area_tree[output] = new_device
+                    log.info(
+                        f"Area '{area_name}': Created power-monitoring PlugDriver for power_output '{output}'."
+                    )
 
             # Add inputs as children
             if "inputs" in area_data:
@@ -1803,6 +1872,7 @@ class Device:
         self.area = None
         self.tags = []
         self.locked=False
+        self.power_monitoring = False
 
     # "Lock" The device so it can't be changed
     def lock(self, value=True):
@@ -1870,27 +1940,13 @@ class Device:
     def set_state(self, state):
         log.info(f"Setting state: {state} on {self.name}")
         if not self.locked:
-            #TODO: FIXME this is a hack, should be done on driver side
-            color_type=None
-            if "rgb_color" in state:
-                color_type="rgb"
-            elif "color_temp" in state:
-                color_type="temp"
-
-            
             state = copy.deepcopy(state)
             if hasattr(self.driver, "set_state"):
-                # I want this here so color/temp can be filled out when it is off
-                # state = self.fillout_state_from_cache(state) #TODO: rethink how this is done in relation to add_to_cache
+                # The driver handles color_type conflicts (rgb vs temp)
+                # via its apply_values logic which tracks color_type internally.
                 if get_verbose_mode():
                     log.info(f"Setting state: {state} on {self.name}")
-                #THIS IS A HACK, FIXME
-                if color_type is not None:
-                    if color_type == "rgb" and "color_temp" in state:
-                        del state["color_temp"]
-                    elif color_type == "temp" and "rgb_color" in state:
-                        del state["rgb_color"]
-                log.info(f"filled out state from cache: {state}")
+                log.info(f"Sending state to driver: {state}")
 
                 applied_state=self.driver.set_state(state)
                 log.info(f"Applied state: {applied_state}")

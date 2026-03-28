@@ -13,6 +13,12 @@ def load_area_tree():
             return func
         return wrapper
 
+    def _state_trigger(*args, **kwargs):
+        """Stub for pyscript state_trigger decorator."""
+        def decorator(func):
+            return func
+        return decorator
+
     pyscript_mod = types.ModuleType('pyscript')
     pyscript_mod.k_to_rgb = types.ModuleType('pyscript.k_to_rgb')
     pyscript_mod.k_to_rgb.convert_K_to_RGB = lambda x: x
@@ -37,8 +43,11 @@ def load_area_tree():
         )
         sys.modules['homeassistant.util'] = util_mod
 
+    class DummyTrackManager:
+        def __init__(self, connections_config=None, **kwargs):
+            pass
     tracker_mod = types.ModuleType('tracker')
-    tracker_mod.TrackManager = object
+    tracker_mod.TrackManager = DummyTrackManager
     tracker_mod.Track = object
     tracker_mod.Event = object
     sys.modules['tracker'] = tracker_mod
@@ -57,6 +66,8 @@ def load_area_tree():
     lines = [
         line for line in lines
         if not (line.strip() in {"init()", "run_tests()"} and not line.startswith(" "))
+        and not line.strip().startswith("init_config = init()")
+        and not line.strip().startswith("if init_config.get")
     ]
     code = ''.join(lines)
 
@@ -66,6 +77,7 @@ def load_area_tree():
     mod.service = stub_decorator
     mod.event_trigger = stub_decorator
     mod.pyscript_compile = stub_decorator
+    mod.state_trigger = _state_trigger
     sys.modules['area_tree'] = mod
     exec(code, mod.__dict__)
     return mod

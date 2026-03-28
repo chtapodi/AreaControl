@@ -1,173 +1,12 @@
-# kauf
-kauf_ball_0:
-  type: light
+# Manual device configurations
+# These take precedence over discovered.yml
+
+# Blinds - these are the actual HA entity names
+living_room_blind_battery:
+  type: blind
   filters:
-    - light
-    - kauf
-
-kauf_ball_1:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_bathroom_0:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_bathroom_1:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_bathroom_2:
-  type: light
-  filters:
-    - light
-    - kauf
-
-hue_bathroom_center:
-  type: light
-  filters:
-    - light
-    - hue
-
-kauf_bedroom_0:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_bedroom_1:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_hallway:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_hanging_0:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_hanging_1:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_hanging_2:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_hanging_3:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_tube:
-  type: light
-  filters:
-    - light
-    - kauf
-
-hue_kitchen_ball:
-  type: light
-  filters:
-    - light
-    - hue
-
-kauf_kitchen_corner:
-  type: light
-  filters:
-    - light
-    - kauf
-
-hue_office_light:
-  type: light
-  filters:
-    - light
-    - hue
-
-
-kauf_sconce_0:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_sconce_1:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_laundry_room_0:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_laundry_room_1:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_laundry_room_2:
-  type: light
-  filters:
-    - light
-    - kauf
-
-kauf_laundry_room_3:
-  type: light
-  filters:
-    - light
-    - kauf
-
-
-kauf_fuzzy_room:
-  type: light
-  filters:
-    - light
-    - kauf
-
-
-# Hue
-living_room_corner_lamp:
-  type: light
-  filters:
-    - light
-    - hue
-
-living_room_lamp:
-  type: light
-  filters:
-    - light
-    - hue
-
-hue_square_lamp:
-  type: light
-  filters:
-    - light
-    - hue
-
-
-
-# Blinds
+    - blind
+  height: 100
 
 living_room_blind_cover:
   type: blind
@@ -175,18 +14,90 @@ living_room_blind_cover:
     - blind
   height: 100
 
-
-bedroom_blind:
+bedroom_blind_battery:
   type: blind
   filters:
     - blind
   height: 100
 
-
-# Outputs
-
-google_home_speaker:
+# Speakers (from media_player)
+living_room_speaker:
   type: speaker
   filters:
     - speaker
-    - google_home
+
+dining_room_speaker:
+  type: speaker
+  filters:
+    - speaker
+
+kitchen_speaker:
+  type: speaker
+  filters:
+    - speaker
+
+bathroom_speaker:
+  type: speaker
+  filters:
+    - speaker
+
+bedroom:
+  type: speaker
+  filters:
+    - speaker
+
+office_fan:
+  type: plug
+  filters:
+    - plug
+
+# Power monitoring plugs (passive - not controlled by motion)
+dryer:
+  type: plug
+  filters:
+    - plug
+
+washer:
+  type: plug
+  filters:
+    - plug
+
+freezer:
+  type: plug
+  filters:
+    - plug
+
+bambu_x1c:
+  type: plug
+  filters:
+    - plug
+
+coffee_tea:
+  type: plug
+  filters:
+    - plug
+
+plug_3_2:
+  type: plug
+  filters:
+    - plug
+
+living_room_fan:
+  type: plug
+  filters:
+    - plug
+
+bedroom_fan:
+  type: plug
+  filters:
+    - plug
+
+splug_0_switch_1:
+  type: plug
+  filters:
+    - plug
+
+splug_1_switch_1:
+  type: plug
+  filters:
+    - plug

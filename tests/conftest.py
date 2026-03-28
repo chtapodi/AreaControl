@@ -30,7 +30,7 @@ class DummyLog:
         pass
 
 
-def load_area_tree(use_real_drivers: bool | None = None):
+def load_area_tree(use_real_drivers=None):
     """Load ``area_tree`` for tests.
 
     When ``use_real_drivers`` is True (or the environment variable

@@ -3,7 +3,7 @@ everything:
     - home
     - outside
   inputs:
-    service: # for homeassistant services
+    service:
       - service_input
 home:
   sub_areas:
@@ -30,10 +30,26 @@ living_room:
   inputs:
     presence:
       - "presence_sensor_living_room"
+    temperature:
+      - living_room_temp_temperature
 
   outputs:
-    - google_home_speaker
     - living_room_blind_cover
+    - living_room_speaker
+    - living_room_blind_battery
+    - kauf_bulb_default_fade
+    - kauf_bulb_default_fade_13
+    - kauf_bulb_default_fade_2
+    - kauf_bulb_default_fade_24
+    - kauf_bulb_effect_18
+    - living_room_corner_lamp_identify
+    - living_room_lamp
+    - living_room_fan
+    - living_room_tv
+    - newtv_remote
+    - roborock_s8_mop_attached
+  power_outputs:
+    - living_room_fan
 
 living_room_chairs:
   direct_sub_areas:
@@ -43,16 +59,13 @@ living_room_chair_0:
   inputs:
     presence:
       - "presence_sensor_living_room_chair_0"
-  outputs:
-    - living_room_corner_lamp
+  outputs: []
 
 living_room_chair_1:
   inputs:
     presence:
       - "presence_sensor_living_room_chair_0"
-
-  outputs:
-    # - living_room_lamp
+  outputs: []
 
 living_room_front:
   direct_sub_areas:
@@ -61,10 +74,7 @@ living_room_hallway:
   inputs:
     presence:
       - "presence_sensor_living_room_hallway"
-
-  outputs:
-    - kauf_sconce_0
-    - kauf_sconce_1
+  outputs: []
 
 living_room_middle:
   direct_sub_areas:
@@ -79,8 +89,7 @@ living_room_couch:
     - living_room_couch_1
     - living_room_couch_2
 
-  outputs:
-    - kauf_tube
+  outputs: []
 
 living_room_couch_0:
   inputs:
@@ -98,10 +107,7 @@ living_room_back:
   inputs:
     presence:
       - "presence_sensor_living_room_back"
-
-  outputs:
-    - kauf_ball_0
-    - kauf_ball_1
+  outputs: []
 
 dining_room:
   direct_sub_areas:
@@ -111,11 +117,10 @@ dining_room:
     - dining_room_2
     - dining_room_3
   outputs:
-    - kauf_hanging_0
-    - kauf_hanging_1
-    - kauf_hanging_2
-    - kauf_hanging_3
-    - living_room_lamp
+    - dining_room_speaker
+    - kauf_bulb_default_fade_8
+    - kauf_bulb_default_fade_9
+    - kauf_bulb_effect_17
 
 
 dining_room_0:
@@ -147,9 +152,15 @@ kitchen:
   inputs:
     motion:
       - motion_sensor_kitchen
+    temperature:
+      - kitchen_temp_temperature
   outputs:
+    - kitchen_speaker
     - hue_kitchen_ball
-    - kauf_kitchen_corner
+    - kauf_bulb_default_fade_10
+    - kauf_bulb_effect_19
+  power_outputs:
+    - coffee_tea
 
 back:
   sub_areas:
@@ -163,43 +174,61 @@ laundry_room:
   inputs:
     motion:
       - motion_sensor_laundry_room
+    temperature:
+      - laundry_room_temp_temperature
   outputs:
-    - kauf_laundry_room_0
-    - kauf_laundry_room_1
-    - kauf_laundry_room_2
-    - kauf_laundry_room_3
+    - kauf_bulb_default_fade_25
+    - kauf_bulb_default_fade_4
+  power_outputs:
+    - dryer
+    - washer
 
 office:
   inputs:
     motion:
       - "motion_sensor_office"
+    temperature:
+      - office_temp_temperature
   outputs:
+    - office_fan
+    - hue_0_firmware
     - hue_office_light
-    - hue_square_lamp
+  power_outputs:
+    - bambu_x1c
+    - freezer
 
 hallway:
   inputs:
     motion:
       - "motion_sensor_hallway"
-  outputs:
-    - kauf_hallway
+  outputs: []
 
 bathroom:
   inputs:
     motion:
       - "motion_sensor_bathroom"
   outputs:
-    - kauf_bathroom_0
-    - kauf_bathroom_1
-    - kauf_bathroom_2
+    - bathroom_speaker
     - hue_bathroom_center
+    - kauf_bulb_default_fade_11
+    - kauf_bulb_default_fade_5
+    - kauf_bulb_default_fade_6
 
 bedroom:
+  inputs:
+    temperature:
+      - bedroom_temp_temperature
   outputs:
-    - kauf_bedroom_0
-    - kauf_bedroom_1
-    - bedroom_blind
-    - kauf_fuzzy_room
+    - bedroom_blind_battery
+    - bedroom
+    - bedroom_lamp
+    - core_600s
+    - kauf_bulb_effect_15
+    - kauf_bulb_effect_16
+  power_outputs:
+    - bedroom_fan
+    - splug_0_switch_1
+    - splug_1_switch_1
 
 outside:
   sub_areas:

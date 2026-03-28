@@ -107,3 +107,21 @@ living_room_zones_on:
 #     - lesser_siblings: []
 #   state:
 #     status: 0
+
+temp_rise_above:
+  trigger_prefix: "sensor_"
+  required_tags: ["temp_above_threshold"]
+  prohibited_tags: ["temp_below_threshold"]
+  scope_functions:
+    - get_local_scope: []
+  state:
+    status: 1
+
+temp_fall_below:
+  trigger_prefix: "sensor_"
+  required_tags: ["temp_below_threshold"]
+  prohibited_tags: ["temp_above_threshold"]
+  scope_functions:
+    - get_local_scope: []
+  state:
+    status: 0

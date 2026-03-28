@@ -1,5 +1,6 @@
 import time
 from collections import Counter
+from typing import Optional
 
 try:
     from pyscript import service
@@ -21,14 +22,14 @@ class AdaptiveLearner:
         self.presence_events = []  # list of (timestamp, area)
         self.rule_events = []      # list of (timestamp, rule_name)
 
-    def record_presence(self, area: str, timestamp: float | None = None) -> None:
+    def record_presence(self, area: str, timestamp: Optional[float] = None) -> None:
         if timestamp is None:
             timestamp = time.time()
         self.presence_events.append((timestamp, area))
         if len(self.presence_events) > self.max_events:
             self.presence_events.pop(0)
 
-    def record_rule_event(self, rule_name: str, timestamp: float | None = None) -> None:
+    def record_rule_event(self, rule_name: str, timestamp: Optional[float] = None) -> None:
         if timestamp is None:
             timestamp = time.time()
         self.rule_events.append((timestamp, rule_name))

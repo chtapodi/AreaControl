@@ -28,6 +28,7 @@ def test_time_based_state_morning(monkeypatch):
     def fake_localtime():
         class T(tuple):
             tm_hour = 9
+            tm_min = 30
         return T()
     monkeypatch.setattr(time, 'localtime', fake_localtime)
 

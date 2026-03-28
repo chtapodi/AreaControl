@@ -12,11 +12,10 @@ connections:
   - office: laundry_room
 
   - living_room_hallway: bedroom
-  # TODO: Do I want to implement doors?
-  # - living_room_hallway: living_room_door
-  # - living_room_door: bedroom
-  # - living_room_door: outside
-  # - living_room_door: living_room_front
+  - living_room_hallway: living_room_door
+  - living_room_door: bedroom
+  - living_room_door: outside
+  - living_room_door: living_room_front
   - living_room_front: living_room_hallway
   - living_room_front: living_room_chair_0
   - living_room_front: living_room_chair_1
