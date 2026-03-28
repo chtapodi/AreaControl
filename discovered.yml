@@ -1,0 +1,1231 @@
+# Auto-generated - do not edit manually
+# New devices are appended. Existing entries preserve order.
+
+airnow_air_quality_index:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_device_id: 5310b11095372d8e153ecc67ba731e83
+  type: sensor
+anna_s_pixel_2:
+  domains:
+  - binary_sensor
+  - device_tracker
+  - sensor
+  filters:
+  - sensor
+  ha_device_id: 638ca3751ae2585abd1efa65547a40e2
+  type: sensor
+apexcharts_card_update:
+  domains:
+  - update
+  ha_device_id: 8a44091e473ba28e94500a984017fde3
+  type: unknown
+backup_backup_manager_state:
+  domains:
+  - event
+  - sensor
+  filters:
+  - sensor
+  ha_device_id: 7c1e17a35550b2881b8c9a307a342760
+  type: sensor
+backyard_camera:
+  domains:
+  - camera
+  - event
+  ha_area_id: backyard
+  ha_device_id: 872a6554cef1439149fab5883c34ab5d
+  type: unknown
+backyard_temp_battery:
+  domains:
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: backyard
+  ha_device_id: f91955da171c62387e3a5c9eba8f42a2
+  type: sensor
+bambu_x1c:
+  domains:
+  - button
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - plug
+  ha_area_id: office
+  ha_device_id: c3906015837fbb15553c568e29bc282c
+  type: plug
+bedroom_blind_battery:
+  domains:
+  - button
+  - cover
+  - sensor
+  - switch
+  - update
+  filters:
+  - blind
+  ha_area_id: bedroom
+  ha_device_id: b2aa6fd79177d7ed64aac4ece73eed6f
+  type: blind
+bedroom_fan_ac_frequency:
+  domains:
+  - button
+  - fan
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - fan
+  ha_area_id: bedroom
+  ha_device_id: 0b9605dfc1cf651348fbe58389943ca4
+  type: fan
+bedroom_lamp:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: bedroom
+  ha_device_id: bae41f3fccc944985108503ae41e8d9a
+  type: light
+bedroom_speaker_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: c3309f4b390df0d652fd8d6e58b4ee69
+  type: plug
+bedroom_temp_battery:
+  domains:
+  - button
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: bedroom
+  ha_device_id: df74c12a887416bdfd94cf4bdb739d65
+  type: sensor
+blind_repeater_0_identify:
+  domains:
+  - button
+  - update
+  ha_device_id: 2cb5f889d8c2fa5a039964953494333c
+  type: unknown
+blind_repeater_1_identify:
+  domains:
+  - button
+  - update
+  ha_device_id: 9df76c17fdae9be3141f5884202eb716
+  type: unknown
+browser_mod_0bb01dcf_0267f4b3_browser_id:
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
+  filters:
+  - light
+  ha_device_id: 52ac6b859d097426855c5e7a9dc1e0f2
+  type: light
+browser_mod_0c939d69_bd067a95_browser_id:
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
+  filters:
+  - light
+  ha_device_id: 45dffe2e959bfa54a3eb1dba25b01a85
+  type: light
+browser_mod_9db1c7b6_75736960_browser_id:
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
+  filters:
+  - light
+  ha_device_id: e072e82e516afb95e81d37b13db671a6
+  type: light
+browser_mod_a18e66b5_364f7747_browser_id:
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
+  filters:
+  - light
+  ha_device_id: c362d855d133031cdf6e2bf0e51c4943
+  type: light
+browser_mod_c3238b70_07c7c77c_browser_id:
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
+  filters:
+  - light
+  ha_area_id: office
+  ha_device_id: 49fde846642d46c449c7a097a12cba6e
+  type: light
+browser_mod_fc9e9079_09559194_browser_id:
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
+  filters:
+  - light
+  ha_device_id: 2dacb762ec7307a62637f0b81a5ce0cd
+  type: light
+browser_mod_update:
+  domains:
+  - update
+  ha_device_id: 7f2ba1b3d704b2e4dfac0b7db6b18117
+  type: unknown
+button_7_battery:
+  domains:
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_device_id: 271ac0781d67fad3b331fea38ccab371
+  type: sensor
+button_card_update:
+  domains:
+  - update
+  ha_device_id: 82f29b1b1f9a503e9dd702d41beb1b0a
+  type: unknown
+card_mod_update:
+  domains:
+  - update
+  ha_device_id: 9af390eba25a0db0905957e0c705b829
+  type: unknown
+circadian_lighting_update:
+  domains:
+  - update
+  ha_device_id: 7d5d9bba5853e8dcc5cacee970b3257b
+  type: unknown
+coffee_tea:
+  domains:
+  - button
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - plug
+  ha_area_id: kitchen
+  ha_device_id: 4179cd440841c61b45fc83d68cef2c5d
+  type: plug
+core_300s_series:
+  domains:
+  - fan
+  - sensor
+  - switch
+  - update
+  filters:
+  - fan
+  ha_device_id: 84eb917ac236641eaab4caa0882aed41
+  type: fan
+core_600s:
+  domains:
+  - fan
+  - sensor
+  - switch
+  - update
+  filters:
+  - fan
+  ha_area_id: bedroom
+  ha_device_id: 37cb13c35d28257c229cecdff10596c8
+  type: fan
+darkish_theme_update:
+  domains:
+  - update
+  ha_device_id: 927af7ca938adfd30764f79abeff64eb
+  type: unknown
+dining_room_speaker_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 89e1b5c52eea185c5fa6325636f092cc
+  type: plug
+door_sensor_2_battery:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  filters:
+  - contact
+  ha_area_id: living_room
+  ha_device_id: e4f34a1c1609545f1d5e02a18a3f7ab3
+  type: contact_sensor
+driveway_battery:
+  domains:
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_device_id: 5ed5061cee23737b8a38afd4b0ba63a7
+  type: sensor
+dryer_ac_frequency:
+  domains:
+  - button
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - plug
+  ha_area_id: laundry_room
+  ha_device_id: b2caae30ddc88ab8e371a116f08a889a
+  type: plug
+everything:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_device_id: 4cf5298489098e39a4c1ea293535fca4
+  type: speaker
+ewelink_ds01_opening:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  filters:
+  - contact
+  ha_device_id: 24013a759752b79d22927615685fe22b
+  type: contact_sensor
+freezer:
+  domains:
+  - button
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - plug
+  ha_area_id: office
+  ha_device_id: 119564571adf2c4759f2e33331306ccb
+  type: plug
+front_group:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_device_id: a91a0a9044d490c0bf3e12383a2bda14
+  type: speaker
+front_yard_camera:
+  domains:
+  - camera
+  - event
+  ha_area_id: front_yard
+  ha_device_id: f9681216bf3af4670184c51d0b14b030
+  type: unknown
+github_dark_theme_update:
+  domains:
+  - update
+  ha_device_id: 871c409ed9b6a17e93f8892408f40a25
+  type: unknown
+google_home_update:
+  domains:
+  - update
+  ha_device_id: 3d6e523e6e7397efb252933de466972c
+  type: unknown
+graphite_theme_update:
+  domains:
+  - update
+  ha_device_id: 2d24f5ddccff69e7dd5291b2add4694d
+  type: unknown
+green_and_dark_theme_simple_clean_and_green_update:
+  domains:
+  - update
+  ha_device_id: 0429485ddcaf1a2c291f9bab66e9903b
+  type: unknown
+green_slate_theme_update:
+  domains:
+  - update
+  ha_device_id: 2a677bbef758308691ab5bf46fdf2b39
+  type: unknown
+grey_night_theme_update:
+  domains:
+  - update
+  ha_device_id: a376acbc695c3d64c510a39d464ed88b
+  type: unknown
+hacs_update:
+  domains:
+  - update
+  ha_device_id: 0a03e5439dc7f4d31bc96247175c1314
+  type: unknown
+harold_update_event:
+  domains:
+  - event
+  - notify
+  ha_device_id: aa4de1ed245b8fbc57fa655514db3c48
+  type: unknown
+home_assistant_swipe_navigation_update:
+  domains:
+  - update
+  ha_device_id: 73b44e98372d711072c527e2741bf673
+  type: unknown
+home_forecast_home:
+  domains:
+  - weather
+  ha_area_id: home
+  ha_device_id: d43c7afed7ef3009a11cd11fc274df50
+  type: unknown
+hue_0_firmware:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: office
+  ha_device_id: f99b3b644a366bcf8e34d7ecd43d841c
+  type: light
+hue_bathroom_center:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: bathroom
+  ha_device_id: 9464f9c26181ce351d7c0ece1bd5a3bd
+  type: light
+hue_kitchen_ball:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: kitchen
+  ha_device_id: 05208c8b2cc560b86498ff39099bf472
+  type: light
+hue_office_light:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: office
+  ha_device_id: 245e65f846fd63a6be139cf18100ea2a
+  type: light
+hui_element_update:
+  domains:
+  - update
+  ha_device_id: 88ef2f4bc1e27a2b4c33abccd1becf32
+  type: unknown
+kauf_bulb_default_fade:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: living_room
+  ha_device_id: 4b221645b4c60de1caea4afbd4fa1fc9
+  type: light
+kauf_bulb_default_fade_10:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: kitchen
+  ha_device_id: bb487df0baf40042ff07b7fb4213c523
+  type: light
+kauf_bulb_default_fade_11:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: bathroom
+  ha_device_id: 026da8e17842be1ba2554f0b10ae1a12
+  type: light
+kauf_bulb_default_fade_13:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: living_room
+  ha_device_id: a474cbf2715f17566620d6111c86a443
+  type: light
+kauf_bulb_default_fade_2:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: living_room
+  ha_device_id: bec996653e535c0ab8b1f217162defb2
+  type: light
+kauf_bulb_default_fade_24:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: living_room
+  ha_device_id: e2a93ebb67fecfc3eef09e86cc1b6077
+  type: light
+kauf_bulb_default_fade_25:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: laundry_room
+  ha_device_id: 9b06f572c0735ef08942358c048fc8d1
+  type: light
+kauf_bulb_default_fade_4:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: laundry_room
+  ha_device_id: 2710b5b04fd8727743a57d016838239b
+  type: light
+kauf_bulb_default_fade_5:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: bathroom
+  ha_device_id: 7c6875b54d7a1dd77ab222e0baa0300e
+  type: light
+kauf_bulb_default_fade_6:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: bathroom
+  ha_device_id: 5c6f9219438fafcd29c51686c3469329
+  type: light
+kauf_bulb_default_fade_8:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: dining_room
+  ha_device_id: f8b9821c8eebf83c64541518e409fb4a
+  type: light
+kauf_bulb_default_fade_9:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: dining_room
+  ha_device_id: 6d58343814902df6640ec3984ade1bb3
+  type: light
+kauf_bulb_effect_15:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: bedroom
+  ha_device_id: 093efb7bf8561b95149ba4a1e53f1a3e
+  type: light
+kauf_bulb_effect_16:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: bedroom
+  ha_device_id: ab2dbdca39f139f8b72766f3d246db5a
+  type: light
+kauf_bulb_effect_17:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: dining_room
+  ha_device_id: 73688cbec1e00a6bced402cf248f7155
+  type: light
+kauf_bulb_effect_18:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: living_room
+  ha_device_id: e03401b885e78e759f47d45efeded7a7
+  type: light
+kauf_bulb_effect_19:
+  domains:
+  - light
+  - number
+  - select
+  filters:
+  - light
+  - kauf
+  ha_area_id: kitchen
+  ha_device_id: 1dbd1022d8e400a116f940c78cbc86ee
+  type: light
+kitchen_speaker_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 2d6a7b0ba8c3e69400bc6a27e24be0f0
+  type: plug
+kitchen_temp_battery:
+  domains:
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: kitchen
+  ha_device_id: ed17162e0578f839e007a71c70d7b9ca
+  type: sensor
+laundry_room_temp_battery:
+  domains:
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: laundry_room
+  ha_device_id: b38f87c375b50ca453a8ce3335d5bc9d
+  type: sensor
+laundryroom_speaker_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 913a391c02ebc7ba9e8e734801758f88
+  type: plug
+layout_card_update:
+  domains:
+  - update
+  ha_device_id: 4c21bfdd010c78a0ac8ca89680ac4b6f
+  type: unknown
+light_entity_card_update:
+  domains:
+  - update
+  ha_device_id: 27762625052eab52bf9cfc350b9d5b57
+  type: unknown
+living_room_blind_battery:
+  domains:
+  - button
+  - cover
+  - sensor
+  - switch
+  - update
+  filters:
+  - blind
+  ha_area_id: living_room
+  ha_device_id: 2466e9260ed52e2c60b1db1a2379ba66
+  type: blind
+living_room_corner_lamp_identify:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: living_room
+  ha_device_id: ede78171f9dab301c53df991d3a6cf2f
+  type: light
+living_room_fan:
+  domains:
+  - button
+  - fan
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - fan
+  ha_area_id: living_room
+  ha_device_id: 6059b347454137fb2d3804fbfc4fbf0c
+  type: fan
+living_room_fan_current_2:
+  domains:
+  - binary_sensor
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_area_id: living_room
+  ha_device_id: 63e664c61eb9b7189eec04a643091ab9
+  type: plug
+living_room_group:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_device_id: 8a45c8cfcf5f6093d2549f764007e65b
+  type: speaker
+living_room_lamp:
+  domains:
+  - button
+  - light
+  - number
+  - select
+  - update
+  filters:
+  - light
+  - hue
+  ha_area_id: living_room
+  ha_device_id: 4b6515db6d79f74d3e4c100a0fb25ecb
+  type: light
+living_room_speaker_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: aaf873632dc2e3fec72ac18de21e96a8
+  type: plug
+living_room_temp_battery:
+  domains:
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: living_room
+  ha_device_id: b4e27ebd0e1fb1739da6e7887ef96d46
+  type: sensor
+living_room_tv:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_area_id: living_room
+  ha_device_id: d4523df3428ff1dabfa514b1a10dd26e
+  type: speaker
+living_room_window_sensor_battery:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  filters:
+  - contact
+  ha_area_id: living_room
+  ha_device_id: 487279b48355f5c08062a9ea3b76032f
+  type: contact_sensor
+local_tuya_update:
+  domains:
+  - update
+  ha_device_id: 6bb3a4981c5b4fdbaccd36802b0bc408
+  type: unknown
+lumi_lumi_sensor_motion_aq2_9c978308_power:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: office
+  ha_device_id: f14aacda7f519e7934db0c9216b35d3a
+  type: sensor
+lumi_lumi_sensor_motion_aq2_b09d8308_power:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: bathroom
+  ha_device_id: db1dfa155a63878fcfae98bb51a3d102
+  type: sensor
+lumi_lumi_sensor_motion_aq2_bc5f8308_illuminance:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: kitchen
+  ha_device_id: 9707aa8c11e8fdb2b1c6cfee0a67ae5a
+  type: sensor
+lumi_lumi_sensor_motion_aq2_identify:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: laundry_room
+  ha_device_id: 425af0ebe112fc4b85176dd8eadbceff
+  type: sensor
+lumi_lumi_sensor_motion_aq2_power:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: hallway
+  ha_device_id: 73c44acf744ef05b587b2683fd204e85
+  type: sensor
+lumi_lumi_sensor_swit_2cd4bc07_power:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: kitchen
+  ha_device_id: f08902060e74917c46342ad4e54ecbf0
+  type: sensor
+lumi_lumi_sensor_swit_42ddbc07_power:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: bathroom
+  ha_device_id: 826cc63f173f90e4b7fd21e00e995813
+  type: sensor
+lumi_lumi_sensor_swit_63a4bc07_power:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: living_room
+  ha_device_id: 73ce8b31023e33c67179de899eec047e
+  type: sensor
+lumi_lumi_sensor_swit_68d4bc07_power:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: laundry_room
+  ha_device_id: d288300e1ca2599bd2ea6caaf1facaa0
+  type: sensor
+lumi_lumi_sensor_swit_battery:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: bedroom
+  ha_device_id: bdf3bd39660bd5321d9aeaaba7381dd2
+  type: sensor
+lumi_lumi_sensor_swit_power:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: bathroom
+  ha_device_id: cb5a2721c953792d8ff0e774c6941db0
+  type: sensor
+material_3_dark_light_theme_07_darkolivegreen_update:
+  domains:
+  - update
+  ha_device_id: f2aba33fa469638a5a2eb7673c9f4a80
+  type: unknown
+met_no_next_6_hours_forecast_update:
+  domains:
+  - update
+  ha_device_id: 898f5386853188dcf534d40fe25b2b5b
+  type: unknown
+mini_graph_card_update:
+  domains:
+  - update
+  ha_device_id: d7aebca06da97175fb21499e15785142
+  type: unknown
+mini_media_player_update:
+  domains:
+  - update
+  ha_device_id: ade4318b763aae08cae6a61f0a689dc5
+  type: unknown
+mushroom_update:
+  domains:
+  - update
+  ha_device_id: a432492da111c536d073df316408b021
+  type: unknown
+nestmini0076:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_device_id: 859e6a2fed060011e0c45075ce548635
+  type: speaker
+newtv_remote:
+  domains:
+  - media_player
+  - remote
+  filters:
+  - speaker
+  ha_area_id: living_room
+  ha_device_id: 792b7ada88ad9f5568cecb83e32ca2e2
+  type: speaker
+office_speaker_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 959263fb8729c6238cb8263de190512b
+  type: plug
+office_temp_battery:
+  domains:
+  - button
+  - number
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: office
+  ha_device_id: 97e0198e2e4e2697fd8c7fdf6776198d
+  type: sensor
+orbit_bhyve_update:
+  domains:
+  - update
+  ha_device_id: ac4becf78d3c46b846b3dd609988a83f
+  type: unknown
+plotly_graph_card_update:
+  domains:
+  - update
+  ha_device_id: e1f375726b8c919e063b3f672ba3bcb1
+  type: unknown
+plug_0_fault:
+  domains:
+  - binary_sensor
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 5d9c3c0956f7481b5e24edc155a70014
+  type: plug
+plug_1_fault:
+  domains:
+  - binary_sensor
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 8ee0e53e10c566dbbd00a03c4ac7cdff
+  type: plug
+plug_3_2:
+  domains:
+  - button
+  - fan
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - fan
+  ha_area_id: kitchen
+  ha_device_id: c913cee952eae8bd049be5bad24d5b38
+  type: fan
+powercalc_update:
+  domains:
+  - update
+  ha_device_id: 5a8817416153c01c3b68241d7e6014da
+  type: unknown
+presence_sensor_fp2_3958_presence_sensor_9:
+  domains:
+  - binary_sensor
+  - button
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: living_room
+  ha_device_id: a8755b80c1cebf356a4e05bbb2f7dcdb
+  type: sensor
+pyscript_update:
+  domains:
+  - update
+  ha_device_id: faa95eda421f843ddaca293eae69acee
+  type: unknown
+rgb_light_card_update:
+  domains:
+  - update
+  ha_device_id: cad9fc0befa1d46d7cdd08ebc420648b
+  type: unknown
+roborock_s8_dock_error:
+  domains:
+  - select
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 7bac495207b05e57ccec92aff88ef702
+  type: plug
+roborock_s8_mop_attached:
+  domains:
+  - binary_sensor
+  - button
+  - image
+  - number
+  - select
+  - sensor
+  - switch
+  - time
+  - vacuum
+  filters:
+  - plug
+  ha_area_id: living_room
+  ha_device_id: e005c7e8ba8d8c297a1a217dd1c9099c
+  type: plug
+saildrone_forecast_saildrone:
+  domains:
+  - weather
+  ha_area_id: saildrone
+  ha_device_id: 04bceb01eb79114673a0921bc22cccd9
+  type: unknown
+saildrone_to_home:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: home
+  ha_device_id: ea06c3b1034e3b6576b08a15b9411132
+  type: sensor
+soil_sensor_0_battery:
+  domains:
+  - sensor
+  - update
+  filters:
+  - sensor
+  ha_area_id: front_yard
+  ha_device_id: 48287103c12c0f01200533d837c7592b
+  type: sensor
+splug_0_power_on_behavior_2:
+  domains:
+  - fan
+  - number
+  - select
+  - switch
+  filters:
+  - fan
+  ha_area_id: bedroom
+  ha_device_id: 88a63afd10a3b8d8dd20ac1d3e8e997d
+  type: fan
+splug_1_switch_1_timer:
+  domains:
+  - fan
+  - number
+  - select
+  - switch
+  filters:
+  - fan
+  ha_area_id: bedroom
+  ha_device_id: c3517fca894a66f52fcae19198f83445
+  type: fan
+spotcast_update:
+  domains:
+  - update
+  ha_device_id: 06e3ebfd16aab32d9807d17187c1e6f0
+  type: unknown
+spotify_lovelace_card_update:
+  domains:
+  - update
+  ha_device_id: 4387e6ee0e87cf3e6126ba326248d402
+  type: unknown
+stack_in_card_update:
+  domains:
+  - update
+  ha_device_id: cad17a37ce8453607a77e81adf89fe9f
+  type: unknown
+state_switch_update:
+  domains:
+  - update
+  ha_device_id: 3e44cbffb5af5e2f4faa5639dbafab89
+  type: unknown
+sun_next_dawn:
+  domains:
+  - sensor
+  filters:
+  - sensor
+  ha_device_id: be015eafa2c31a6f2a96a3f8269e0986
+  type: sensor
+tesla_update:
+  domains:
+  - update
+  ha_device_id: eb34de40c2af1cfffdf721b37380bac5
+  type: unknown
+texas_instruments_cc2652_fans:
+  domains:
+  - switch
+  filters:
+  - plug
+  ha_device_id: ebff8d0ec8728db5a16f304256f69d2a
+  type: plug
+titan:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_device_id: 37abb699c6ec412d394516c32b12c134
+  type: speaker
+titan_device:
+  domains:
+  - number
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_device_id: 20edd1fc2e998578f95597ac2b36886f
+  type: plug
+tree_kale_bed_zone_history:
+  domains:
+  - sensor
+  - switch
+  filters:
+  - plug
+  ha_area_id: front_yard
+  ha_device_id: 1dcf5cdd61f0a397451c80f2b03558b3
+  type: plug
+twelve_forecast_twelve:
+  domains:
+  - weather
+  ha_area_id: twelve
+  ha_device_id: 8164a956054d412daf6fde76f8cf2a0a
+  type: unknown
+ui_lovelace_minimalist_update:
+  domains:
+  - update
+  ha_device_id: 66fce5a4ac8da631e3a96e38bc38f2f5
+  type: unknown
+vertical_stack_in_card_update:
+  domains:
+  - update
+  ha_device_id: 3b358bed8992be4927e7946dc7610589
+  type: unknown
+washer_ac_frequency:
+  domains:
+  - button
+  - number
+  - select
+  - sensor
+  - switch
+  - update
+  filters:
+  - plug
+  ha_area_id: laundry_room
+  ha_device_id: cb1ca40b70bbd9fb7268dd64732cdc8f
+  type: plug
+work_group:
+  domains:
+  - media_player
+  filters:
+  - speaker
+  ha_device_id: bb1fdf182bb0f3ab862eb675adbc5491
+  type: speaker
+xaviers_s25:
+  domains:
+  - binary_sensor
+  - device_tracker
+  - sensor
+  filters:
+  - sensor
+  ha_device_id: c7d1f759d68da68739dff67010f4ddb2
+  type: sensor
+zenwifi_pro_xt12_8600_wan_status:
+  domains:
+  - binary_sensor
+  - sensor
+  filters:
+  - sensor
+  ha_area_id: home
+  ha_device_id: f21371303ec4d0bef2f4b6e399d86062
+  type: sensor
+browser_mod_cad64fd2_349956f4_browser_id:
+  type: light
+  filters:
+  - light
+  ha_device_id: 6dd6f65041af81617920b60c5333331d
+  domains:
+  - binary_sensor
+  - light
+  - media_player
+  - sensor
