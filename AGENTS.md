@@ -205,3 +205,15 @@ BlindController – Wrapper coordinating blind drivers with SunTracker, enforcin
  Will freeze_area / unfreeze_area be used during invasive or noisy testing?
 
  Does the target driver support the keys being set (respecting ct vs rgb exclusivity and other filters)?
+
+10) Post-Implementation: Update Obsidian Documentation
+
+After any pyscript change is implemented and validated, update the matching Obsidian notes via MCP (obsidian_patch_note for surgical edits). This keeps architecture docs in sync and is a quick 2-4 patch operation, not a full rewrite. Only touch notes relevant to your change.
+
+Target notes and when to update each:
+- _context.md (Areas/Home/Homeassistant/_context.md) — if new concepts, services, or config keys were added
+- Per-class docs (Areas/Home/Homeassistant/Automation/Documentation/<ClassName>.md) — if class interface or behavior changed
+- Core Engine (Areas/Home/Homeassistant/Automation/Homeassistant + pyscript automation/Implementation/Core Engine (area_tree.py).md) — if services, class summaries, or config loading changed
+- Drivers and Device State Model (same Implementation/ folder) — if driver behavior or guardrails changed
+- Configuration Reference (Operations/ folder) — if YAML schema for any config file changed
+- Services, Testing, and Diagnostics (Operations/ folder) — if services, startup behavior, or runbook changed

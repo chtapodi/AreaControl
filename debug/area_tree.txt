@@ -2,75 +2,59 @@
  everything:
   │
 
-   outside:
-      │
-
-     yard:
-          └── (No children)
-
-     other:
-          └── (No children)
-
-     saildrone:
-          └── (No children)
-
-     twelve:
-          └── (No children)
-
    home:
       │
-
-     back:
-          │
-
-       laundry_room:
-              │
-         motion_sensor_laundry_room:
-         kauf_laundry_room_2:
-         kauf_laundry_room_0:
-         kauf_laundry_room_1:
-         kauf_laundry_room_3:
-
-       office:
-              │
-         hue_office_light:
-         motion_sensor_office:
-         hue_square_lamp:
-
-       bedroom:
-              │
-         bedroom_blind:
-         kauf_fuzzy_room:
-         kauf_bedroom_1:
-         kauf_bedroom_0:
-
-       bathroom:
-              │
-         kauf_bathroom_1:
-         kauf_bathroom_0:
-         kauf_bathroom_2:
-         motion_sensor_bathroom:
-         hue_bathroom_center:
-
-       hallway:
-              │
-         kauf_hallway:
-         motion_sensor_hallway:
 
      front:
           │
 
        kitchen:
               │
+         coffee_tea:
+         kitchen_speaker:
          motion_sensor_kitchen:
-         hue_kitchen_ball:
-         kauf_kitchen_corner:
 
        front_room:
               │
+         presence_sensor_living_room_front_room:
 
          (Direct) living_room:
                   │
+
+           (Direct) living_room_middle:
+                      │
+             presence_sensor_living_room_middle:
+
+             (Direct) living_room_couch:
+                          │
+
+               living_room_couch_0:
+                              │
+                 presence_sensor_living_room_couch_0:
+
+               living_room_couch_1:
+                              │
+                 presence_sensor_living_room_couch_1:
+
+               living_room_couch_2:
+                              │
+                 presence_sensor_living_room_couch_2:
+           living_room_blind_cover:
+           living_room_speaker:
+
+           (Direct) living_room_front:
+                      │
+
+             (Direct) living_room_hallway:
+                          │
+               presence_sensor_living_room_hallway:
+
+           (Direct) living_room_back:
+                      │
+             presence_sensor_living_room_back:
+           living_room_blind_battery:
+           living_room_fan:
+           presence_sensor_living_room:
 
            (Direct) living_room_chairs:
                       │
@@ -81,73 +65,78 @@
 
              (Direct) living_room_chair_0:
                           │
-               living_room_corner_lamp:
                presence_sensor_living_room_chair_0:
-
-           (Direct) living_room_front:
-                      │
-
-             (Direct) living_room_hallway:
-                          │
-               kauf_sconce_1:
-               kauf_sconce_0:
-               presence_sensor_living_room_hallway:
-           presence_sensor_living_room:
-           living_room_blind_cover:
-           google_home_speaker:
-
-           (Direct) living_room_back:
-                      │
-             presence_sensor_living_room_back:
-             kauf_ball_1:
-             kauf_ball_0:
-
-           (Direct) living_room_middle:
-                      │
-             presence_sensor_living_room_middle:
-
-             (Direct) living_room_couch:
-                          │
-               kauf_tube:
-
-               living_room_couch_2:
-                              │
-                 presence_sensor_living_room_couch_2:
-
-               living_room_couch_1:
-                              │
-                 presence_sensor_living_room_couch_1:
-
-               living_room_couch_0:
-                              │
-                 presence_sensor_living_room_couch_0:
+           living_room_fan:
 
          (Direct) dining_room:
                   │
-           kauf_hanging_1:
-           kauf_hanging_3:
-
-           (Direct) dining_room_1:
-                      │
-             presence_sensor_living_room_dining_room_1:
-           kauf_hanging_0:
-           living_room_lamp:
-
-           (Direct) dining_room_hallway:
-                      │
-             presence_sensor_living_room_dining_room_hallway:
 
            (Direct) dining_room_2:
                       │
              presence_sensor_living_room_dining_room_2:
-           kauf_hanging_2:
+
+           (Direct) dining_room_1:
+                      │
+             presence_sensor_living_room_dining_room_1:
 
            (Direct) dining_room_0:
                       │
              presence_sensor_living_room_dining_room_0:
 
+           (Direct) dining_room_hallway:
+                      │
+             presence_sensor_living_room_dining_room_hallway:
+           dining_room_speaker:
+
            (Direct) dining_room_3:
                       │
              presence_sensor_living_room_dining_room_3:
-         presence_sensor_living_room_front_room:
+
+     back:
+          │
+
+       hallway:
+              │
+         motion_sensor_hallway:
+
+       laundry_room:
+              │
+         washer:
+         dryer:
+         motion_sensor_laundry_room:
+
+       bedroom:
+              │
+         bedroom_blind_battery:
+         bedroom_fan:
+         splug_0_switch_1:
+         splug_1_switch_1:
+         bedroom:
+
+       office:
+              │
+         freezer:
+         motion_sensor_office:
+         office_fan:
+         bambu_x1c:
+
+       bathroom:
+              │
+         bathroom_speaker:
+         motion_sensor_bathroom:
+
+   outside:
+      │
+
+     saildrone:
+          └── (No children)
+
+     twelve:
+          └── (No children)
+
+     yard:
+          └── (No children)
+
+     other:
+          └── (No children)
    service_input:
