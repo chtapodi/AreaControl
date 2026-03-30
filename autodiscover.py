@@ -718,6 +718,7 @@ def merge_layouts(
     return merged
 
 
+@service
 def run_autodiscovery():
     """Service to manually trigger full autodiscovery."""
     try:
@@ -741,6 +742,7 @@ def run_autodiscovery():
     }
 
 
+@service
 def get_discovered_summary():
     """Service to get the current discovery summary without re-running."""
     try:

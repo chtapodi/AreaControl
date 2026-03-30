@@ -109,6 +109,7 @@ DEFAULT_CONFIG = {
     "layout": "./pyscript/layout.yml",
     "rules": "./pyscript/rules.yml",
     "devices": "devices.yml",
+    "discovered": "./pyscript/discovered.yml",
     "connections": "./pyscript/connections.yml",
     "sun": "./pyscript/sun_config.yml",
 }
@@ -613,6 +614,8 @@ def combine_states(state_list, strategy="last"):
                             count_dict[key][i] += 1
 
                     else:
+                        if value is None:
+                            continue
                         if key not in sum_dict.keys():
                             sum_dict[key] = 0
                             count_dict[key] = 0
@@ -720,8 +723,7 @@ def get_immediate_scope(device, device_area, *args): ...
 
 
 def get_local_scope(device, device_area, *args):
-    greatest_parent = get_area_tree().get_greatest_area(device_area.name)
-    return [greatest_parent]
+    return [device_area]
 
 
 # When area names are passed in as args, gets their local scopes
@@ -914,6 +916,23 @@ def generate_state_trigger(trigger, functions, kwarg_list):
     return func_trig
 
 
+def _register_always_on_trigger(device_name):
+    """Register a state trigger to restore always_on devices when turned off."""
+    trigger_entity = f"switch.{device_name}"
+
+    @state_trigger(f"{trigger_entity} == 'off'")
+    def _always_on_restore():
+        log.warning(f"always_on: {device_name} was turned off — restoring to ON")
+        try:
+            switch.turn_on(entity_id=trigger_entity)
+        except Exception as e:
+            log.error(f"always_on: Failed to restore {device_name}: {e}")
+
+    _always_on_restore.__name__ = f"always_on_restore_{device_name}"
+    get_global_triggers().append(["always_on", device_name, _always_on_restore])
+    log.info(f"always_on: Registered restore trigger for {device_name}")
+
+
 def merge_data(data):
     """
     Merge the given data into a single value.
@@ -982,15 +1001,18 @@ def merge_data(data):
         for key in all_keys:
             values = []
             for d in data:
-                if key in d:
+                if key in d and d[key] is not None:
                     values.append(d[key])
+            if not values:
+                continue
             # Recursively merge values for the current key
             merged_value = merge_data(values)
             result[key] = merged_value
         return result
 
     else:
-        raise ValueError(f"merge_data(): Unsupported data type {data_type}: {data}")
+        log.warning(f"merge_data(): Unsupported data type {data_type}: {data}")
+        return None
 
 
 
@@ -1146,16 +1168,36 @@ class Area:
     def is_frozen(self):
         return self.frozen
 
-    def set_state(self, state):
+    def set_state(self, state, device_type_filter=None):
+        log.info(f"Area {self.name}: set_state called with state={state} filter={device_type_filter}")
         if self.frozen:
             log.info(f"Area {self.name} is frozen; skipping state change {state}")
             return
-        for child in self.get_children():
-            # Skip power-monitoring devices -- they should never be toggled by area state changes
-            if isinstance(child, Device) and child.power_monitoring:
-                log.info(f"Area {self.name}: Skipping power-monitoring device {child.name}")
-                continue
-            child.set_state(copy.deepcopy(state))
+        children = self.get_children()
+        log.info(f"Area {self.name}: set_state iterating {len(children)} children")
+        for child in children:
+            try:
+                if hasattr(child, 'driver'):
+                    # Child is a Device (has a driver attribute)
+                    # Skip power-monitoring devices -- they should never be toggled by area state changes
+                    if child.power_monitoring:
+                        log.info(f"Area {self.name}: Skipping power-monitoring device {child.name}")
+                        continue
+                    # Skip devices not matching the type filter (if set)
+                    if device_type_filter is not None:
+                        child_type = getattr(child.driver, "device_type", None)
+                        if child_type not in device_type_filter:
+                            log.info(f"Area {self.name}: Skipping {child.name} (type '{child_type}' not in filter {device_type_filter})")
+                            continue
+                    if not state:
+                        log.info(f"Area {self.name}: Skipping {child.name} (empty state)")
+                        continue
+                    child.set_state(copy.deepcopy(state))
+                else:
+                    # Sub-area: propagate the filter
+                    child.set_state(copy.deepcopy(state), device_type_filter=device_type_filter)
+            except Exception as exc:
+                log.error(f"Area {self.name}: Exception setting state on child {getattr(child, 'name', child)}: {exc}")
 
     def get_state(self):
         log.info(f"Area:get_state(): Getting state for {self.get_pretty_string()}")
@@ -1212,6 +1254,25 @@ def load_yaml(path):
     return data
 
 
+@pyscript_compile
+def load_device_defs(devices_path, discovered_path="./pyscript/discovered.yml"):
+    """Load discovered devices first, then apply manual device overrides."""
+    device_defs = {}
+
+    try:
+        device_defs = load_yaml(discovered_path) or {}
+    except Exception:
+        device_defs = {}
+
+    try:
+        manual_defs = load_yaml(devices_path) or {}
+        device_defs.update(manual_defs)
+    except Exception:
+        pass
+
+    return device_defs
+
+
 ### Tracker interface
 def update_tracker(device, *args):
     tracker_manager=get_tracker_manager()
@@ -1241,6 +1302,9 @@ class EventManager:
         result = self.check_event(event)
 
     def check_event(self, event):
+        if "device_name" not in event:
+            log.warning(f"EventManager:check_event(): Missing device_name in event {event}, dropping")
+            return False
         matching_rules = []
         rule_lookup = self.get_rules()
         for rule_name in rule_lookup.keys():
@@ -1327,6 +1391,7 @@ class EventManager:
             # get values
             device_area = device.get_area()
             rule_state = rule.get("state", {})
+            device_type_filter = rule.get("device_type_filter", None)
 
             log.info(f"EventManager:execute_rule(): updating {rule} with {event_data}")
             rule.update(event_data)
@@ -1417,7 +1482,7 @@ class EventManager:
             log.info("EventManager:execute_rule(): Event passed all functions")
             log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
             for areas in scope:
-                areas.set_state(final_state)
+                areas.set_state(final_state, device_type_filter=device_type_filter)
 
             if rule_name is not None:
                 try:
@@ -1486,11 +1551,10 @@ class AreaTree:
 
     def __init__(self, config_path, devices_file="devices.yml"):
         self.config_path = config_path
-        self.device_defs = {}
-        try:
-            self.device_defs = load_yaml(devices_file)
-        except Exception:
-            pass
+        self.device_defs = load_device_defs(
+            devices_file,
+            config_settings.get("discovered", DEFAULT_CONFIG["discovered"]),
+        )
         self.area_tree_lookup = self._create_area_tree(self.config_path)
 
         log.info(f"AreaTree: Created area tree with children: {list(self.area_tree_lookup.keys())}")
@@ -1770,12 +1834,15 @@ class AreaTree:
                     driver = PlugDriver(output)
                     new_device = Device(driver)
                     new_device.power_monitoring = True
+                    new_device.always_on = bool(info.get("always_on", False))
                     area.add_device(new_device)
                     new_device.set_area(area)
                     area_tree[output] = new_device
                     log.info(
                         f"Area '{area_name}': Created power-monitoring PlugDriver for power_output '{output}'."
                     )
+                    if new_device.always_on:
+                        _register_always_on_trigger(output)
 
             # Add inputs as children
             if "inputs" in area_data:
@@ -1868,6 +1935,7 @@ class Device:
         self.tags = []
         self.locked=False
         self.power_monitoring = False
+        self.always_on = False
 
     # "Lock" The device so it can't be changed
     def lock(self, value=True):
@@ -2068,6 +2136,18 @@ class ServiceDriver:
         def service_driver_trigger(**kwargs):
             log.info(f"Triggering Service: with value: {kwargs}")
             new_event = {}
+
+            # Always set device_name and tags regardless of whether a state payload is present.
+            # Previously these were only set inside the `if "state"` block, which caused a
+            # KeyError in EventManager.check_event() for tag-only calls like turn_on/turn_off.
+            if "name" in kwargs:
+                new_event["device_name"] = kwargs["name"]
+            else:
+                new_event["device_name"] = self.name
+
+            if "tags" in kwargs:
+                new_event["tags"] = kwargs["tags"]
+
             if "state" in kwargs:
                 state = kwargs["state"]
                 if "hs_color" in state:
@@ -2081,14 +2161,11 @@ class ServiceDriver:
                 if "temp" in state:
                     state["color_temp"] = state["temp"]
                     del state["temp"]
-                if "name" in kwargs:
-                    new_event["device_name"] = kwargs["name"]
-                else:
-                    new_event["device_name"] = self.name
 
                 log.info(f"state: {state}")
                 new_event["state"] = state
 
+            log.info(f"ServiceDriver: emitting event {new_event}")
             get_event_manager().create_event(new_event)
 
         get_global_triggers().append(["Service", service_driver_trigger])
@@ -2173,6 +2250,7 @@ class KaufLight:
 
     def __init__(self, name, color_profile=None):
         self.name = name
+        self.device_type = "light"
         self.last_state = {}
         # These values are cached on the driver, whereas the whole state is cached on the device
         self.rgb_color = None
@@ -2403,6 +2481,7 @@ class HueLight:
 
     def __init__(self, name):
         self.name = name
+        self.device_type = "light"
         self._delegate = KaufLight(name, color_profile=COLOR_PROFILES.get("hue"))
 
     def __getattr__(self, attr):
@@ -2426,6 +2505,7 @@ class BlindDriver:
 
     def __init__(self, name, height=100):
         self.name = name
+        self.device_type = "blind"
         self.height = height
         self.last_state = {"closed_percent": 0}
 
@@ -2476,6 +2556,7 @@ class SpeakerDriver:
 
     def __init__(self, name):
         self.name = name
+        self.device_type = "speaker"
         self.last_state = {"volume": None, "playing": None}
 
     def get_valid_state_keys(self):
@@ -2517,6 +2598,7 @@ class PlugDriver:
 
     def __init__(self, name):
         self.name = name
+        self.device_type = "plug"
         self.last_state = {"status": 0}
 
     def get_valid_state_keys(self):
@@ -2558,6 +2640,7 @@ class ContactSensorDriver:
 
     def __init__(self, name):
         self.name = name
+        self.device_type = "contact_sensor"
         self.last_state = {"contact": 0}
 
     def get_valid_state_keys(self):
@@ -2586,6 +2669,7 @@ class FanDriver:
 
     def __init__(self, name):
         self.name = name
+        self.device_type = "fan"
         self.last_state = {"status": 0}
 
     def get_valid_state_keys(self):
@@ -2627,6 +2711,7 @@ class TelevisionDriver:
 
     def __init__(self, name):
         self.name = name
+        self.device_type = "television"
         self.last_state = {"status": 0}
 
     def get_valid_state_keys(self):
@@ -3008,6 +3093,55 @@ class TestManager():
 
         # cleanup
         set_motion_sensor_mode("on")
+        return True
+
+    def test_device_type_filter(self):
+        """Verify that device_type_filter on Area.set_state skips non-matching device types."""
+        log.info("test_device_type_filter: starting")
+
+        # Use the office area which has both lights (hue) and a plug (office_fan)
+        office_area = self.area_tree.get_area("office")
+        if office_area is None:
+            log.warning("test_device_type_filter: office area not found, skipping")
+            return True
+
+        # Find the office_fan device (plug) and a light device
+        office_fan = self.area_tree.get_device("office_fan")
+        if office_fan is None:
+            log.warning("test_device_type_filter: office_fan not found, skipping")
+            return True
+
+        # Verify device_type attributes are set correctly
+        fan_type = getattr(office_fan.driver, "device_type", None)
+        if fan_type != "plug":
+            log.warning(f"test_device_type_filter: Expected office_fan.driver.device_type='plug', got '{fan_type}'")
+            return False
+        log.info(f"test_device_type_filter: office_fan.driver.device_type='{fan_type}' OK")
+
+        # Reset office_fan to a known off state
+        office_fan.add_to_cache({"status": 0})
+        fan_state_before = office_fan.cached_state.get("status", None)
+
+        # Apply state with device_type_filter=["light"] — plug should be skipped
+        office_area.set_state({"status": 1, "brightness": 200}, device_type_filter=["light"])
+
+        fan_state_after = office_fan.cached_state.get("status", None) if office_fan.cached_state else None
+        if fan_state_after != 0:
+            log.warning(f"test_device_type_filter: FAIL — office_fan status should remain 0 after light-only set_state, got {fan_state_after}")
+            return False
+        log.info(f"test_device_type_filter: office_fan correctly skipped (status={fan_state_after})")
+
+        # Now apply without filter — plug SHOULD be updated this time
+        office_area.set_state({"status": 1}, device_type_filter=None)
+        fan_state_unfiltered = office_fan.cached_state.get("status", None) if office_fan.cached_state else None
+        if fan_state_unfiltered != 1:
+            log.warning(f"test_device_type_filter: FAIL — office_fan should be 1 after unfiltered set_state, got {fan_state_unfiltered}")
+            return False
+        log.info(f"test_device_type_filter: office_fan correctly updated without filter (status={fan_state_unfiltered})")
+
+        # Cleanup: turn office_fan back off
+        office_area.set_state({"status": 0}, device_type_filter=None)
+        log.info("test_device_type_filter: PASSED")
         return True
 
 @service 

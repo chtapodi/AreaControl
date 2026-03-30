@@ -5,6 +5,11 @@ import copy
 import builtins
 import os
 
+try:
+    from .health_dashboard import generate_dashboard
+except ImportError:
+    from health_dashboard import generate_dashboard
+
 
 def _stub_decorator(*dargs, **dkwargs):
     if len(dargs) == 1 and callable(dargs[0]) and not dkwargs:
@@ -22,9 +27,13 @@ def _state_trigger(*args, **kwargs):
 
 
 class DummyLog:
+    def debug(self, *a, **k):
+        pass
     def info(self, *a, **k):
         pass
     def warning(self, *a, **k):
+        pass
+    def error(self, *a, **k):
         pass
     def fatal(self, *a, **k):
         pass
@@ -94,6 +103,20 @@ def load_area_tree(use_real_drivers=None):
     return mod
 
 
+def load_area_tree_with_config(config_paths, use_real_drivers=False):
+    """Load ``area_tree`` and point it at specific config files for tests.
+
+    ``config_paths`` should be a mapping containing absolute or repo-relative paths
+    for one or more config keys from ``DEFAULT_CONFIG``.
+    """
+    mod = load_area_tree(use_real_drivers=use_real_drivers)
+    settings = dict(mod.DEFAULT_CONFIG)
+    settings.update(config_paths)
+    settings["run_tests_on_start"] = False
+    mod.config_settings = settings
+    return mod
+
+
 def load_tracker():
     pyscript_mod = types.ModuleType('pyscript')
     pyscript_mod.service = _stub_decorator
@@ -131,3 +154,11 @@ def load_tracker():
     sys.modules['modules.tracker'] = mod
     exec(code, mod.__dict__)
     return mod
+
+
+def pytest_sessionfinish(session, exitstatus):
+    try:
+        generate_dashboard(session, exitstatus)
+    except Exception:
+        # Dashboard generation must never break the test run outcome.
+        pass

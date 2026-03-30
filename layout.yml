@@ -157,8 +157,8 @@ kitchen:
   outputs:
     - kitchen_speaker
     - hue_kitchen_ball
-    - kauf_bulb_default_fade_10
-    - kauf_bulb_effect_19
+    - kauf_kitchen_corner
+    - kauf_hanging_5
   power_outputs:
     - coffee_tea
 
@@ -177,6 +177,7 @@ laundry_room:
     temperature:
       - laundry_room_temp_temperature
   outputs:
+    - kauf_laundry_room_0
     - kauf_bulb_default_fade_25
     - kauf_bulb_default_fade_4
   power_outputs:
@@ -201,7 +202,8 @@ hallway:
   inputs:
     motion:
       - "motion_sensor_hallway"
-  outputs: []
+  outputs:
+    - kauf_hallway
 
 bathroom:
   inputs:
@@ -210,9 +212,8 @@ bathroom:
   outputs:
     - bathroom_speaker
     - hue_bathroom_center
-    - kauf_bulb_default_fade_11
-    - kauf_bulb_default_fade_5
-    - kauf_bulb_default_fade_6
+    - kauf_bathroom_0
+    - kauf_bathroom_1
 
 bedroom:
   inputs:

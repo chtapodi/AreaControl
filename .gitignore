@@ -13,3 +13,4 @@ room_config.yml.bak
 .prettierrc
 *.png
 *.gif
+.env

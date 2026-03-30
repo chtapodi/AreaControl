@@ -52,30 +52,36 @@ office_fan:
     - plug
 
 # Power monitoring plugs (passive - not controlled by motion)
+# always_on: true means the device will be automatically turned back on if turned off
 dryer:
   type: plug
   filters:
     - plug
+  always_on: true
 
 washer:
   type: plug
   filters:
     - plug
+  always_on: true
 
 freezer:
   type: plug
   filters:
     - plug
+  always_on: true
 
 bambu_x1c:
   type: plug
   filters:
     - plug
+  always_on: true
 
 coffee_tea:
   type: plug
   filters:
     - plug
+  always_on: true
 
 plug_3_2:
   type: plug
@@ -101,3 +107,43 @@ splug_1_switch_1:
   type: plug
   filters:
     - plug
+
+# Laundry room lights (manually mapped - autodiscovery used wrong entity name)
+kauf_laundry_room_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+# Hallway light (manually mapped - autodiscovery used wrong entity name)
+kauf_hallway:
+  type: light
+  filters:
+    - light
+    - kauf
+
+# Kitchen lights (manually mapped - autodiscovery used wrong entity names)
+kauf_kitchen_corner:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_5:
+  type: light
+  filters:
+    - light
+    - kauf
+
+# Bathroom lights (manually mapped - autodiscovery used wrong entity names)
+kauf_bathroom_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bathroom_1:
+  type: light
+  filters:
+    - light
+    - kauf

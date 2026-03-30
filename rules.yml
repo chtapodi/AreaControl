@@ -71,6 +71,7 @@ motion_on:
     # - get_last_set_state: []
     - get_time_based_state: []
   combination_strategy: "first_state"
+  device_type_filter: ["light"]
 
 
 
@@ -84,6 +85,18 @@ motion_off_after_15:
     - get_local_scope: []
   state:
     status: 0
+  device_type_filter: ["light"]
+
+motion_off_ias:
+  trigger_prefix: "motion_"
+  required_tags: ["off", "motion_detected"]
+  functions:
+    - motion_sensor_mode: []
+  scope_functions:
+    - get_local_scope: []
+  state:
+    status: 0
+  device_type_filter: ["light"]
 
 living_room_zones_on:
   trigger_prefix: "presence_sensor_living_room_"
@@ -99,6 +112,7 @@ living_room_zones_on:
     # - get_last_set_state: []
     - get_time_based_state: []
   combination_strategy: "first_state"
+  device_type_filter: ["light"]
 
 # turn_living_room_off:
 #   trigger_prefix: "presence_sensor_living_room"
