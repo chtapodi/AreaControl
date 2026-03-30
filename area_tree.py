@@ -86,6 +86,12 @@ global_triggers = None
 tracker_manager=None
 config_settings = {}
 
+# Maps area_name -> asyncio.Task for pending delayed-off
+pending_motion_off = {}
+
+# Default delay (seconds) when no per-area value is configured
+DEFAULT_MOTION_OFF_DELAY = 900
+
 verbose_mode = False
 
 last_set_state={}
@@ -511,6 +517,62 @@ def create_event(**kwargs):
 
 
 @service
+def button_laundry_double():
+    light.turn_on(entity_id="light.laundry_room_lights", color_temp=411)
+
+
+@service
+def button_6_power_off_bedroom():
+    light.turn_off(
+        entity_id=[
+            "light.library_lamp",
+            "light.all",
+            "light.bedroom_lamp",
+            "light.living_room_lamp",
+            "light.living_room_hue",
+        ],
+        device_id=[
+            "61ed18cf42fa764f9ba367d977111dd0",
+            "33bec14f3e68137127a179bfb81da939",
+            "61ed18cf42fa764f9ba367d977111dd0",
+        ],
+    )
+    media_player.turn_off(device_id="61ed18cf42fa764f9ba367d977111dd0")
+    switch.turn_on(entity_id=[], device_id=["88a63afd10a3b8d8dd20ac1d3e8e997d"], area_id=[])
+    conversation.process(text="Turn off all of the lights")
+
+
+@service
+def button_3_turn_all_off_bedroom_lamp():
+    light.turn_off(
+        entity_id=[
+            "light.library_lamp",
+            "light.all",
+            "light.bedroom_lamp",
+            "light.living_room_lamp",
+            "light.living_room_hue",
+        ],
+        device_id=[
+            "61ed18cf42fa764f9ba367d977111dd0",
+            "33bec14f3e68137127a179bfb81da939",
+            "61ed18cf42fa764f9ba367d977111dd0",
+        ],
+    )
+    media_player.turn_off(device_id="61ed18cf42fa764f9ba367d977111dd0")
+    switch.turn_on(device_id="c3517fca894a66f52fcae19198f83445", area_id=[])
+
+
+@service
+def button_3_toggle_fan_bedroom_lamp():
+    fan.toggle(entity_id="fan.splug_1_switch_1")
+
+
+@service
+def bedroom_shake_toggle_fan_button_6():
+    fan.toggle(entity_id="fan.splug_0_switch_1")
+
+
+@service
 def freeze_area(area_name, recursive=True):
     """Freeze an area so its lights ignore future state changes."""
     area = get_area_tree().get_area(area_name)
@@ -711,6 +773,119 @@ def set_motion_sensor_mode(state):
     log.info(f"set_motion_sensor_mode is now {input_boolean.motion_sensor_mode}")
 
 
+def _get_area_motion_off_delay(area):
+    """Return the motion-off delay (seconds) for *area*, falling back to the default."""
+    delay = getattr(area, "motion_off_delay", None)
+    if delay is not None:
+        return delay
+    return DEFAULT_MOTION_OFF_DELAY
+
+
+def schedule_motion_off(device, *args):
+    """Replace the immediate motion-off action with a cancellable delayed one.
+
+    Called as a ``functions`` guard from the motion_off rules.  Instead of
+    returning False (which would block the rule entirely) it:
+      1. Resolves the delay for the triggering area.
+      2. Schedules a new async task that sleeps for *delay* seconds and then
+         applies ``{status: 0}`` to the area's lights.  ``kill_me=True``
+         ensures any previously running task with the same name is killed and
+         the countdown is reset — this matters because the IAS-zone and
+         occupancy sensors both fire off within milliseconds of each other, so
+         whichever arrives second should always win and restart the timer.
+      3. Returns False so the rule itself does NOT apply state immediately —
+         the delayed task does it instead.
+
+    The task handle is stored in ``pending_motion_off`` so that
+    ``cancel_motion_off`` can cancel it directly when new motion is detected.
+    """
+    global pending_motion_off
+
+    area = device.get_area()
+    area_name = area.name
+    delay = _get_area_motion_off_delay(area)
+
+    log.info(f"schedule_motion_off: scheduling off for {area_name} in {delay}s")
+
+    @task_unique(f"motion_off_{area_name}", kill_me=True)
+    async def _delayed_off():
+        log.info(f"schedule_motion_off: [{area_name}] waiting {delay}s before turning off")
+        await asyncio.sleep(delay)
+        log.info(f"schedule_motion_off: [{area_name}] delay elapsed — applying off")
+        # Re-check motion sensor mode at execution time
+        if not motion_sensor_mode():
+            log.info(f"schedule_motion_off: [{area_name}] motion_sensor_mode is off, skipping")
+            return
+        area_obj = get_area_tree().get_area(area_name)
+        if area_obj is None:
+            log.warning(f"schedule_motion_off: [{area_name}] area no longer in tree")
+            return
+        area_obj.set_state({"status": 0}, device_type_filter=["light"])
+        pending_motion_off.pop(area_name, None)
+        log.info(f"schedule_motion_off: [{area_name}] off applied")
+
+    pending_motion_off[area_name] = _delayed_off()
+
+    # Return False: prevents the rule from applying state immediately.
+    return False
+
+
+def cancel_motion_off(device, *args):
+    """Cancel any pending delayed-off for the device's area.
+
+    Called as a ``functions`` entry on motion_on rules so that a new motion
+    event cancels a previously scheduled off.
+    """
+    global pending_motion_off
+
+    area_name = device.get_area().name
+    existing = pending_motion_off.pop(area_name, None)
+    if existing is not None:
+        try:
+            existing.cancel()
+            log.info(f"cancel_motion_off: cancelled pending-off for {area_name}")
+        except Exception as exc:
+            log.warning(f"cancel_motion_off: error cancelling task for {area_name}: {exc}")
+    return True
+
+
+def check_adjacent_motion(device, *args):
+    """Guard: block motion-off if recent motion was detected in an adjacent area.
+
+    Uses the TrackManager's graph to find neighbouring areas and inspects
+    recent track events.  If any track has its head in a neighbouring area
+    within the configured adjacent_motion_window (default 5 minutes), the
+    off is suppressed (returns False).
+    """
+    ADJACENT_WINDOW = 300  # seconds — how recent "adjacent motion" must be
+
+    area_name = device.get_area().name
+    tracker = get_tracker_manager()
+
+    try:
+        neighbors = tracker.graph_manager.get_neighbors(area_name)
+    except Exception as exc:
+        log.warning(f"check_adjacent_motion: could not get neighbors for {area_name}: {exc}")
+        return True  # allow off on error
+
+    if not neighbors:
+        return True  # no neighbours configured → allow off
+
+    for track in tracker.tracks:
+        head = track.get_head()
+        if head is None:
+            continue
+        if head.get_area() in neighbors:
+            age = head.get_time_since_last_trigger()
+            if age < ADJACENT_WINDOW:
+                log.info(
+                    f"check_adjacent_motion: blocking off for {area_name} — "
+                    f"recent motion in adjacent area {head.get_area()} ({age:.0f}s ago)"
+                )
+                return False
+
+    return True
+
 
 ### Scope functions
 def get_entire_scope(device, device_area, *args):
@@ -719,7 +894,8 @@ def get_entire_scope(device, device_area, *args):
 
 # get immediate scope
 # make it so they filter by all checking
-def get_immediate_scope(device, device_area, *args): ...
+def get_immediate_scope(device, device_area, *args):
+    return get_local_scope(device, device_area, *args)
 
 
 def get_local_scope(device, device_area, *args):
@@ -729,14 +905,22 @@ def get_local_scope(device, device_area, *args):
 # When area names are passed in as args, gets their local scopes
 def get_area_local_scope(device, device_area, *args):
     log.info(f"get_area_local_scope {args}")
+    if len(args) == 0 or args[0] is None or len(args[0]) == 0:
+        return [device_area]
+
     areas = []
+    area_tree = get_area_tree()
     for area_name in args[0]:
-        area_tree = get_area_tree()
-        if area_tree.is_area(area_name):
-            areas.append(area_tree.get_area(area_name))
+        area_entry = area_tree.get_area_tree_lookup().get(area_name)
+        if isinstance(area_entry, Area):
+            areas.append(area_entry)
         else:
             log.info(f"Area {area_name} not found")
-    log.info(f"get_area_local_scope {areas[0].name}")
+
+    if len(areas) == 0:
+        return [device_area]
+
+    log.info(f"get_area_local_scope {[area.name for area in areas]}")
     return areas
 
 
@@ -1114,6 +1298,7 @@ class Area:
         self.devices = []
         self.parent = None
         self.frozen = False
+        self.motion_off_delay = None  # seconds; None means use DEFAULT_MOTION_OFF_DELAY
 
     def add_parent(self, parent):
         self.parent = parent
@@ -1340,7 +1525,7 @@ class EventManager:
 
                 if not approved or (
                     function_override
-                    and self._check_functions(event, rule_lookup[rule_name])
+                    and (not self._check_functions(event, rule_lookup[rule_name]))
                 ):
                     approved = False
                     # log.info(f"EventManager:check_event(): {rule_name} FAILED function check")
@@ -1393,8 +1578,9 @@ class EventManager:
             rule_state = rule.get("state", {})
             device_type_filter = rule.get("device_type_filter", None)
 
-            log.info(f"EventManager:execute_rule(): updating {rule} with {event_data}")
-            rule.update(event_data)
+            event_scope_functions = event_data.get("scope_functions")
+            if event_scope_functions is not None:
+                rule["scope_functions"] = event_scope_functions
 
             scope = None  # Should these be anded?
             # Get scope to apply to
@@ -1420,8 +1606,24 @@ class EventManager:
                                     log.info(f"EventManager:execute_rule(): Edited scope: {scope}->{edited_scope}")
                                     scope = edited_scope
 
-            if scope is None:
-                scope = get_local_scope(device, device_area)
+            if not scope:
+                if isinstance(device.driver, ServiceDriver):
+                    nearest_area = self.get_area_tree().get_nearest_area_with_outputs(device_area)
+                    if nearest_area is not None:
+                        scope = [nearest_area]
+                    else:
+                        scope = get_local_scope(device, device_area)
+                else:
+                    scope = get_local_scope(device, device_area)
+
+            if isinstance(device.driver, ServiceDriver):
+                mapped_scope = []
+                for scoped_area in scope:
+                    nearest_area = self.get_area_tree().get_nearest_area_with_outputs(scoped_area)
+                    if nearest_area is not None and nearest_area not in mapped_scope:
+                        mapped_scope.append(nearest_area)
+                if mapped_scope:
+                    scope = mapped_scope
 
             scope_names=[]
             for area in scope:
@@ -1481,8 +1683,25 @@ class EventManager:
                                 return False
             log.info("EventManager:execute_rule(): Event passed all functions")
             log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
-            for areas in scope:
-                areas.set_state(final_state, device_type_filter=device_type_filter)
+            if device.target_outputs:
+                for target_device_name in device.target_outputs:
+                    target_device = self.get_area_tree().get_device(target_device_name)
+                    if target_device is None:
+                        log.warning(
+                            f"EventManager:execute_rule(): target output '{target_device_name}' not found"
+                        )
+                        continue
+                    if target_device.power_monitoring:
+                        continue
+                    if device_type_filter is not None:
+                        target_type = getattr(target_device.driver, "device_type", None)
+                        if target_type not in device_type_filter:
+                            continue
+                    if final_state:
+                        target_device.set_state(copy.deepcopy(final_state))
+            else:
+                for areas in scope:
+                    areas.set_state(final_state, device_type_filter=device_type_filter)
 
             if rule_name is not None:
                 try:
@@ -1585,8 +1804,6 @@ class AreaTree:
 
     def get_device(self, device_name):
         if device_name not in self.area_tree_lookup:
-            if "service_" in device_name:
-                return self.area_tree_lookup["service_input"]
             log.warning(f"Device {device_name} not found in area tree")
             return None
         return self.area_tree_lookup[device_name]
@@ -1596,9 +1813,7 @@ class AreaTree:
 
     def is_area(self, area_name):
         log.info(f"Checking if {area_name} is an area")
-        if area_name in self.get_area_tree_lookup():
-            return True
-        return False
+        return isinstance(self.get_area_tree_lookup().get(area_name), Area)
 
     def _find_root_area_name(self):
         root_area = None
@@ -1659,6 +1874,25 @@ class AreaTree:
             siblings.remove(area)
         return siblings
 
+    def get_nearest_area_with_outputs(self, area_or_name):
+        if area_or_name is None:
+            return None
+
+        if isinstance(area_or_name, str):
+            current = self.get_area(area_or_name)
+        else:
+            current = area_or_name
+
+        input_drivers = (MotionSensorDriver, PresenceSensorDriver, ServiceDriver)
+
+        while current is not None:
+            for device in current.get_devices():
+                if isinstance(device, Device) and not isinstance(device.driver, input_drivers):
+                    return current
+            current = current.get_parent()
+
+        return None
+
     def _create_area_tree(self, yaml_file):
         """
         Loads areas from a YAML file and creates a hierarchical structure of Area objects.
@@ -1698,6 +1932,15 @@ class AreaTree:
                 continue
 
             area = create_area(area_name)
+
+            # Store per-area motion-off delay if configured
+            motion_off_delay = area_data.get("motion_off_delay")
+            if motion_off_delay is not None:
+                try:
+                    area.motion_off_delay = int(motion_off_delay)
+                    log.info(f"Area '{area_name}': motion_off_delay={area.motion_off_delay}s")
+                except (ValueError, TypeError) as exc:
+                    log.warning(f"Area '{area_name}': invalid motion_off_delay '{motion_off_delay}': {exc}")
 
             # Create direct child relationships
             direct_sub_areas = area_data.get("direct_sub_areas")
@@ -1873,7 +2116,26 @@ class AreaTree:
                             )
                             continue
 
-                        for device_id in device_id_list:
+                        if not isinstance(device_id_list, list):
+                            log.warning(
+                                f"Area '{area_name}': Input type '{input_type}' expected list, got {type(device_id_list)}. Skipping."
+                            )
+                            continue
+
+                        for device_entry in device_id_list:
+                            device_id = None
+                            target_outputs = None
+                            if isinstance(device_entry, str):
+                                device_id = device_entry
+                            elif isinstance(device_entry, dict):
+                                device_id = device_entry.get("name")
+                                target_outputs = device_entry.get("target_outputs")
+                            else:
+                                log.warning(
+                                    f"Area '{area_name}', input_type '{input_type}': Unsupported input entry {device_entry!r}. Skipping."
+                                )
+                                continue
+
                             if device_id is None:
                                 log.warning(
                                     f"Area '{area_name}', input_type '{input_type}': "
@@ -1882,22 +2144,29 @@ class AreaTree:
                                 continue
 
                             new_input = None
-                            if "motion" in device_id:
+                            if input_type == "motion":
                                 log.info(f"Area '{area_name}': Creating motion device: {device_id}")
                                 new_input = MotionSensorDriver(input_type, device_id)
-                            elif "presence" in device_id:
+                            elif input_type == "presence":
                                 log.info(f"Area '{area_name}': Creating presence device: {device_id}")
                                 new_input = PresenceSensorDriver(input_type, device_id)
-                            elif "service" in device_id:
+                            elif input_type == "service":
                                 log.info(f"Area '{area_name}': Creating service device: {device_id}")
                                 new_input = ServiceDriver(input_type, device_id)
                             else:
                                 log.warning(
-                                    f"Area '{area_name}': Input '{device_id}' has no driver mapping. Skipping."
+                                    f"Area '{area_name}': Input type '{input_type}' has no driver mapping for '{device_id}'. Skipping."
                                 )
 
                             if new_input is not None:
                                 new_device = Device(new_input)
+                                if target_outputs is not None:
+                                    if isinstance(target_outputs, list):
+                                        new_device.target_outputs = target_outputs
+                                    else:
+                                        log.warning(
+                                            f"Area '{area_name}': target_outputs for '{device_id}' must be a list. Ignoring."
+                                        )
                                 new_input.add_callback(new_device.input_trigger)
 
                                 area.add_device(new_device)
@@ -1936,6 +2205,7 @@ class Device:
         self.locked=False
         self.power_monitoring = False
         self.always_on = False
+        self.target_outputs = None
 
     # "Lock" The device so it can't be changed
     def lock(self, value=True):
@@ -3213,7 +3483,7 @@ def monitor_external_state_setting(**kwargs):
                     if device_state is not None:
                         if get_state_similarity(device_state, state)<=0.5: 
                             log.info(f"SETTING DEVICE {device_name} TO {state}")
-                            # device.set_state(state)
+                            device.add_to_cache(state)
                 else :
                     log.info(f"DEVICE {device_name} NOT FOUND")
 

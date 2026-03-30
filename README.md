@@ -304,3 +304,15 @@ service to build the area tree and start processing events. Services like
 so lights ignore any events until unfrozen.
 
 Refer back to [Event and Rule Workflow](#event-and-rule-workflow) to understand how a service call becomes an action inside an area.
+
+## Future TODOs
+
+- **Temperature inputs are not fully wired into the rule engine yet.** `layout.yml`
+  already declares `temperature` inputs, and `rules.yml` contains
+  `temp_rise_above` / `temp_fall_below`, but the current system still needs a
+  concrete implementation contract for:
+  - where per-area temperature thresholds live
+  - what event tags a temperature driver should emit on threshold crossings
+  - whether temperature device names should follow the existing `sensor_...`
+    rule prefix or whether the rules should be updated to match layout naming
+  - how hysteresis/debounce should work to avoid oscillation around thresholds

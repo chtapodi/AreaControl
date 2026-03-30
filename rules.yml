@@ -18,24 +18,26 @@
 toggle_light_color:
   trigger_prefix: "service_input_button_double"
   scope_functions:
-    - get_area_local_scope: []
+    - get_local_scope: []
   state_functions:
     - toggle_state: []
   functions :
     - update_tracker: []
   state: {}
+  device_type_filter: ["light"]
   # state is passed by service call
 
 
 toggle_light_status:
   trigger_prefix: "service_input_button_single"
   scope_functions:
-    - get_area_local_scope: []
+    - get_local_scope: []
   state_functions:
     - toggle_status: []
   functions :
     - update_tracker: []
   state: {}
+  device_type_filter: ["light"]
   # state is passed by service call
 
 
@@ -45,6 +47,7 @@ HA_only_on_lights:
     - get_entire_scope: []
   functions:
     -  set_cached_last_set_state: ["$state"]
+  device_type_filter: ["light"]
     
   # state is passed by service call
 
@@ -54,6 +57,7 @@ motion_on_tracker:
   required_tags: ["on"]
   functions:
     - update_tracker: []
+    - cancel_motion_off: []
 
 
 
@@ -81,6 +85,10 @@ motion_off_after_15:
   required_tags: ["off", "motion_occupancy"]
   functions:
     - motion_sensor_mode: []
+    - check_adjacent_motion: []
+    # schedule_motion_off must be last: it cancels any existing pending-off,
+    # schedules the delayed off, and returns False to block immediate state apply.
+    - schedule_motion_off: []
   scope_functions:
     - get_local_scope: []
   state:
@@ -92,6 +100,8 @@ motion_off_ias:
   required_tags: ["off", "motion_detected"]
   functions:
     - motion_sensor_mode: []
+    - check_adjacent_motion: []
+    - schedule_motion_off: []
   scope_functions:
     - get_local_scope: []
   state:

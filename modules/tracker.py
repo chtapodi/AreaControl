@@ -517,6 +517,12 @@ class GraphManager:
         plt.close()
         
 
+    def get_neighbors(self, area):
+        """Return the set of areas directly connected to *area* in the graph."""
+        if area not in self.graph:
+            return set()
+        return set(self.graph.neighbors(area))
+
     def get_distance(self, area_1, area_2):
         shortest_path_length = nx.shortest_path_length(self.graph, area_1, area_2)
         return shortest_path_length

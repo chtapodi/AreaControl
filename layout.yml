@@ -2,9 +2,6 @@ everything:
   sub_areas:
     - home
     - outside
-  inputs:
-    service:
-      - service_input
 home:
   sub_areas:
     - front
@@ -32,6 +29,8 @@ living_room:
       - "presence_sensor_living_room"
     temperature:
       - living_room_temp_temperature
+    service:
+      - service_input_button_single_living_room
 
   outputs:
     - living_room_blind_cover
@@ -82,6 +81,8 @@ living_room_middle:
   inputs:
     presence:
       - "presence_sensor_living_room_middle"
+    service:
+      - service_input_button_single_living_room_middle
 
 living_room_couch:
   sub_areas:
@@ -149,11 +150,18 @@ dining_room_hallway:
       - "presence_sensor_living_room_dining_room_hallway"
 
 kitchen:
+  motion_off_delay: 900
   inputs:
     motion:
       - motion_sensor_kitchen
     temperature:
       - kitchen_temp_temperature
+    service:
+      - service_input_button_single_kitchen
+      - service_input_button_double_kitchen
+      - name: service_input_button_single_kitchen_corner
+        target_outputs:
+          - kauf_kitchen_corner
   outputs:
     - kitchen_speaker
     - hue_kitchen_ball
@@ -171,11 +179,14 @@ back:
     - bedroom
 
 laundry_room:
+  motion_off_delay: 900
   inputs:
     motion:
       - motion_sensor_laundry_room
     temperature:
       - laundry_room_temp_temperature
+    service:
+      - service_input_button_single_laundry_room
   outputs:
     - kauf_laundry_room_0
     - kauf_bulb_default_fade_25
@@ -185,11 +196,14 @@ laundry_room:
     - washer
 
 office:
+  motion_off_delay: 900
   inputs:
     motion:
       - "motion_sensor_office"
     temperature:
       - office_temp_temperature
+    service:
+      - service_input_button_single_office
   outputs:
     - office_fan
     - hue_0_firmware
@@ -199,16 +213,29 @@ office:
     - freezer
 
 hallway:
+  motion_off_delay: 120
+  sub_areas:
+    - hallway_nook
   inputs:
     motion:
       - "motion_sensor_hallway"
   outputs:
     - kauf_hallway
 
+hallway_nook:
+  inputs:
+    service:
+      - service_input_button_single_hallway_nook
+  outputs: []
+
 bathroom:
+  motion_off_delay: 300
   inputs:
     motion:
       - "motion_sensor_bathroom"
+    service:
+      - service_input_button_single_bathroom
+      - service_input_button_double_bathroom
   outputs:
     - bathroom_speaker
     - hue_bathroom_center
@@ -219,6 +246,12 @@ bedroom:
   inputs:
     temperature:
       - bedroom_temp_temperature
+    service:
+      - service_input_button_single_bedroom
+      - service_input_button_double_bedroom
+      - name: service_input_button_single_bedroom_lamp
+        target_outputs:
+          - bedroom_lamp
   outputs:
     - bedroom_blind_battery
     - bedroom
