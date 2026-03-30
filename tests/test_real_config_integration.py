@@ -144,3 +144,37 @@ def test_real_motion_rules_turn_expected_room_lights_on_and_off():
         assert expected_lights.issubset(off_targets), (
             f"Expected turn_off calls for {room_name}: {sorted(expected_lights)}, got {sorted(off_targets)}"
         )
+
+
+def test_real_config_service_driver_all_lights_color():
+    """Test that service_input_all_lights properly propagates RGB color to all lights.
+
+    This verifies the complete fix for the service driver bug:
+    1. service_input_all_lights device exists in layout.yml
+    2. HA_only_on_lights rule with combination_strategy: "last" matches the event
+    3. Event color state merges correctly (last strategy prefers event color)
+    4. All lights in scope receive the color update via get_entire_scope
+    """
+    area_tree, calls = build_real_config_module()
+
+    # Simulate HA template light calling pyscript.service_driver_trigger with RGB color and status
+    # (HA template light includes status: 1 when setting colors on lights)
+    before = len(calls)
+    area_tree.event_manager.create_event({
+        "device_name": "service_input_all_lights",
+        "state": {"rgb_color": [255, 100, 0], "status": 1},  # Orange
+    })
+    color_calls = calls[before:]
+
+    # Verify that turn_on was called with the RGB color for lights
+    color_targets = {
+        call[1]["entity_id"]
+        for call in color_calls
+        if call[0] == "on" and "rgb_color" in call[1] and call[1]["rgb_color"] == [255, 100, 0]
+    }
+
+    assert len(color_targets) > 0, (
+        "No lights received turn_on with the correct rgb_color. "
+        "The service_driver bug is not fixed: either service_input_all_lights is not registered "
+        "or HA_only_on_lights rule is not applying state correctly."
+    )

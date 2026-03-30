@@ -2638,13 +2638,23 @@ class KaufLight:
         Only does anything if state value is present, including changing brightness.
         """
 
+        # Use explicit loop instead of generator expression because pyscript's
+        # restricted AST interpreter does not support ast_generatorexp (see issue #1234)
+        has_color_or_brightness = False
+        for k in ["rgb_color", "color_temp", "brightness", "hs_color", "temp"]:
+            if k in state:
+                has_color_or_brightness = True
+                break
+        
         if "status" in state.keys():
             if not state["status"]:  # if being set to off
                 state["off"] = 1
 
             del state["status"]
         else:
-            if not self.is_on():  # if already on, apply values
+            # If no status but we have color/brightness changes, preserve on/off state
+            # Only turn off if we have NO color/brightness and light is off
+            if not has_color_or_brightness and not self.is_on():
                 state["off"] = 1
 
         return self.apply_values(**state)

@@ -45,6 +45,8 @@ HA_only_on_lights:
   trigger_prefix: "service_input_all_"
   scope_functions:
     - get_entire_scope: []
+  state: {}
+  combination_strategy: "last"
   functions:
     -  set_cached_last_set_state: ["$state"]
   device_type_filter: ["light"]

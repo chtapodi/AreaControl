@@ -2,6 +2,9 @@ everything:
   sub_areas:
     - home
     - outside
+  inputs:
+    service:
+      - service_input_all_lights
 home:
   sub_areas:
     - front
