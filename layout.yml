@@ -4,7 +4,7 @@ everything:
     - outside
   inputs:
     service:
-      - service_input_all_lights
+      - service_input_button_all_lights
 home:
   sub_areas:
     - front
@@ -44,7 +44,7 @@ living_room:
     - kauf_bulb_default_fade_2
     - kauf_bulb_default_fade_24
     - kauf_bulb_effect_18
-    - living_room_corner_lamp_identify
+    - living_room_corner_lamp
     - living_room_lamp
     - living_room_fan
     - living_room_tv
@@ -125,6 +125,9 @@ dining_room:
     - kauf_bulb_default_fade_8
     - kauf_bulb_default_fade_9
     - kauf_bulb_effect_17
+    - kauf_hanging_0
+    - kauf_hanging_1
+    - kauf_hanging_2
 
 
 dining_room_0:

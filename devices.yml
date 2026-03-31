@@ -1,6 +1,32 @@
 # Manual device configurations
 # These take precedence over discovered.yml
 
+# Living room Hue lamp (ZHA entity - was incorrectly mapped to identify button)
+living_room_corner_lamp:
+  type: light
+  filters:
+    - light
+    - hue
+
+# Dining room hanging Kauf bulbs (ESPHome)
+kauf_hanging_0:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_1:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_hanging_2:
+  type: light
+  filters:
+    - light
+    - kauf
+
 # Blinds - these are the actual HA entity names
 living_room_blind_battery:
   type: blind

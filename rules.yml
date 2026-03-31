@@ -42,7 +42,7 @@ toggle_light_status:
 
 
 HA_only_on_lights: 
-  trigger_prefix: "service_input_all_"
+  trigger_prefix: "service_input_button_all_"
   scope_functions:
     - get_entire_scope: []
   state: {}
@@ -122,17 +122,40 @@ living_room_zones_on:
     status: 1
   state_functions:
     # - get_last_set_state: []
-    - get_time_based_state: []
+    # - get_time_based_state: []
   combination_strategy: "first_state"
   device_type_filter: ["light"]
 
-# turn_living_room_off:
-#   trigger_prefix: "presence_sensor_living_room"
-#   required_tags: ["off", "presence"]
-#   scope_functions:
-#     - lesser_siblings: []
-#   state:
-#     status: 0
+
+living_room_presence_on:
+  trigger_prefix: "presence_sensor_living_room"
+  required_tags: ["on", "presence"]
+  functions:
+    - motion_sensor_mode: []
+    - update_tracker: []
+  scope_functions:
+    - get_local_scope: []
+  state:
+    status: 1
+  state_functions:
+    # - get_last_set_state: []
+    # - get_time_based_state: []
+  combination_strategy: "first_state"
+  device_type_filter: ["light"]
+
+
+living_room_presence_off:
+  trigger_prefix: "presence_sensor_living_room"
+  required_tags: ["off", "presence"]
+  functions:
+    - motion_sensor_mode: []
+    - check_adjacent_motion: []
+    - schedule_motion_off: []
+  scope_functions:
+    - get_local_scope: []
+  state:
+    status: 0
+  device_type_filter: ["light"]
 
 temp_rise_above:
   trigger_prefix: "sensor_"

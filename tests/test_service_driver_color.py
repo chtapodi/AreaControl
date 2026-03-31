@@ -1,7 +1,7 @@
 """Tests for ServiceDriver color/temperature/brightness propagation via HA_only_on_lights rule.
 
 These tests verify that:
-1. service_input_all_lights device exists in layout.yml
+1. service_input_button_all_lights device exists in layout.yml
 2. HA_only_on_lights rule with combination_strategy: "last" correctly propagates color/temp/brightness
 3. Event states (color, temperature, brightness) override rule states when merged
 4. All lights in scope receive the merged state updates
@@ -81,27 +81,27 @@ def build_real_config_module():
 class TestServiceDriverColorPropagation:
     """Tests for ServiceDriver event propagation with HA_only_on_lights rule."""
 
-    def test_service_input_all_lights_device_exists(self):
-        """Verify that service_input_all_lights device is registered in layout.yml."""
+    def test_service_input_button_all_lights_device_exists(self):
+        """Verify that service_input_button_all_lights device is registered in layout.yml."""
         area_tree, _ = build_real_config_module()
         tree = area_tree.area_tree
 
-        # The service_input_all_lights device should exist in the tree
-        device = tree.get_device("service_input_all_lights")
+        # The service_input_button_all_lights device should exist in the tree
+        device = tree.get_device("service_input_button_all_lights")
         assert device is not None, (
-            "service_input_all_lights device not found in AreaTree. "
+            "service_input_button_all_lights device not found in AreaTree. "
             "Ensure it is registered in layout.yml under everything.inputs.service"
         )
 
     def test_service_driver_color_propagates_to_all_lights(self):
-        """Verify that RGB color from service_input_all_lights reaches all lights."""
+        """Verify that RGB color from service_input_button_all_lights reaches all lights."""
         area_tree, calls = build_real_config_module()
 
         # Simulate a service call with RGB color state
         # Note: must include status: 1 to turn on lights (service_input provides color override)
         before = len(calls)
         area_tree.event_manager.create_event({
-            "device_name": "service_input_all_lights",
+            "device_name": "service_input_button_all_lights",
             "state": {"rgb_color": [255, 0, 0], "status": 1},  # Red
         })
         color_calls = calls[before:]
@@ -122,14 +122,14 @@ class TestServiceDriverColorPropagation:
         )
 
     def test_service_driver_temperature_propagates_to_all_lights(self):
-        """Verify that color_temp from service_input_all_lights reaches all lights."""
+        """Verify that color_temp from service_input_button_all_lights reaches all lights."""
         area_tree, calls = build_real_config_module()
 
         # Simulate a service call with color temperature state
         # Note: must include status: 1 to turn on lights (service_input provides temp override)
         before = len(calls)
         area_tree.event_manager.create_event({
-            "device_name": "service_input_all_lights",
+            "device_name": "service_input_button_all_lights",
             "state": {"color_temp": 2700, "status": 1},  # Warm white
         })
         temp_calls = calls[before:]
@@ -152,7 +152,7 @@ class TestServiceDriverColorPropagation:
     def test_service_driver_brightness_propagates_to_all_lights(self):
         """Verify that the HA_only_on_lights rule properly handles brightness events.
         
-        This test verifies that brightness updates from service_input_all_lights are matched
+        This test verifies that brightness updates from service_input_button_all_lights are matched
         by the rule and processed through state merging, even if the drivers choose not to
         apply incremental brightness-only changes to already-on lights.
         """
@@ -162,46 +162,46 @@ class TestServiceDriverColorPropagation:
         # Simulate a service call with brightness (HA template light set_level)
         # The HA_only_on_lights rule should match the trigger prefix
         result = area_tree.event_manager.check_event({
-            "device_name": "service_input_all_lights",
+            "device_name": "service_input_button_all_lights",
             "state": {"brightness": 200},
         })
 
         # Main assertion: the rule must match (return [True])
         assert result == [True] or True in result, (
-            "HA_only_on_lights rule failed to match 'service_input_all_lights' trigger prefix. "
+            "HA_only_on_lights rule failed to match 'service_input_button_all_lights' trigger prefix. "
             "Verify trigger_prefix configuration and device registration in layout.yml."
         )
 
     def test_service_driver_on_off_propagates_to_all_lights(self):
-        """Verify that on/off status from service_input_all_lights is processed by the rule.
+        """Verify that on/off status from service_input_button_all_lights is processed by the rule.
         
-        This test ensures the HA_only_on_lights rule properly matches service_input_all_lights
+        This test ensures the HA_only_on_lights rule properly matches service_input_button_all_lights
         turn_on and turn_off events, validating the fix for the service driver bug.
         """
-        # Test turn_off via service_input_all_lights
+        # Test turn_off via service_input_button_all_lights
         area_tree_off, calls_off = build_real_config_module()
         result_off = area_tree_off.event_manager.check_event({
-            "device_name": "service_input_all_lights",
+            "device_name": "service_input_button_all_lights",
             "state": {"status": 0},
         })
 
         # The rule should match (return [True])
         assert result_off == [True] or True in result_off, (
-            "HA_only_on_lights rule failed to match service_input_all_lights for turn_off. "
+            "HA_only_on_lights rule failed to match service_input_button_all_lights for turn_off. "
             "Verify rule configuration and trigger_prefix matching."
         )
 
-        # Test turn_on + color via service_input_all_lights
+        # Test turn_on + color via service_input_button_all_lights
         # (Replicates HA template light set_color behavior)
         area_tree_on, calls_on = build_real_config_module()
         result_on = area_tree_on.event_manager.check_event({
-            "device_name": "service_input_all_lights",
+            "device_name": "service_input_button_all_lights",
             "state": {"rgb_color": [127, 200, 100], "status": 1},
         })
 
         # The rule should match
         assert result_on == [True] or True in result_on, (
-            "HA_only_on_lights rule failed to match service_input_all_lights for turn_on + color."
+            "HA_only_on_lights rule failed to match service_input_button_all_lights for turn_on + color."
         )
 
         # Verify that lights received turn_on calls with the color
@@ -212,6 +212,6 @@ class TestServiceDriverColorPropagation:
         }
 
         assert len(on_targets) > 0, (
-            "No lights received turn_on when service_input_all_lights color state was sent. "
+            "No lights received turn_on when service_input_button_all_lights color state was sent. "
             "get_entire_scope() may not be returning all lights in the tree."
         )

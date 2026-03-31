@@ -5,17 +5,18 @@
    outside:
       │
 
-     other:
-          └── (No children)
-
-     twelve:
-          └── (No children)
-
      saildrone:
+          └── (No children)
+
+     other:
           └── (No children)
 
      yard:
           └── (No children)
+
+     twelve:
+          └── (No children)
+   service_input_button_all_lights:
 
    home:
       │
@@ -25,50 +26,52 @@
 
        kitchen:
               │
-         hue_kitchen_ball:
-         motion_sensor_kitchen:
+         service_input_button_single_kitchen:
+         kauf_kitchen_corner:
          service_input_button_single_kitchen_corner:
          service_input_button_double_kitchen:
-         kauf_kitchen_corner:
          coffee_tea:
          kitchen_speaker:
-         service_input_button_single_kitchen:
+         hue_kitchen_ball:
          kauf_hanging_5:
+         motion_sensor_kitchen:
 
        front_room:
               │
-         presence_sensor_living_room_front_room:
 
          (Direct) living_room:
                   │
-           living_room_lamp:
+           living_room_corner_lamp_identify:
            newtv_remote:
-           kauf_bulb_default_fade:
-           kauf_bulb_default_fade_13:
-           living_room_fan:
            kauf_bulb_effect_18:
-           presence_sensor_living_room:
-           roborock_s8_mop_attached:
-
-           (Direct) living_room_front:
-                      │
-
-             (Direct) living_room_hallway:
-                          │
-               presence_sensor_living_room_hallway:
-           living_room_tv:
-           service_input_button_single_living_room:
 
            (Direct) living_room_back:
                       │
              presence_sensor_living_room_back:
-           living_room_fan:
-           living_room_speaker:
-           living_room_blind_battery:
-           living_room_blind_cover:
-           kauf_bulb_default_fade_2:
            kauf_bulb_default_fade_24:
-           living_room_corner_lamp_identify:
+
+           (Direct) living_room_chairs:
+                      │
+
+             (Direct) living_room_chair_1:
+                          │
+               presence_sensor_living_room_chair_0:
+
+             (Direct) living_room_chair_0:
+                          │
+               presence_sensor_living_room_chair_0:
+           living_room_tv:
+           living_room_fan:
+           presence_sensor_living_room:
+           kauf_bulb_default_fade_2:
+           service_input_button_single_living_room:
+           living_room_speaker:
+           kauf_bulb_default_fade:
+           living_room_blind_cover:
+           living_room_fan:
+           kauf_bulb_default_fade_13:
+           living_room_lamp:
+           roborock_s8_mop_attached:
 
            (Direct) living_room_middle:
                       │
@@ -81,42 +84,38 @@
                               │
                  presence_sensor_living_room_couch_1:
 
-               living_room_couch_2:
-                              │
-                 presence_sensor_living_room_couch_2:
-
                living_room_couch_0:
                               │
                  presence_sensor_living_room_couch_0:
-             service_input_button_single_living_room_middle:
 
-           (Direct) living_room_chairs:
+               living_room_couch_2:
+                              │
+                 presence_sensor_living_room_couch_2:
+             service_input_button_single_living_room_middle:
+           living_room_blind_battery:
+
+           (Direct) living_room_front:
                       │
 
-             (Direct) living_room_chair_1:
+             (Direct) living_room_hallway:
                           │
-               presence_sensor_living_room_chair_0:
-
-             (Direct) living_room_chair_0:
-                          │
-               presence_sensor_living_room_chair_0:
+               presence_sensor_living_room_hallway:
 
          (Direct) dining_room:
                   │
 
-           (Direct) dining_room_0:
+           (Direct) dining_room_hallway:
                       │
-             presence_sensor_living_room_dining_room_0:
-
-           (Direct) dining_room_2:
-                      │
-             presence_sensor_living_room_dining_room_2:
-           kauf_bulb_default_fade_8:
-           kauf_bulb_effect_17:
+             presence_sensor_living_room_dining_room_hallway:
 
            (Direct) dining_room_1:
                       │
              presence_sensor_living_room_dining_room_1:
+
+           (Direct) dining_room_0:
+                      │
+             presence_sensor_living_room_dining_room_0:
+           kauf_bulb_effect_17:
            dining_room_speaker:
 
            (Direct) dining_room_3:
@@ -124,57 +123,24 @@
              presence_sensor_living_room_dining_room_3:
            kauf_bulb_default_fade_9:
 
-           (Direct) dining_room_hallway:
+           (Direct) dining_room_2:
                       │
-             presence_sensor_living_room_dining_room_hallway:
+             presence_sensor_living_room_dining_room_2:
+           kauf_bulb_default_fade_8:
+         presence_sensor_living_room_front_room:
 
      back:
           │
 
-       bedroom:
-              │
-         bedroom:
-         service_input_button_double_bedroom:
-         service_input_button_single_bedroom_lamp:
-         splug_0_switch_1:
-         bedroom_blind_battery:
-         service_input_button_single_bedroom:
-         core_600s:
-         bedroom_lamp:
-         bedroom_fan:
-         splug_1_switch_1:
-         kauf_bulb_effect_16:
-         kauf_bulb_effect_15:
-
        bathroom:
               │
-         service_input_button_double_bathroom:
          kauf_bathroom_0:
          motion_sensor_bathroom:
-         bathroom_speaker:
+         hue_bathroom_center:
+         service_input_button_double_bathroom:
          kauf_bathroom_1:
          service_input_button_single_bathroom:
-         hue_bathroom_center:
-
-       office:
-              │
-         office_fan:
-         hue_office_light:
-         motion_sensor_office:
-         bambu_x1c:
-         hue_0_firmware:
-         freezer:
-         service_input_button_single_office:
-
-       laundry_room:
-              │
-         kauf_bulb_default_fade_4:
-         kauf_laundry_room_0:
-         kauf_bulb_default_fade_25:
-         dryer:
-         washer:
-         motion_sensor_laundry_room:
-         service_input_button_single_laundry_room:
+         bathroom_speaker:
 
        hallway:
               │
@@ -184,4 +150,38 @@
          hallway_nook:
                   │
            service_input_button_single_hallway_nook:
-   service_input_all_lights:
+
+       office:
+              │
+         office_fan:
+         motion_sensor_office:
+         hue_0_firmware:
+         freezer:
+         service_input_button_single_office:
+         hue_office_light:
+         bambu_x1c:
+
+       laundry_room:
+              │
+         dryer:
+         kauf_bulb_default_fade_4:
+         washer:
+         service_input_button_single_laundry_room:
+         kauf_laundry_room_0:
+         kauf_bulb_default_fade_25:
+         motion_sensor_laundry_room:
+
+       bedroom:
+              │
+         bedroom:
+         core_600s:
+         bedroom_blind_battery:
+         bedroom_fan:
+         service_input_button_double_bedroom:
+         service_input_button_single_bedroom_lamp:
+         bedroom_lamp:
+         kauf_bulb_effect_15:
+         kauf_bulb_effect_16:
+         service_input_button_single_bedroom:
+         splug_1_switch_1:
+         splug_0_switch_1:

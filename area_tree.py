@@ -807,10 +807,9 @@ def schedule_motion_off(device, *args):
 
     log.info(f"schedule_motion_off: scheduling off for {area_name} in {delay}s")
 
-    @task_unique(f"motion_off_{area_name}", kill_me=True)
     async def _delayed_off():
         log.info(f"schedule_motion_off: [{area_name}] waiting {delay}s before turning off")
-        await asyncio.sleep(delay)
+        await task.sleep(delay)
         log.info(f"schedule_motion_off: [{area_name}] delay elapsed — applying off")
         # Re-check motion sensor mode at execution time
         if not motion_sensor_mode():
@@ -1633,7 +1632,7 @@ class EventManager:
 
             function_states = []
             # if there are state functions, run them
-            if "state_functions" in rule:
+            if "state_functions" in rule and rule["state_functions"] is not None:
                 log.info(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
                 for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
