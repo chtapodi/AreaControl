@@ -1,37 +1,77 @@
 Home Assistant Device Audit
 ===========================
-Generated: 2026-03-30T22:01:37Z
+Generated: 2026-04-29T01:43:37Z
 
-Known devices (devices.yml): 159
-Devices in Home Assistant: 152
-Devices missing from devices.yml: 3
+Known devices (devices.yml): 163
+Devices in Home Assistant: 147
+Devices missing from devices.yml: 6
 
 Missing devices (sorted by name):
-browser_mod_e734b69f_6cdfff23 (offline)
+browser_mod_0f16ee45_9fca1d7d
+eWeLink SNZB-02P
+eWeLink SNZB-02P
+eWeLink TH01 (offline)
 Kiosk Mode (offline)
 Tv (offline)
 
 === Category: binary_sensor (1 devices) ===
-- browser_mod_e734b69f_6cdfff23 (device_id=1c885575050f136c36ed1453503cc615, online=no)
+- browser_mod_0f16ee45_9fca1d7d (device_id=e61c629bf179ddd986802695d1787814, online=yes)
     Manufacturer/Model: Browser Mod / Unknown Model
     Area ID: Unknown Area
     Domains: binary_sensor, light, media_player, sensor
     Entities:
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23 -> state=unavailable, disabled_by=None
-      * light.browser_mod_e734b69f_6cdfff23_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_e734b69f_6cdfff23 -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_panel -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_battery -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23_browser_charging -> state=unavailable, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_id -> state=browser_mod_0f16ee45_9fca1d7d, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_path -> state=/lovelace/0, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_visibility -> state=visible, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_useragent -> state=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_user -> state=xavier, disabled_by=None
+      * binary_sensor.browser_mod_0f16ee45_9fca1d7d_browser_fullykiosk -> state=off, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_width -> state=1010, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_height -> state=949, disabled_by=None
+      * binary_sensor.browser_mod_0f16ee45_9fca1d7d_browser_dark_mode -> state=on, disabled_by=None
+      * binary_sensor.browser_mod_0f16ee45_9fca1d7d -> state=off, disabled_by=None
+      * light.browser_mod_0f16ee45_9fca1d7d_screen -> state=unknown, disabled_by=None
+      * media_player.browser_mod_0f16ee45_9fca1d7d -> state=unknown, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_panel -> state=Overview - Home, disabled_by=None
+
+=== Category: button (3 devices) ===
+- eWeLink SNZB-02P (device_id=db5fc1e622fb9ae06fa71729f7c19751, online=yes)
+    Manufacturer/Model: eWeLink / SNZB-02P
+    Area ID: Unknown Area
+    Domains: button, sensor, update
+    Entities:
+      * sensor.ewelink_snzb_02p_rssi_3 -> state=None, disabled_by=integration
+      * sensor.ewelink_snzb_02p_lqi_3 -> state=None, disabled_by=integration
+      * update.laundry_room_temp_firmware -> state=unknown, disabled_by=None
+      * button.laundry_room_temp_identify -> state=unknown, disabled_by=None
+      * sensor.ewelink_snzb_02p_battery -> state=100.0, disabled_by=None
+      * sensor.ewelink_snzb_02p_temperature -> state=73.04, disabled_by=None
+      * sensor.ewelink_snzb_02p_humidity -> state=50.4, disabled_by=None
+
+- eWeLink SNZB-02P (device_id=ea649080fae87ae484d8853d9a0fe400, online=yes)
+    Manufacturer/Model: eWeLink / SNZB-02P
+    Area ID: Unknown Area
+    Domains: button, sensor, update
+    Entities:
+      * sensor.ewelink_snzb_02p_rssi_5 -> state=None, disabled_by=integration
+      * sensor.ewelink_snzb_02p_lqi_5 -> state=None, disabled_by=integration
+      * update.driveway_firmware -> state=unknown, disabled_by=None
+      * button.driveway_identify -> state=unknown, disabled_by=None
+      * sensor.ewelink_snzb_02p_battery_2 -> state=100.0, disabled_by=None
+      * sensor.ewelink_snzb_02p_temperature_2 -> state=70.34, disabled_by=None
+      * sensor.ewelink_snzb_02p_humidity_2 -> state=50.9, disabled_by=None
+
+- eWeLink TH01 (device_id=4045677e45d86a5d644332b65ea6ecc6, online=no)
+    Manufacturer/Model: eWeLink / TH01
+    Area ID: Unknown Area
+    Domains: button, sensor
+    Entities:
+      * sensor.ewelink_th01_rssi_2 -> state=None, disabled_by=integration
+      * sensor.ewelink_th01_lqi_2 -> state=None, disabled_by=integration
+      * button.bedroom_temp_identify -> state=unavailable, disabled_by=None
+      * sensor.ewelink_th01_battery -> state=unavailable, disabled_by=None
+      * sensor.ewelink_th01_temperature -> state=unavailable, disabled_by=None
+      * sensor.ewelink_th01_humidity -> state=unavailable, disabled_by=None
 
 === Category: media_player (1 devices) ===
 - Tv (device_id=804ac142715859779f8f08450353ce4c, online=no)
@@ -53,26 +93,62 @@ Tv (offline)
 
 All Home Assistant devices (missing first):
 
-- browser_mod_e734b69f_6cdfff23 [MISSING] (device_id=1c885575050f136c36ed1453503cc615, online=no)
+- browser_mod_0f16ee45_9fca1d7d [MISSING] (device_id=e61c629bf179ddd986802695d1787814, online=yes)
     Manufacturer/Model: Browser Mod / Unknown Model
     Area ID: Unknown Area
     Domains: binary_sensor, light, media_player, sensor
     Entities:
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23 -> state=unavailable, disabled_by=None
-      * light.browser_mod_e734b69f_6cdfff23_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_e734b69f_6cdfff23 -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_panel -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_e734b69f_6cdfff23_browser_battery -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_e734b69f_6cdfff23_browser_charging -> state=unavailable, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_id -> state=browser_mod_0f16ee45_9fca1d7d, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_path -> state=/lovelace/0, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_visibility -> state=visible, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_useragent -> state=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_user -> state=xavier, disabled_by=None
+      * binary_sensor.browser_mod_0f16ee45_9fca1d7d_browser_fullykiosk -> state=off, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_width -> state=1010, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_browser_height -> state=949, disabled_by=None
+      * binary_sensor.browser_mod_0f16ee45_9fca1d7d_browser_dark_mode -> state=on, disabled_by=None
+      * binary_sensor.browser_mod_0f16ee45_9fca1d7d -> state=off, disabled_by=None
+      * light.browser_mod_0f16ee45_9fca1d7d_screen -> state=unknown, disabled_by=None
+      * media_player.browser_mod_0f16ee45_9fca1d7d -> state=unknown, disabled_by=None
+      * sensor.browser_mod_0f16ee45_9fca1d7d_panel -> state=Overview - Home, disabled_by=None
+
+- eWeLink SNZB-02P [MISSING] (device_id=db5fc1e622fb9ae06fa71729f7c19751, online=yes)
+    Manufacturer/Model: eWeLink / SNZB-02P
+    Area ID: Unknown Area
+    Domains: button, sensor, update
+    Entities:
+      * sensor.ewelink_snzb_02p_rssi_3 -> state=None, disabled_by=integration
+      * sensor.ewelink_snzb_02p_lqi_3 -> state=None, disabled_by=integration
+      * update.laundry_room_temp_firmware -> state=unknown, disabled_by=None
+      * button.laundry_room_temp_identify -> state=unknown, disabled_by=None
+      * sensor.ewelink_snzb_02p_battery -> state=100.0, disabled_by=None
+      * sensor.ewelink_snzb_02p_temperature -> state=73.04, disabled_by=None
+      * sensor.ewelink_snzb_02p_humidity -> state=50.4, disabled_by=None
+
+- eWeLink SNZB-02P [MISSING] (device_id=ea649080fae87ae484d8853d9a0fe400, online=yes)
+    Manufacturer/Model: eWeLink / SNZB-02P
+    Area ID: Unknown Area
+    Domains: button, sensor, update
+    Entities:
+      * sensor.ewelink_snzb_02p_rssi_5 -> state=None, disabled_by=integration
+      * sensor.ewelink_snzb_02p_lqi_5 -> state=None, disabled_by=integration
+      * update.driveway_firmware -> state=unknown, disabled_by=None
+      * button.driveway_identify -> state=unknown, disabled_by=None
+      * sensor.ewelink_snzb_02p_battery_2 -> state=100.0, disabled_by=None
+      * sensor.ewelink_snzb_02p_temperature_2 -> state=70.34, disabled_by=None
+      * sensor.ewelink_snzb_02p_humidity_2 -> state=50.9, disabled_by=None
+
+- eWeLink TH01 [MISSING] (device_id=4045677e45d86a5d644332b65ea6ecc6, online=no)
+    Manufacturer/Model: eWeLink / TH01
+    Area ID: Unknown Area
+    Domains: button, sensor
+    Entities:
+      * sensor.ewelink_th01_rssi_2 -> state=None, disabled_by=integration
+      * sensor.ewelink_th01_lqi_2 -> state=None, disabled_by=integration
+      * button.bedroom_temp_identify -> state=unavailable, disabled_by=None
+      * sensor.ewelink_th01_battery -> state=unavailable, disabled_by=None
+      * sensor.ewelink_th01_temperature -> state=unavailable, disabled_by=None
+      * sensor.ewelink_th01_humidity -> state=unavailable, disabled_by=None
 
 - Kiosk Mode [MISSING] (device_id=a1bbe52cd1a34423d617131b990c1698, online=no)
     Manufacturer/Model: NemesisRE / plugin
@@ -90,149 +166,36 @@ All Home Assistant devices (missing first):
       * media_player.tv_2 -> state=None, disabled_by=config_entry
       * remote.tv -> state=None, disabled_by=config_entry
 
-- AirNow [KNOWN] (device_id=5310b11095372d8e153ecc67ba731e83, online=yes)
+- AirNow [KNOWN] (device_id=502b304690f58d40ed73df4bfbfd5420, online=yes)
     Manufacturer/Model: AirNow / Unknown Model
     Area ID: Unknown Area
     Domains: sensor
     Entities:
-      * sensor.airnow_air_quality_index -> state=64, disabled_by=None
-      * sensor.airnow_pm2_5 -> state=16.1, disabled_by=None
-      * sensor.airnow_ozone -> state=0.031, disabled_by=None
+      * sensor.airnow_air_quality_index -> state=54, disabled_by=None
+      * sensor.airnow_pm2_5 -> state=10.7, disabled_by=None
+      * sensor.airnow_ozone -> state=0.038, disabled_by=None
       * sensor.airnow_pm2_5_reporting_station -> state=Oakland, disabled_by=None
       * sensor.airnow_pm10 -> state=unknown, disabled_by=None
 
-- Anna's pixel [KNOWN] (device_id=638ca3751ae2585abd1efa65547a40e2, online=yes)
+- Anna's pixel [KNOWN] (device_id=e4c7a35ae5121505c1b8022350ba9c8c, online=yes)
     Manufacturer/Model: Google / Pixel 7
     Area ID: Unknown Area
     Domains: binary_sensor, device_tracker, sensor
     Entities:
-      * device_tracker.anna_s_pixel_2 -> state=Twelve, disabled_by=None
-      * sensor.anna_s_pixel_detected_activity -> state=walking, disabled_by=None
-      * sensor.anna_s_pixel_sleep_confidence -> state=1, disabled_by=None
-      * sensor.anna_s_pixel_sleep_segment -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_current_version -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_app_rx_gb -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_app_tx_gb -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_app_memory -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_app_inactive -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_app_standby_bucket -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_app_importance -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_ringer_mode -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_audio_mode -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_headphones -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_mic_muted -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_speakerphone -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_music_active -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_alarm -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_call -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_music -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_ringer -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_notification -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_system -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_dtmf -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_volume_level_accessibility -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_battery_level_2 -> state=70, disabled_by=None
+      * device_tracker.anna_s_pixel_2 -> state=home, disabled_by=None
+      * sensor.anna_s_pixel_detected_activity -> state=unknown, disabled_by=None
+      * sensor.anna_s_pixel_sleep_confidence -> state=16, disabled_by=None
+      * sensor.anna_s_pixel_battery_level_2 -> state=43, disabled_by=None
       * sensor.anna_s_pixel_battery_state_2 -> state=discharging, disabled_by=None
       * binary_sensor.anna_s_pixel_is_charging_2 -> state=off, disabled_by=None
       * sensor.anna_s_pixel_charger_type_2 -> state=none, disabled_by=None
       * sensor.anna_s_pixel_battery_health_2 -> state=good, disabled_by=None
-      * sensor.anna_s_pixel_battery_temperature_2 -> state=27.0, disabled_by=None
-      * sensor.anna_s_pixel_battery_power -> state=-1.29, disabled_by=None
-      * sensor.anna_s_pixel_bluetooth_connection -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_bluetooth_state -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_ble_transmitter_2 -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_beacon_monitor -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_screen_brightness -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_screen_off_timeout -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_do_not_disturb_sensor -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_accent_color -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_work_profile -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_geocoded_location_2 -> state=646 Bancroft Way, Berkeley, CA 94710, USA, disabled_by=None
-      * binary_sensor.anna_s_pixel_device_locked -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_device_secure -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_keyguard_locked -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_keyguard_secure -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_last_used_app -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_last_reboot -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_last_update_trigger -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_light_sensor -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_high_accuracy_mode -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_high_accuracy_update_interval -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_mobile_data -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_mobile_data_roaming -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_wifi_connection -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_wifi_bssid -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_wifi_ip_address -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_wifi_link_speed -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_wifi_state -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_wifi_frequency -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_wifi_signal_strength -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_public_ip_address -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_network_type -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_next_alarm_2 -> state=unavailable, disabled_by=None
-      * sensor.anna_s_pixel_last_notification -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_last_removed_notification -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_active_notification_count -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_media_session -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_phone_state -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_sim_1 -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_sim_2 -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_interactive -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_doze_mode -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_power_save -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_pressure_sensor -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_proximity_sensor -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_steps_sensor -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_internal_storage -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_external_storage -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_current_time_zone -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_mobile_rx_gb -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_mobile_tx_gb -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_total_rx_gb -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_total_tx_gb -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_android_auto -> state=None, disabled_by=integration
-      * sensor.anna_sleep -> state=1113118.22, disabled_by=None
+      * sensor.anna_s_pixel_battery_temperature_2 -> state=32.0, disabled_by=None
+      * sensor.anna_s_pixel_battery_power -> state=-0.92, disabled_by=None
+      * sensor.anna_s_pixel_geocoded_location_2 -> state=634 Broadmoor Blvd, San Leandro, CA 94577, USA, disabled_by=None
+      * sensor.anna_sleep -> state=1147239.20, disabled_by=None
       * binary_sensor.anna_is_sleeping -> state=off, disabled_by=None
-      * sensor.anna_s_pixel_os_version -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_security_patch -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_battery -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_name -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_charging_status -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_ev_connector_type -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_fuel -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_fuel_type -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_odometer -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_nfc_state -> state=None, disabled_by=integration
-      * binary_sensor.anna_s_pixel_hotspot_state -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_ipv6_addresses -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_remaining_charge_time -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_signal_strength_sim_1 -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_signal_strength_sim_2 -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_data_network_type_sim_1 -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_data_network_type_sim_2 -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_screen_orientation -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_screen_rotation -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_speed -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_car_range_remaining -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_active_calories_burned -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_daily_distance -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_daily_elevation_gained -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_daily_floors -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_daily_steps -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_total_calories_burned -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_vo2_max -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_battery_cycle_count -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_blood_glucose -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_diastolic_blood_pressure -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_heart_rate -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_systolic_blood_pressure -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_weight -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_body_fat -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_heart_rate_variability -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_oxygen_saturation -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_respiratory_rate -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_resting_heart_rate -> state=None, disabled_by=integration
-      * sensor.anna_s_pixel_sleep_duration -> state=None, disabled_by=integration
+      * sensor.anna_s_pixel_next_alarm -> state=unavailable, disabled_by=None
 
 - apexcharts-card [KNOWN] (device_id=8a44091e473ba28e94500a984017fde3, online=yes)
     Manufacturer/Model: RomRider / plugin
@@ -242,7 +205,7 @@ All Home Assistant devices (missing first):
       * switch.apexcharts_card_pre_release -> state=None, disabled_by=integration
       * update.apexcharts_card_update -> state=on, disabled_by=None
 
-- Backup [KNOWN] (device_id=7c1e17a35550b2881b8c9a307a342760, online=yes)
+- Backup [KNOWN] (device_id=ae7777aa55eb1583d2ffa6dff962414a, online=yes)
     Manufacturer/Model: Home Assistant / Home Assistant Backup
     Area ID: Unknown Area
     Domains: event, sensor
@@ -250,8 +213,8 @@ All Home Assistant devices (missing first):
       * sensor.backup_backup_manager_state -> state=idle, disabled_by=None
       * sensor.backup_next_scheduled_automatic_backup -> state=unknown, disabled_by=None
       * sensor.backup_last_successful_automatic_backup -> state=unknown, disabled_by=None
-      * event.backup_automatic_backup -> state=unknown, disabled_by=None
       * sensor.backup_last_attempted_automatic_backup -> state=unknown, disabled_by=None
+      * event.backup_automatic_backup -> state=unknown, disabled_by=None
 
 - Backyard camera [KNOWN] (device_id=872a6554cef1439149fab5883c34ab5d, online=yes)
     Manufacturer/Model: Google Nest / Camera
@@ -259,20 +222,20 @@ All Home Assistant devices (missing first):
     Domains: camera, event
     Entities:
       * camera.backyard_camera -> state=streaming, disabled_by=None
-      * event.backyard_camera_motion -> state=2026-03-30T19:38:34.004+00:00, disabled_by=None
+      * event.backyard_camera_motion -> state=2026-04-29T01:24:12.125+00:00, disabled_by=None
 
-- Backyard Temp [KNOWN] (device_id=f91955da171c62387e3a5c9eba8f42a2, online=no)
+- Backyard Temp [KNOWN] (device_id=f91955da171c62387e3a5c9eba8f42a2, online=yes)
     Manufacturer/Model: eWeLink / SNZB-02P
     Area ID: backyard
     Domains: button, sensor, update
     Entities:
       * sensor.ewelink_snzb_02p_rssi_4 -> state=None, disabled_by=integration
       * sensor.ewelink_snzb_02p_lqi_4 -> state=None, disabled_by=integration
-      * sensor.backyard_temp_battery -> state=unavailable, disabled_by=None
-      * update.backyard_temp_firmware -> state=unavailable, disabled_by=None
-      * sensor.backyard_temp_humidity -> state=unavailable, disabled_by=None
-      * button.backyard_temp_identify -> state=unavailable, disabled_by=None
-      * sensor.backyard_temp_temperature -> state=unavailable, disabled_by=None
+      * sensor.backyard_temp_battery -> state=38.0, disabled_by=None
+      * update.backyard_temp_firmware -> state=unknown, disabled_by=None
+      * sensor.backyard_temp_humidity -> state=46.3, disabled_by=None
+      * button.backyard_temp_identify -> state=unknown, disabled_by=None
+      * sensor.backyard_temp_temperature -> state=71.78, disabled_by=None
 
 - Bambu X1C [KNOWN] (device_id=c3906015837fbb15553c568e29bc282c, online=yes)
     Manufacturer/Model: Third Reality, Inc / 3RSP02028BZ
@@ -283,16 +246,16 @@ All Home Assistant devices (missing first):
       * sensor.third_reality_inc_3rsp02028bz_lqi_4 -> state=None, disabled_by=integration
       * switch.bambu_x1c -> state=on, disabled_by=None
       * sensor.bambu_x1c_ac_frequency -> state=60.0, disabled_by=None
-      * sensor.bambu_x1c_current -> state=0.146, disabled_by=None
+      * sensor.bambu_x1c_current -> state=0.138, disabled_by=None
       * update.bambu_x1c_firmware -> state=on, disabled_by=None
       * button.bambu_x1c_identify -> state=unknown, disabled_by=None
-      * sensor.bambu_x1c_instantaneous_demand -> state=0.2, disabled_by=None
-      * sensor.bambu_x1c_power -> state=9.1, disabled_by=None
-      * sensor.bambu_x1c_power_factor -> state=50, disabled_by=None
+      * sensor.bambu_x1c_instantaneous_demand -> state=0.0, disabled_by=None
+      * sensor.bambu_x1c_power -> state=9.2, disabled_by=None
+      * sensor.bambu_x1c_power_factor -> state=53, disabled_by=None
       * button.bambu_x1c_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.bambu_x1c_start_up_behavior -> state=On, disabled_by=None
-      * sensor.bambu_x1c_summation_delivered -> state=63.8569477777778, disabled_by=None
-      * sensor.bambu_x1c_voltage -> state=122.9, disabled_by=None
+      * sensor.bambu_x1c_summation_delivered -> state=75.0057836111111, disabled_by=None
+      * sensor.bambu_x1c_voltage -> state=123.7, disabled_by=None
       * number.bambu_x1c_turn_off_delay -> state=0, disabled_by=None
       * number.bambu_x1c_turn_on_delay -> state=0, disabled_by=None
 
@@ -313,15 +276,15 @@ All Home Assistant devices (missing first):
       * sensor.bedroom_fan_ac_frequency -> state=60.0, disabled_by=None
       * switch.bedroom_fan -> state=off, disabled_by=None
       * sensor.bedroom_fan_current -> state=0.0, disabled_by=None
-      * update.bedroom_fan_firmware -> state=on, disabled_by=None
+      * update.bedroom_fan_firmware -> state=unknown, disabled_by=None
       * button.bedroom_fan_identify -> state=unknown, disabled_by=None
-      * sensor.bedroom_fan_instantaneous_demand -> state=0.1, disabled_by=None
+      * sensor.bedroom_fan_instantaneous_demand -> state=0.0, disabled_by=None
       * sensor.bedroom_fan_power -> state=0.0, disabled_by=None
       * sensor.bedroom_fan_power_factor -> state=0, disabled_by=None
       * button.bedroom_fan_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.bedroom_fan_start_up_behavior -> state=PreviousValue, disabled_by=None
-      * sensor.bedroom_fan_summation_delivered -> state=71.7447966666667, disabled_by=None
-      * sensor.bedroom_fan_voltage -> state=124.0, disabled_by=None
+      * sensor.bedroom_fan_summation_delivered -> state=82.8064205555556, disabled_by=None
+      * sensor.bedroom_fan_voltage -> state=122.2, disabled_by=None
       * fan.bedroom_fan -> state=off, disabled_by=None
       * number.bedroom_fan_turn_off_delay -> state=0, disabled_by=None
       * number.bedroom_fan_turn_on_delay -> state=0, disabled_by=None
@@ -331,7 +294,7 @@ All Home Assistant devices (missing first):
     Area ID: bedroom
     Domains: button, light, number, select, sensor, update
     Entities:
-      * light.bedroom_lamp -> state=off, disabled_by=None
+      * light.bedroom_lamp -> state=on, disabled_by=None
       * button.bedroom_lamp_identify -> state=unknown, disabled_by=None
       * sensor.bedroom_lamp_rssi -> state=None, disabled_by=integration
       * sensor.bedroom_lamp_lqi -> state=None, disabled_by=integration
@@ -347,24 +310,12 @@ All Home Assistant devices (missing first):
     Entities:
       * media_player.bedroom -> state=off, disabled_by=None
 
-- Bedroom Temp [KNOWN] (device_id=df74c12a887416bdfd94cf4bdb739d65, online=no)
-    Manufacturer/Model: eWeLink / TH01
-    Area ID: bedroom
-    Domains: button, sensor
-    Entities:
-      * sensor.ewelink_th01_rssi_2 -> state=None, disabled_by=integration
-      * sensor.ewelink_th01_lqi_2 -> state=None, disabled_by=integration
-      * sensor.bedroom_temp_battery -> state=unavailable, disabled_by=None
-      * sensor.bedroom_temp_humidity -> state=unavailable, disabled_by=None
-      * button.bedroom_temp_identify -> state=unavailable, disabled_by=None
-      * sensor.bedroom_temp_temperature -> state=unavailable, disabled_by=None
-
 - bedroom_blind [KNOWN] (device_id=b2aa6fd79177d7ed64aac4ece73eed6f, online=yes)
     Manufacturer/Model: IKEA of Sweden / TREDANSEN block-out cellul blind
     Area ID: bedroom
     Domains: button, cover, sensor, switch, update
     Entities:
-      * sensor.bedroom_blind_battery -> state=88.0, disabled_by=None
+      * sensor.bedroom_blind_battery -> state=86.0, disabled_by=None
       * cover.bedroom_blind_cover -> state=open, disabled_by=None
       * button.bedroom_blind_identify -> state=unknown, disabled_by=None
       * sensor.bedroom_blind_lqi -> state=None, disabled_by=integration
@@ -416,89 +367,13 @@ All Home Assistant devices (missing first):
       * sensor.browser_mod_0bb01dcf_0267f4b3_browser_height -> state=962, disabled_by=None
       * binary_sensor.browser_mod_0bb01dcf_0267f4b3_browser_dark_mode -> state=on, disabled_by=None
       * binary_sensor.browser_mod_0bb01dcf_0267f4b3 -> state=off, disabled_by=None
-      * light.browser_mod_0bb01dcf_0267f4b3_screen -> state=off, disabled_by=None
+      * light.browser_mod_0bb01dcf_0267f4b3_screen -> state=unknown, disabled_by=None
       * media_player.browser_mod_0bb01dcf_0267f4b3 -> state=unknown, disabled_by=None
       * sensor.browser_mod_0bb01dcf_0267f4b3_panel -> state=Screen - Home, disabled_by=None
       * sensor.browser_mod_0bb01dcf_0267f4b3_browser_battery -> state=100, disabled_by=None
       * binary_sensor.browser_mod_0bb01dcf_0267f4b3_browser_charging -> state=on, disabled_by=None
 
-- browser_mod_0c939d69_bd067a95 [KNOWN] (device_id=45dffe2e959bfa54a3eb1dba25b01a85, online=no)
-    Manufacturer/Model: Browser Mod / Unknown Model
-    Area ID: Unknown Area
-    Domains: binary_sensor, light, media_player, sensor
-    Entities:
-      * sensor.browser_mod_0c939d69_bd067a95_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_0c939d69_bd067a95_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_0c939d69_bd067a95_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_0c939d69_bd067a95 -> state=unavailable, disabled_by=None
-      * light.browser_mod_0c939d69_bd067a95_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_0c939d69_bd067a95 -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_0c939d69_bd067a95_panel -> state=unavailable, disabled_by=None
-
-- browser_mod_9db1c7b6_75736960 [KNOWN] (device_id=e072e82e516afb95e81d37b13db671a6, online=no)
-    Manufacturer/Model: Browser Mod / Unknown Model
-    Area ID: Unknown Area
-    Domains: binary_sensor, light, media_player, sensor
-    Entities:
-      * sensor.browser_mod_9db1c7b6_75736960_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_9db1c7b6_75736960_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_9db1c7b6_75736960_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_9db1c7b6_75736960 -> state=unavailable, disabled_by=None
-      * light.browser_mod_9db1c7b6_75736960_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_9db1c7b6_75736960 -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_9db1c7b6_75736960_panel -> state=unavailable, disabled_by=None
-
-- browser_mod_a18e66b5_364f7747 [KNOWN] (device_id=c362d855d133031cdf6e2bf0e51c4943, online=no)
-    Manufacturer/Model: Browser Mod / Unknown Model
-    Area ID: Unknown Area
-    Domains: binary_sensor, light, media_player, sensor
-    Entities:
-      * sensor.browser_mod_a18e66b5_364f7747_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_a18e66b5_364f7747_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_a18e66b5_364f7747_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_a18e66b5_364f7747 -> state=unavailable, disabled_by=None
-      * light.browser_mod_a18e66b5_364f7747_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_a18e66b5_364f7747 -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_a18e66b5_364f7747_panel -> state=unavailable, disabled_by=None
-
-- browser_mod_cad64fd2_349956f4 [KNOWN] (device_id=6dd6f65041af81617920b60c5333331d, online=no)
-    Manufacturer/Model: Browser Mod / Unknown Model
-    Area ID: Unknown Area
-    Domains: binary_sensor, light, media_player, sensor
-    Entities:
-      * sensor.browser_mod_cad64fd2_349956f4_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_cad64fd2_349956f4_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_cad64fd2_349956f4_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_cad64fd2_349956f4 -> state=unavailable, disabled_by=None
-      * light.browser_mod_cad64fd2_349956f4_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_cad64fd2_349956f4 -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_cad64fd2_349956f4_panel -> state=unavailable, disabled_by=None
-
-- browser_mod_fc9e9079_09559194 [KNOWN] (device_id=2dacb762ec7307a62637f0b81a5ce0cd, online=no)
+- browser_mod_fc9e9079_09559194 [KNOWN] (device_id=c399fba97312224181aeef9f21b37ec3, online=no)
     Manufacturer/Model: Browser Mod / Unknown Model
     Area ID: Unknown Area
     Domains: binary_sensor, light, media_player, sensor
@@ -537,13 +412,13 @@ All Home Assistant devices (missing first):
       * sensor.button_0_lqi -> state=None, disabled_by=integration
       * sensor.button_0_rssi -> state=None, disabled_by=integration
 
-- button_1 [KNOWN] (device_id=cb5a2721c953792d8ff0e774c6941db0, online=no)
+- button_1 [KNOWN] (device_id=cb5a2721c953792d8ff0e774c6941db0, online=yes)
     Manufacturer/Model: LUMI / lumi.sensor_switch.aq3
     Area ID: bathroom
     Domains: sensor
     Entities:
-      * sensor.lumi_lumi_sensor_swit_power -> state=unavailable, disabled_by=None
-      * sensor.button_1_device_temperature -> state=unavailable, disabled_by=None
+      * sensor.lumi_lumi_sensor_swit_power -> state=100.0, disabled_by=None
+      * sensor.button_1_device_temperature -> state=73.4, disabled_by=None
       * sensor.button_1_lqi -> state=None, disabled_by=integration
       * sensor.button_1_rssi -> state=None, disabled_by=integration
 
@@ -552,7 +427,7 @@ All Home Assistant devices (missing first):
     Area ID: living_room
     Domains: sensor
     Entities:
-      * sensor.lumi_lumi_sensor_swit_63a4bc07_power -> state=66.0, disabled_by=None
+      * sensor.lumi_lumi_sensor_swit_63a4bc07_power -> state=59.0, disabled_by=None
       * sensor.button_3_device_temperature -> state=82.4, disabled_by=None
       * sensor.button_3_rssi -> state=None, disabled_by=integration
       * sensor.button_3_lqi -> state=None, disabled_by=integration
@@ -624,15 +499,15 @@ All Home Assistant devices (missing first):
       * switch.coffee_tea -> state=on, disabled_by=None
       * sensor.coffee_tea_ac_frequency -> state=60.0, disabled_by=None
       * sensor.coffee_tea_current -> state=0.16, disabled_by=None
-      * update.coffee_tea_firmware -> state=on, disabled_by=None
+      * update.coffee_tea_firmware -> state=unknown, disabled_by=None
       * button.coffee_tea_identify -> state=unknown, disabled_by=None
       * sensor.coffee_tea_instantaneous_demand -> state=0.0, disabled_by=None
-      * sensor.coffee_tea_power -> state=5.0, disabled_by=None
+      * sensor.coffee_tea_power -> state=5.1, disabled_by=None
       * sensor.coffee_tea_power_factor -> state=25, disabled_by=None
       * button.coffee_tea_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.coffee_tea_start_up_behavior -> state=On, disabled_by=None
-      * sensor.coffee_tea_summation_delivered -> state=85.2770802777778, disabled_by=None
-      * sensor.coffee_tea_voltage -> state=122.4, disabled_by=None
+      * sensor.coffee_tea_summation_delivered -> state=100.8054125, disabled_by=None
+      * sensor.coffee_tea_voltage -> state=122.1, disabled_by=None
       * number.coffee_tea_turn_off_delay -> state=0, disabled_by=None
       * number.coffee_tea_turn_on_delay -> state=0, disabled_by=None
 
@@ -647,7 +522,7 @@ All Home Assistant devices (missing first):
       * update.core_300s_series_firmware -> state=on, disabled_by=None
       * switch.core_300s_series_display -> state=on, disabled_by=None
       * switch.core_300s_series_child_lock -> state=off, disabled_by=None
-      * sensor.core_300s_series_filter_lifetime -> state=53, disabled_by=None
+      * sensor.core_300s_series_filter_lifetime -> state=38, disabled_by=None
 
 - Core 600S [KNOWN] (device_id=37cb13c35d28257c229cecdff10596c8, online=yes)
     Manufacturer/Model: VeSync / LAP-C601S-WUS
@@ -656,11 +531,11 @@ All Home Assistant devices (missing first):
     Entities:
       * fan.core_600s -> state=on, disabled_by=None
       * sensor.core_600s_air_quality -> state=excellent, disabled_by=None
-      * sensor.core_600s_pm2_5 -> state=7, disabled_by=None
+      * sensor.core_600s_pm2_5 -> state=3, disabled_by=None
       * switch.core_600s_display -> state=on, disabled_by=None
       * switch.core_600s_child_lock -> state=off, disabled_by=None
       * update.core_600s_firmware -> state=on, disabled_by=None
-      * sensor.core_600s_filter_lifetime -> state=81, disabled_by=None
+      * sensor.core_600s_filter_lifetime -> state=65, disabled_by=None
 
 - Darkish Theme [KNOWN] (device_id=927af7ca938adfd30764f79abeff64eb, online=yes)
     Manufacturer/Model: 78wesley / theme
@@ -669,27 +544,6 @@ All Home Assistant devices (missing first):
     Entities:
       * switch.darkish_theme_pre_release -> state=None, disabled_by=integration
       * update.darkish_theme_update -> state=off, disabled_by=None
-
-- Desktop [KNOWN] (device_id=49fde846642d46c449c7a097a12cba6e, online=no)
-    Manufacturer/Model: Browser Mod / Unknown Model
-    Area ID: office
-    Domains: binary_sensor, light, media_player, sensor
-    Entities:
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_id -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_path -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_visibility -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_useragent -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_user -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_c3238b70_07c7c77c_browser_fullykiosk -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_width -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_height -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_c3238b70_07c7c77c_browser_dark_mode -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_c3238b70_07c7c77c -> state=unavailable, disabled_by=None
-      * light.browser_mod_c3238b70_07c7c77c_screen -> state=unavailable, disabled_by=None
-      * media_player.browser_mod_c3238b70_07c7c77c -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_panel -> state=unavailable, disabled_by=None
-      * sensor.browser_mod_c3238b70_07c7c77c_browser_battery -> state=unavailable, disabled_by=None
-      * binary_sensor.browser_mod_c3238b70_07c7c77c_browser_charging -> state=unavailable, disabled_by=None
 
 - door_sensor_1 [KNOWN] (device_id=24013a759752b79d22927615685fe22b, online=no)
     Manufacturer/Model: eWeLink / DS01
@@ -713,19 +567,6 @@ All Home Assistant devices (missing first):
       * button.door_sensor_2_identify -> state=unavailable, disabled_by=None
       * binary_sensor.door_sensor_2_opening -> state=unavailable, disabled_by=None
 
-- Driveway [KNOWN] (device_id=5ed5061cee23737b8a38afd4b0ba63a7, online=yes)
-    Manufacturer/Model: eWeLink / SNZB-02P
-    Area ID: Unknown Area
-    Domains: button, sensor, update
-    Entities:
-      * sensor.ewelink_snzb_02p_rssi_5 -> state=None, disabled_by=integration
-      * sensor.ewelink_snzb_02p_lqi_5 -> state=None, disabled_by=integration
-      * sensor.driveway_battery -> state=100.0, disabled_by=None
-      * update.driveway_firmware -> state=on, disabled_by=None
-      * sensor.driveway_humidity -> state=39.4, disabled_by=None
-      * button.driveway_identify -> state=unknown, disabled_by=None
-      * sensor.driveway_temperature -> state=75.2, disabled_by=None
-
 - Dryer [KNOWN] (device_id=b2caae30ddc88ab8e371a116f08a889a, online=yes)
     Manufacturer/Model: Third Reality, Inc / 3RSP02028BZ
     Area ID: laundry_room
@@ -742,8 +583,8 @@ All Home Assistant devices (missing first):
       * sensor.dryer_power_factor -> state=0, disabled_by=None
       * button.dryer_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.dryer_start_up_behavior -> state=On, disabled_by=None
-      * sensor.dryer_summation_delivered -> state=20.5870261111111, disabled_by=None
-      * sensor.dryer_voltage -> state=119.8, disabled_by=None
+      * sensor.dryer_summation_delivered -> state=23.6488952777778, disabled_by=None
+      * sensor.dryer_voltage -> state=120.5, disabled_by=None
       * switch.dryer -> state=on, disabled_by=None
       * number.dryer_turn_off_delay -> state=0, disabled_by=None
       * number.dryer_turn_on_delay -> state=0, disabled_by=None
@@ -765,15 +606,15 @@ All Home Assistant devices (missing first):
       * switch.freezer -> state=on, disabled_by=None
       * sensor.freezer_ac_frequency -> state=60.0, disabled_by=None
       * sensor.freezer_current -> state=0.0, disabled_by=None
-      * update.freezer_firmware -> state=on, disabled_by=None
+      * update.freezer_firmware -> state=unknown, disabled_by=None
       * button.freezer_identify -> state=unknown, disabled_by=None
       * sensor.freezer_instantaneous_demand -> state=0.0, disabled_by=None
       * sensor.freezer_power -> state=0.0, disabled_by=None
       * sensor.freezer_power_factor -> state=0, disabled_by=None
       * button.freezer_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.freezer_start_up_behavior -> state=On, disabled_by=None
-      * sensor.freezer_summation_delivered -> state=137.011561388889, disabled_by=None
-      * sensor.freezer_voltage -> state=122.6, disabled_by=None
+      * sensor.freezer_summation_delivered -> state=159.364189166667, disabled_by=None
+      * sensor.freezer_voltage -> state=121.4, disabled_by=None
       * number.freezer_turn_off_delay -> state=0, disabled_by=None
       * number.freezer_turn_on_delay -> state=0, disabled_by=None
 
@@ -790,24 +631,24 @@ All Home Assistant devices (missing first):
     Domains: camera, event
     Entities:
       * camera.front_yard_camera -> state=streaming, disabled_by=None
-      * event.front_yard_camera_motion -> state=2026-03-30T19:55:20.541+00:00, disabled_by=None
+      * event.front_yard_camera_motion -> state=2026-04-29T01:09:31.868+00:00, disabled_by=None
 
 - front_yard_water_controller [KNOWN] (device_id=1dcf5cdd61f0a397451c80f2b03558b3, online=yes)
     Manufacturer/Model: Orbit BHyve / HT34-0001
     Area ID: front_yard
     Domains: sensor, switch
     Entities:
-      * sensor.tree_kale_bed_zone_history -> state=2026-03-30T09:00:00-07:00, disabled_by=None
-      * sensor.herb_beds_zone_history -> state=2026-03-30T08:00:00-07:00, disabled_by=None
-      * sensor.tomato_bed_zone_history -> state=2026-03-27T09:00:00-07:00, disabled_by=None
-      * sensor.allium_bed_zone_history -> state=2026-03-27T09:15:00-07:00, disabled_by=None
+      * sensor.tree_kale_bed_zone_history -> state=2026-04-28T09:30:00-07:00, disabled_by=None
+      * sensor.herb_beds_zone_history -> state=2026-04-28T08:00:00-07:00, disabled_by=None
+      * sensor.tomato_bed_zone_history -> state=2026-04-28T09:00:00-07:00, disabled_by=None
+      * sensor.allium_bed_zone_history -> state=2026-04-28T09:15:00-07:00, disabled_by=None
       * switch.tree_kale_bed_zone -> state=off, disabled_by=None
       * switch.herb_beds_zone -> state=off, disabled_by=None
       * switch.tomato_bed_zone -> state=off, disabled_by=None
       * switch.allium_bed_zone -> state=off, disabled_by=None
       * switch.front_yard_water_controller_ground_beds_program -> state=on, disabled_by=None
       * switch.front_yard_water_controller_raised_beds_program -> state=on, disabled_by=None
-      * sensor.front_yard_water_controller_battery_level -> state=100, disabled_by=None
+      * sensor.front_yard_water_controller_battery_level -> state=95, disabled_by=None
       * switch.front_yard_water_controller_rain_delay -> state=off, disabled_by=None
       * sensor.front_yard_water_controller_state -> state=auto, disabled_by=None
       * switch.front_yard_mounds_program -> state=on, disabled_by=None
@@ -830,82 +671,82 @@ All Home Assistant devices (missing first):
       * switch.google_home_pre_release -> state=None, disabled_by=integration
       * update.google_home_update -> state=on, disabled_by=None
 
-- Google Home Bathroom speaker [KNOWN] (device_id=89e1b5c52eea185c5fa6325636f092cc, online=yes)
+- Google Home Bathroom speaker [KNOWN] (device_id=23638e52ffd0da5f101c0f382ef3e5a5, online=yes)
     Manufacturer/Model: Google Home / Google Home Mini
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.dining_room_speaker_device -> state=192.168.50.131, disabled_by=None
-      * sensor.dining_room_speaker_alarms -> state=unavailable, disabled_by=None
-      * sensor.dining_room_speaker_timers -> state=unavailable, disabled_by=None
       * switch.dining_room_speaker_do_not_disturb -> state=off, disabled_by=None
       * number.dining_room_speaker_alarm_volume -> state=71, disabled_by=None
+      * sensor.bathroom_speaker_alarms -> state=unavailable, disabled_by=None
+      * sensor.bathroom_speaker_timers -> state=unavailable, disabled_by=None
 
-- Google Home Bedroom speaker [KNOWN] (device_id=c3309f4b390df0d652fd8d6e58b4ee69, online=yes)
+- Google Home Bedroom speaker [KNOWN] (device_id=04ee71aae0142942660f328b6359bfc0, online=yes)
     Manufacturer/Model: Google Home / Google Home Mini
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.bedroom_speaker_device -> state=192.168.50.83, disabled_by=None
-      * sensor.bedroom_speaker_alarms -> state=unavailable, disabled_by=None
-      * sensor.bedroom_speaker_timers -> state=unavailable, disabled_by=None
       * switch.bedroom_speaker_do_not_disturb -> state=off, disabled_by=None
       * number.bedroom_speaker_alarm_volume -> state=71, disabled_by=None
+      * sensor.bedroom_speaker_alarms -> state=unavailable, disabled_by=None
+      * sensor.bedroom_speaker_timers -> state=unavailable, disabled_by=None
 
-- Google Home Kitchen speaker [KNOWN] (device_id=2d6a7b0ba8c3e69400bc6a27e24be0f0, online=yes)
+- Google Home Kitchen speaker [KNOWN] (device_id=95c64433ba803339ff7dbb0ac679f7da, online=yes)
     Manufacturer/Model: Google Home / Google Nest Mini
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.kitchen_speaker_device -> state=192.168.50.216, disabled_by=None
-      * sensor.kitchen_speaker_alarms -> state=unavailable, disabled_by=None
-      * sensor.kitchen_speaker_timers -> state=unavailable, disabled_by=None
       * switch.kitchen_speaker_do_not_disturb -> state=off, disabled_by=None
       * number.kitchen_speaker_alarm_volume -> state=70, disabled_by=None
+      * sensor.kitchen_speaker_alarms -> state=unavailable, disabled_by=None
+      * sensor.kitchen_speaker_timers -> state=unavailable, disabled_by=None
 
-- Google Home Laundryroom speaker [KNOWN] (device_id=913a391c02ebc7ba9e8e734801758f88, online=yes)
+- Google Home Laundryroom speaker [KNOWN] (device_id=e4f853f9ae69bc859b67fec91a280a14, online=yes)
     Manufacturer/Model: Google Home / Google Nest Mini
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.laundryroom_speaker_device -> state=192.168.50.211, disabled_by=None
-      * sensor.laundryroom_speaker_alarms -> state=unavailable, disabled_by=None
-      * sensor.laundryroom_speaker_timers -> state=unavailable, disabled_by=None
       * switch.laundryroom_speaker_do_not_disturb -> state=off, disabled_by=None
       * number.laundryroom_speaker_alarm_volume -> state=70, disabled_by=None
+      * sensor.laundryroom_speaker_alarms -> state=unavailable, disabled_by=None
+      * sensor.laundryroom_speaker_timers -> state=unavailable, disabled_by=None
 
-- Google Home Living Room speaker [KNOWN] (device_id=aaf873632dc2e3fec72ac18de21e96a8, online=yes)
+- Google Home Living Room speaker [KNOWN] (device_id=6f812051821977eb037d4bbaa7bc70c6, online=yes)
     Manufacturer/Model: Google Home / Google Nest Mini
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.living_room_speaker_device -> state=192.168.50.230, disabled_by=None
-      * sensor.living_room_speaker_alarms -> state=unavailable, disabled_by=None
-      * sensor.living_room_speaker_timers -> state=unavailable, disabled_by=None
       * switch.living_room_speaker_do_not_disturb -> state=off, disabled_by=None
       * number.living_room_speaker_alarm_volume -> state=70, disabled_by=None
+      * sensor.living_room_speaker_alarms -> state=unavailable, disabled_by=None
+      * sensor.living_room_speaker_timers -> state=unavailable, disabled_by=None
 
-- Google Home Office speaker [KNOWN] (device_id=959263fb8729c6238cb8263de190512b, online=yes)
+- Google Home Office speaker [KNOWN] (device_id=a1f3f8e3c306a407f523bdc648db518c, online=yes)
     Manufacturer/Model: Google Home / Google Nest Mini
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.office_speaker_device -> state=192.168.50.41, disabled_by=None
-      * sensor.office_speaker_alarms -> state=unavailable, disabled_by=None
-      * sensor.office_speaker_timers -> state=unavailable, disabled_by=None
       * switch.office_speaker_do_not_disturb -> state=off, disabled_by=None
       * number.office_speaker_alarm_volume -> state=70, disabled_by=None
+      * sensor.office_speaker_alarms -> state=unavailable, disabled_by=None
+      * sensor.office_speaker_timers -> state=unavailable, disabled_by=None
 
-- Google Home Titan [KNOWN] (device_id=20edd1fc2e998578f95597ac2b36886f, online=yes)
+- Google Home Titan [KNOWN] (device_id=5e182ace90144a701a7b7fd421529427, online=yes)
     Manufacturer/Model: Google Home / Google Home Max
     Area ID: Unknown Area
     Domains: number, sensor, switch
     Entities:
       * sensor.titan_device -> state=192.168.50.10, disabled_by=None
-      * sensor.titan_alarms -> state=unavailable, disabled_by=None
-      * sensor.titan_timers -> state=unavailable, disabled_by=None
       * switch.titan_do_not_disturb -> state=off, disabled_by=None
       * number.titan_alarm_volume -> state=43, disabled_by=None
+      * sensor.titan_alarms -> state=unavailable, disabled_by=None
+      * sensor.titan_timers -> state=unavailable, disabled_by=None
 
 - Graphite Theme [KNOWN] (device_id=2d24f5ddccff69e7dd5291b2add4694d, online=yes)
     Manufacturer/Model: TilmanGriesel / theme
@@ -947,7 +788,7 @@ All Home Assistant devices (missing first):
       * switch.hacs_pre_release -> state=None, disabled_by=integration
       * update.hacs_update -> state=off, disabled_by=None
 
-- HArold [KNOWN] (device_id=aa4de1ed245b8fbc57fa655514db3c48, online=yes)
+- HArold [KNOWN] (device_id=58f18213a3b4a501fefc0b90aab89a47, online=yes)
     Manufacturer/Model: Telegram / Webhooks
     Area ID: Unknown Area
     Domains: event, notify
@@ -968,7 +809,7 @@ All Home Assistant devices (missing first):
     Area ID: home
     Domains: weather
     Entities:
-      * weather.home_forecast_home -> state=cloudy, disabled_by=None
+      * weather.home_forecast_home -> state=sunny, disabled_by=None
 
 - hue_bathroom_center [KNOWN] (device_id=9464f9c26181ce351d7c0ece1bd5a3bd, online=yes)
     Manufacturer/Model: Signify Netherlands B.V. / LCA013
@@ -977,7 +818,7 @@ All Home Assistant devices (missing first):
     Entities:
       * sensor.signify_netherlands_b_v_lca013_rssi -> state=None, disabled_by=integration
       * sensor.signify_netherlands_b_v_lca013_lqi -> state=None, disabled_by=integration
-      * light.hue_bathroom_center -> state=off, disabled_by=None
+      * light.hue_bathroom_center -> state=on, disabled_by=None
       * update.hue_bathroom_center_firmware -> state=unknown, disabled_by=None
       * button.hue_bathroom_center_identify -> state=unknown, disabled_by=None
       * select.hue_bathroom_center_start_up_behavior -> state=On, disabled_by=None
@@ -1005,26 +846,26 @@ All Home Assistant devices (missing first):
     Entities:
       * sensor.signify_netherlands_b_v_lca013_rssi_2 -> state=None, disabled_by=integration
       * sensor.signify_netherlands_b_v_lca013_lqi_2 -> state=None, disabled_by=integration
-      * light.hue_office_light -> state=on, disabled_by=None
+      * light.hue_office_light -> state=off, disabled_by=None
       * update.hue_office_light_firmware -> state=unknown, disabled_by=None
       * button.hue_office_light_identify -> state=unknown, disabled_by=None
       * select.hue_office_light_start_up_behavior -> state=On, disabled_by=None
       * number.hue_office_light_start_up_color_temperature -> state=367, disabled_by=None
       * number.hue_office_light_start_up_current_level -> state=254, disabled_by=None
 
-- hue_square_lamp [KNOWN] (device_id=f99b3b644a366bcf8e34d7ecd43d841c, online=no)
+- hue_square_lamp [KNOWN] (device_id=f99b3b644a366bcf8e34d7ecd43d841c, online=yes)
     Manufacturer/Model: Signify Netherlands B.V. / LCA007
     Area ID: office
     Domains: button, light, number, select, sensor, update
     Entities:
       * sensor.signify_netherlands_b_v_lca007_rssi -> state=None, disabled_by=integration
       * sensor.signify_netherlands_b_v_lca007_lqi -> state=None, disabled_by=integration
-      * update.hue_0_firmware -> state=unavailable, disabled_by=None
-      * button.hue_0_identify -> state=unavailable, disabled_by=None
-      * select.hue_0_start_up_behavior -> state=unavailable, disabled_by=None
-      * number.hue_0_start_up_color_temperature -> state=unavailable, disabled_by=None
-      * number.hue_0_start_up_current_level -> state=unavailable, disabled_by=None
-      * light.hue_square_lamp -> state=unavailable, disabled_by=None
+      * update.hue_0_firmware -> state=unknown, disabled_by=None
+      * button.hue_0_identify -> state=unknown, disabled_by=None
+      * select.hue_0_start_up_behavior -> state=On, disabled_by=None
+      * number.hue_0_start_up_color_temperature -> state=366, disabled_by=None
+      * number.hue_0_start_up_current_level -> state=254, disabled_by=None
+      * light.hue_square_lamp -> state=off, disabled_by=None
 
 - hui-element [KNOWN] (device_id=88ef2f4bc1e27a2b4c33abccd1becf32, online=yes)
     Manufacturer/Model: thomasloven / plugin
@@ -1070,7 +911,7 @@ All Home Assistant devices (missing first):
       * select.kauf_bulb_power_on_state_13 -> state=unavailable, disabled_by=None
       * light.kauf_ball_1 -> state=unavailable, disabled_by=None
 
-- Kauf_bathroom_0 [KNOWN] (device_id=5c6f9219438fafcd29c51686c3469329, online=no)
+- Kauf_bathroom_0 [KNOWN] (device_id=5c6f9219438fafcd29c51686c3469329, online=yes)
     Manufacturer/Model: Kauf / RGBWW
     Area ID: bathroom
     Domains: button, light, number, select, sensor, switch
@@ -1080,15 +921,15 @@ All Home Assistant devices (missing first):
       * sensor.kauf_bulb_ip_address_6 -> state=None, disabled_by=integration
       * button.kauf_bulb_restart_firmware_6 -> state=None, disabled_by=integration
       * number.kauf_bulb_max_power_6 -> state=None, disabled_by=integration
-      * number.kauf_bulb_default_fade_6 -> state=unavailable, disabled_by=None
+      * number.kauf_bulb_default_fade_6 -> state=250.0, disabled_by=None
       * switch.kauf_bulb_no_hass_6 -> state=None, disabled_by=integration
-      * select.kauf_bulb_effect_6 -> state=unavailable, disabled_by=None
+      * select.kauf_bulb_effect_6 -> state=None, disabled_by=None
       * select.kauf_bulb_ddp_debug_6 -> state=None, disabled_by=integration
-      * select.kauf_bulb_power_on_state_6 -> state=unavailable, disabled_by=None
-      * light.kauf_bathroom_0 -> state=unavailable, disabled_by=None
-      * light.kauf_bathroom_0_warm_rgb -> state=unavailable, disabled_by=None
+      * select.kauf_bulb_power_on_state_6 -> state=Restore Power Off State, disabled_by=None
+      * light.kauf_bathroom_0 -> state=on, disabled_by=None
+      * light.kauf_bathroom_0_warm_rgb -> state=off, disabled_by=None
 
-- Kauf_bathroom_1 [KNOWN] (device_id=7c6875b54d7a1dd77ab222e0baa0300e, online=no)
+- Kauf_bathroom_1 [KNOWN] (device_id=7c6875b54d7a1dd77ab222e0baa0300e, online=yes)
     Manufacturer/Model: Kauf / RGBWW
     Area ID: bathroom
     Domains: button, light, number, select, sensor, switch
@@ -1098,14 +939,14 @@ All Home Assistant devices (missing first):
       * sensor.kauf_bulb_ip_address_5 -> state=None, disabled_by=integration
       * button.kauf_bulb_restart_firmware_5 -> state=None, disabled_by=integration
       * number.kauf_bulb_max_power_5 -> state=None, disabled_by=integration
-      * number.kauf_bulb_default_fade_5 -> state=unavailable, disabled_by=None
+      * number.kauf_bulb_default_fade_5 -> state=250.0, disabled_by=None
       * switch.kauf_bulb_no_hass_5 -> state=None, disabled_by=integration
-      * select.kauf_bulb_effect_5 -> state=unavailable, disabled_by=None
+      * select.kauf_bulb_effect_5 -> state=None, disabled_by=None
       * select.kauf_bulb_ddp_debug_5 -> state=None, disabled_by=integration
-      * select.kauf_bulb_power_on_state_5 -> state=unavailable, disabled_by=None
-      * light.kauf_bathroom_1 -> state=unavailable, disabled_by=None
+      * select.kauf_bulb_power_on_state_5 -> state=Restore Power Off State, disabled_by=None
+      * light.kauf_bathroom_1 -> state=on, disabled_by=None
       * button.stop_factory_routine -> state=None, disabled_by=integration
-      * light.kauf_bathroom_1_warm_rgb -> state=unavailable, disabled_by=None
+      * light.kauf_bathroom_1_warm_rgb -> state=off, disabled_by=None
 
 - kauf_bedroom_0 [KNOWN] (device_id=093efb7bf8561b95149ba4a1e53f1a3e, online=yes)
     Manufacturer/Model: Kauf / RGBWW
@@ -1159,7 +1000,7 @@ All Home Assistant devices (missing first):
       * switch.kauf_bulb_no_hass_17 -> state=None, disabled_by=integration
       * sensor.kauf_bulb_uptime_17 -> state=None, disabled_by=integration
       * sensor.kauf_bulb_ip_address_17 -> state=None, disabled_by=integration
-      * light.kauf_hanging_0 -> state=off, disabled_by=None
+      * light.kauf_hanging_0 -> state=on, disabled_by=None
 
 - Kauf_hanging_1 [KNOWN] (device_id=f8b9821c8eebf83c64541518e409fb4a, online=yes)
     Manufacturer/Model: Kauf / RGBWW
@@ -1176,7 +1017,7 @@ All Home Assistant devices (missing first):
       * select.kauf_bulb_effect_8 -> state=None, disabled_by=None
       * select.kauf_bulb_ddp_debug_8 -> state=None, disabled_by=integration
       * select.kauf_bulb_power_on_state_8 -> state=Restore Power Off State, disabled_by=None
-      * light.kauf_hanging_1 -> state=off, disabled_by=None
+      * light.kauf_hanging_1 -> state=on, disabled_by=None
       * light.kauf_hanging_1_warm_rgb -> state=off, disabled_by=None
 
 - kauf_hanging_2 [KNOWN] (device_id=6d58343814902df6640ec3984ade1bb3, online=no)
@@ -1251,7 +1092,7 @@ All Home Assistant devices (missing first):
       * light.kauf_hallway -> state=on, disabled_by=None
       * light.kauf_lamp_warm_rgb -> state=off, disabled_by=None
 
-- kauf_laundry_room_0 [KNOWN] (device_id=026da8e17842be1ba2554f0b10ae1a12, online=yes)
+- kauf_laundry_room_0 [KNOWN] (device_id=026da8e17842be1ba2554f0b10ae1a12, online=no)
     Manufacturer/Model: Kauf / RGBWW
     Area ID: laundry_room
     Domains: button, light, number, select, sensor, switch
@@ -1261,13 +1102,13 @@ All Home Assistant devices (missing first):
       * sensor.kauf_bulb_ip_address_11 -> state=None, disabled_by=integration
       * button.kauf_bulb_restart_firmware_11 -> state=None, disabled_by=integration
       * number.kauf_bulb_max_power_11 -> state=None, disabled_by=integration
-      * number.kauf_bulb_default_fade_11 -> state=250.0, disabled_by=None
+      * number.kauf_bulb_default_fade_11 -> state=unavailable, disabled_by=None
       * switch.kauf_bulb_no_hass_11 -> state=None, disabled_by=integration
-      * select.kauf_bulb_effect_11 -> state=None, disabled_by=None
+      * select.kauf_bulb_effect_11 -> state=unavailable, disabled_by=None
       * select.kauf_bulb_ddp_debug_11 -> state=None, disabled_by=integration
-      * select.kauf_bulb_power_on_state_11 -> state=Restore Power Off State, disabled_by=None
-      * light.kauf_bathroom_center_warm_rgb -> state=off, disabled_by=None
-      * light.kauf_laundry_room_0 -> state=off, disabled_by=None
+      * select.kauf_bulb_power_on_state_11 -> state=unavailable, disabled_by=None
+      * light.kauf_bathroom_center_warm_rgb -> state=unavailable, disabled_by=None
+      * light.kauf_laundry_room_0 -> state=unavailable, disabled_by=None
 
 - Kauf_laundry_room_2 [KNOWN] (device_id=9b06f572c0735ef08942358c048fc8d1, online=yes)
     Manufacturer/Model: Kauf / RGBWW
@@ -1371,31 +1212,18 @@ All Home Assistant devices (missing first):
     Entities:
       * media_player.dining_room_speaker -> state=off, disabled_by=None
 
-- Kitchen Temp [KNOWN] (device_id=ed17162e0578f839e007a71c70d7b9ca, online=no)
+- Kitchen Temp [KNOWN] (device_id=ed17162e0578f839e007a71c70d7b9ca, online=yes)
     Manufacturer/Model: eWeLink / SNZB-02P
     Area ID: kitchen
     Domains: button, sensor, update
     Entities:
       * sensor.ewelink_snzb_02p_rssi -> state=None, disabled_by=integration
       * sensor.ewelink_snzb_02p_lqi -> state=None, disabled_by=integration
-      * sensor.kitchen_temp_battery -> state=unavailable, disabled_by=None
-      * update.kitchen_temp_firmware -> state=unavailable, disabled_by=None
-      * sensor.kitchen_temp_humidity -> state=unavailable, disabled_by=None
-      * button.kitchen_temp_identify -> state=unavailable, disabled_by=None
-      * sensor.kitchen_temp_temperature -> state=unavailable, disabled_by=None
-
-- Laundry Room Temp [KNOWN] (device_id=b38f87c375b50ca453a8ce3335d5bc9d, online=yes)
-    Manufacturer/Model: eWeLink / SNZB-02P
-    Area ID: laundry_room
-    Domains: button, sensor, update
-    Entities:
-      * sensor.ewelink_snzb_02p_rssi_3 -> state=None, disabled_by=integration
-      * sensor.ewelink_snzb_02p_lqi_3 -> state=None, disabled_by=integration
-      * sensor.laundry_room_temp_battery -> state=100.0, disabled_by=None
-      * update.laundry_room_temp_firmware -> state=on, disabled_by=None
-      * sensor.laundry_room_temp_humidity -> state=44.1, disabled_by=None
-      * button.laundry_room_temp_identify -> state=unknown, disabled_by=None
-      * sensor.laundry_room_temp_temperature -> state=73.58, disabled_by=None
+      * sensor.kitchen_temp_battery -> state=100.0, disabled_by=None
+      * update.kitchen_temp_firmware -> state=unknown, disabled_by=None
+      * sensor.kitchen_temp_humidity -> state=47.9, disabled_by=None
+      * button.kitchen_temp_identify -> state=unknown, disabled_by=None
+      * sensor.kitchen_temp_temperature -> state=71.6, disabled_by=None
 
 - Laundryroom speaker [KNOWN] (device_id=e43e26e3a86576e796db97383b63fe82, online=yes)
     Manufacturer/Model: Google Inc. / Google Nest Mini
@@ -1440,19 +1268,19 @@ All Home Assistant devices (missing first):
     Entities:
       * sensor.third_reality_inc_3rsp02028bz_rssi_9 -> state=None, disabled_by=integration
       * sensor.third_reality_inc_3rsp02028bz_lqi_9 -> state=None, disabled_by=integration
-      * switch.living_room_fan -> state=on, disabled_by=None
+      * switch.living_room_fan -> state=off, disabled_by=None
       * sensor.living_room_fan_ac_frequency -> state=60.0, disabled_by=None
-      * sensor.living_room_fan_current -> state=0.299, disabled_by=None
+      * sensor.living_room_fan_current -> state=0.0, disabled_by=None
       * update.living_room_fan_firmware -> state=on, disabled_by=None
       * button.living_room_fan_identify -> state=unknown, disabled_by=None
-      * sensor.living_room_fan_instantaneous_demand -> state=0.1, disabled_by=None
-      * sensor.living_room_fan_power -> state=34.2, disabled_by=None
-      * sensor.living_room_fan_power_factor -> state=92, disabled_by=None
+      * sensor.living_room_fan_instantaneous_demand -> state=0.0, disabled_by=None
+      * sensor.living_room_fan_power -> state=0.0, disabled_by=None
+      * sensor.living_room_fan_power_factor -> state=0, disabled_by=None
       * button.living_room_fan_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.living_room_fan_start_up_behavior -> state=PreviousValue, disabled_by=None
-      * sensor.living_room_fan_summation_delivered -> state=26.9741594444444, disabled_by=None
-      * sensor.living_room_fan_voltage -> state=123.7, disabled_by=None
-      * fan.living_room_fan -> state=on, disabled_by=None
+      * sensor.living_room_fan_summation_delivered -> state=32.3813266666667, disabled_by=None
+      * sensor.living_room_fan_voltage -> state=122.5, disabled_by=None
+      * fan.living_room_fan -> state=off, disabled_by=None
       * number.living_room_fan_turn_off_delay -> state=0, disabled_by=None
       * number.living_room_fan_turn_on_delay -> state=0, disabled_by=None
 
@@ -1478,24 +1306,24 @@ All Home Assistant devices (missing first):
       * sensor.ewelink_snzb_02p_rssi_2 -> state=None, disabled_by=integration
       * sensor.ewelink_snzb_02p_lqi_2 -> state=None, disabled_by=integration
       * sensor.living_room_temp_battery -> state=100.0, disabled_by=None
-      * update.living_room_temp_firmware -> state=on, disabled_by=None
-      * sensor.living_room_temp_humidity -> state=45.1, disabled_by=None
+      * update.living_room_temp_firmware -> state=unknown, disabled_by=None
+      * sensor.living_room_temp_humidity -> state=49.3, disabled_by=None
       * button.living_room_temp_identify -> state=unknown, disabled_by=None
-      * sensor.living_room_temp_temperature -> state=71.96, disabled_by=None
+      * sensor.living_room_temp_temperature -> state=71.6, disabled_by=None
 
-- living_room_blind [KNOWN] (device_id=2466e9260ed52e2c60b1db1a2379ba66, online=yes)
+- living_room_blind [KNOWN] (device_id=2466e9260ed52e2c60b1db1a2379ba66, online=no)
     Manufacturer/Model: IKEA of Sweden / TREDANSEN block-out cellul blind
     Area ID: living_room
     Domains: button, cover, sensor, switch, update
     Entities:
       * sensor.ikea_of_sweden_tredansen_block_out_cellul_blind_rssi -> state=None, disabled_by=integration
       * sensor.ikea_of_sweden_tredansen_block_out_cellul_blind_lqi -> state=None, disabled_by=integration
-      * sensor.living_room_blind_battery -> state=64.0, disabled_by=None
-      * cover.living_room_blind_cover -> state=closed, disabled_by=None
-      * button.living_room_blind_identify -> state=unknown, disabled_by=None
-      * sensor.living_room_blind_window_covering_type -> state=Rollershade, disabled_by=None
-      * update.living_room_blind_firmware -> state=unknown, disabled_by=None
-      * switch.living_room_blind_inverted -> state=off, disabled_by=None
+      * sensor.living_room_blind_battery -> state=unavailable, disabled_by=None
+      * cover.living_room_blind_cover -> state=unavailable, disabled_by=None
+      * button.living_room_blind_identify -> state=unavailable, disabled_by=None
+      * sensor.living_room_blind_window_covering_type -> state=unavailable, disabled_by=None
+      * update.living_room_blind_firmware -> state=unavailable, disabled_by=None
+      * switch.living_room_blind_inverted -> state=unavailable, disabled_by=None
 
 - living_room_corner_lamp [KNOWN] (device_id=ede78171f9dab301c53df991d3a6cf2f, online=yes)
     Manufacturer/Model: Signify Netherlands B.V. / LCA005
@@ -1506,7 +1334,7 @@ All Home Assistant devices (missing first):
       * select.living_room_corner_lamp_start_up_behavior -> state=On, disabled_by=None
       * number.living_room_corner_lamp_start_up_color_temperature -> state=65535, disabled_by=None
       * number.living_room_corner_lamp_start_up_current_level -> state=255, disabled_by=None
-      * light.living_room_corner_lamp -> state=off, disabled_by=None
+      * light.living_room_corner_lamp -> state=on, disabled_by=None
       * sensor.living_room_corner_lamp_lqi -> state=None, disabled_by=integration
       * sensor.living_room_corner_lamp_rssi -> state=None, disabled_by=integration
       * update.living_room_corner_lamp_firmware -> state=unknown, disabled_by=None
@@ -1516,7 +1344,7 @@ All Home Assistant devices (missing first):
     Area ID: living_room
     Domains: button, light, number, select, sensor, update
     Entities:
-      * light.living_room_lamp -> state=off, disabled_by=None
+      * light.living_room_lamp -> state=on, disabled_by=None
       * update.living_room_lamp_firmware -> state=unknown, disabled_by=None
       * button.living_room_lamp_identify -> state=unknown, disabled_by=None
       * sensor.living_room_lamp_lqi -> state=None, disabled_by=integration
@@ -1576,65 +1404,65 @@ All Home Assistant devices (missing first):
       * switch.mini_graph_card_pre_release -> state=None, disabled_by=integration
       * update.mini_graph_card_update -> state=on, disabled_by=None
 
-- motion_sensor_bathroom [KNOWN] (device_id=db1dfa155a63878fcfae98bb51a3d102, online=yes)
+- motion_sensor_bathroom [KNOWN] (device_id=db1dfa155a63878fcfae98bb51a3d102, online=no)
     Manufacturer/Model: LUMI / lumi.sensor_motion.aq2
     Area ID: bathroom
     Domains: binary_sensor, button, sensor, update
     Entities:
-      * sensor.lumi_lumi_sensor_motion_aq2_b09d8308_power -> state=48.0, disabled_by=None
-      * sensor.motion_sensor_bathroom_device_temperature -> state=78.8, disabled_by=None
-      * button.motion_sensor_bathroom_identify -> state=unknown, disabled_by=None
+      * sensor.lumi_lumi_sensor_motion_aq2_b09d8308_power -> state=unavailable, disabled_by=None
+      * sensor.motion_sensor_bathroom_device_temperature -> state=unavailable, disabled_by=None
+      * button.motion_sensor_bathroom_identify -> state=unavailable, disabled_by=None
       * sensor.motion_sensor_bathroom_lqi -> state=None, disabled_by=integration
       * sensor.motion_sensor_bathroom_rssi -> state=None, disabled_by=integration
-      * sensor.motion_sensor_bathroom_illuminance -> state=87, disabled_by=None
-      * binary_sensor.motion_sensor_bathroom_ias_zone -> state=off, disabled_by=None
-      * binary_sensor.motion_sensor_bathroom_occupancy -> state=off, disabled_by=None
-      * update.motion_sensor_bathroom_firmware -> state=unknown, disabled_by=None
+      * sensor.motion_sensor_bathroom_illuminance -> state=unavailable, disabled_by=None
+      * binary_sensor.motion_sensor_bathroom_ias_zone -> state=unavailable, disabled_by=None
+      * binary_sensor.motion_sensor_bathroom_occupancy -> state=unavailable, disabled_by=None
+      * update.motion_sensor_bathroom_firmware -> state=unavailable, disabled_by=None
 
 - motion_sensor_hallway [KNOWN] (device_id=73c44acf744ef05b587b2683fd204e85, online=yes)
     Manufacturer/Model: LUMI / lumi.sensor_motion.aq2
     Area ID: hallway
     Domains: binary_sensor, button, sensor, update
     Entities:
-      * sensor.lumi_lumi_sensor_motion_aq2_power -> state=87.5, disabled_by=None
+      * sensor.lumi_lumi_sensor_motion_aq2_power -> state=84.0, disabled_by=None
       * binary_sensor.motion_sensor_hallway_ias_zone -> state=off, disabled_by=None
-      * binary_sensor.motion_sensor_hallway_occupancy -> state=on, disabled_by=None
-      * sensor.motion_sensor_hallway_illuminance -> state=24, disabled_by=None
+      * binary_sensor.motion_sensor_hallway_occupancy -> state=off, disabled_by=None
+      * sensor.motion_sensor_hallway_illuminance -> state=5, disabled_by=None
       * sensor.motion_sensor_hallway_device_temperature -> state=77.0, disabled_by=None
       * button.motion_sensor_hallway_identify -> state=unknown, disabled_by=None
       * sensor.motion_sensor_hallway_lqi -> state=None, disabled_by=integration
       * sensor.motion_sensor_hallway_rssi -> state=None, disabled_by=integration
       * update.motion_sensor_hallway_firmware -> state=unknown, disabled_by=None
 
-- motion_sensor_kitchen [KNOWN] (device_id=9707aa8c11e8fdb2b1c6cfee0a67ae5a, online=yes)
+- motion_sensor_kitchen [KNOWN] (device_id=9707aa8c11e8fdb2b1c6cfee0a67ae5a, online=no)
     Manufacturer/Model: LUMI / lumi.sensor_motion.aq2
     Area ID: kitchen
     Domains: binary_sensor, button, sensor, update
     Entities:
-      * sensor.lumi_lumi_sensor_motion_aq2_bc5f8308_illuminance -> state=121, disabled_by=None
-      * sensor.lumi_lumi_sensor_motion_aq2_bc5f8308_power -> state=69.5, disabled_by=None
-      * binary_sensor.motion_sensor_kitchen_ias_zone -> state=off, disabled_by=None
-      * binary_sensor.motion_sensor_kitchen_occupancy -> state=on, disabled_by=None
-      * sensor.motion_sensor_kitchen_device_temperature -> state=91.4, disabled_by=None
-      * button.motion_sensor_kitchen_identify -> state=unknown, disabled_by=None
+      * sensor.lumi_lumi_sensor_motion_aq2_bc5f8308_illuminance -> state=unavailable, disabled_by=None
+      * sensor.lumi_lumi_sensor_motion_aq2_bc5f8308_power -> state=unavailable, disabled_by=None
+      * binary_sensor.motion_sensor_kitchen_ias_zone -> state=unavailable, disabled_by=None
+      * binary_sensor.motion_sensor_kitchen_occupancy -> state=unavailable, disabled_by=None
+      * sensor.motion_sensor_kitchen_device_temperature -> state=unavailable, disabled_by=None
+      * button.motion_sensor_kitchen_identify -> state=unavailable, disabled_by=None
       * sensor.motion_sensor_kitchen_lqi -> state=None, disabled_by=integration
       * sensor.motion_sensor_kitchen_rssi -> state=None, disabled_by=integration
-      * update.motion_sensor_kitchen_firmware -> state=unknown, disabled_by=None
+      * update.motion_sensor_kitchen_firmware -> state=unavailable, disabled_by=None
 
-- motion_sensor_laundry_room [KNOWN] (device_id=425af0ebe112fc4b85176dd8eadbceff, online=yes)
+- motion_sensor_laundry_room [KNOWN] (device_id=425af0ebe112fc4b85176dd8eadbceff, online=no)
     Manufacturer/Model: LUMI / lumi.sensor_motion.aq2
     Area ID: laundry_room
     Domains: binary_sensor, button, sensor, update
     Entities:
-      * button.lumi_lumi_sensor_motion_aq2_identify -> state=unknown, disabled_by=None
-      * sensor.lumi_lumi_sensor_motion_aq2_battery -> state=73.0, disabled_by=None
-      * sensor.lumi_lumi_sensor_motion_aq2_illuminance_2 -> state=83, disabled_by=None
+      * button.lumi_lumi_sensor_motion_aq2_identify -> state=unavailable, disabled_by=None
+      * sensor.lumi_lumi_sensor_motion_aq2_battery -> state=unavailable, disabled_by=None
+      * sensor.lumi_lumi_sensor_motion_aq2_illuminance_2 -> state=unavailable, disabled_by=None
       * sensor.lumi_lumi_sensor_motion_aq2_rssi -> state=None, disabled_by=integration
       * sensor.lumi_lumi_sensor_motion_aq2_lqi -> state=None, disabled_by=integration
-      * binary_sensor.motion_sensor_laundry_room_iaszone -> state=off, disabled_by=None
-      * binary_sensor.motion_sensor_laundry_room_occupancy -> state=off, disabled_by=None
-      * sensor.motion_sensor_laundry_room_device_temperature -> state=78.8, disabled_by=None
-      * update.motion_sensor_laundry_room_firmware -> state=unknown, disabled_by=None
+      * binary_sensor.motion_sensor_laundry_room_iaszone -> state=unavailable, disabled_by=None
+      * binary_sensor.motion_sensor_laundry_room_occupancy -> state=unavailable, disabled_by=None
+      * sensor.motion_sensor_laundry_room_device_temperature -> state=unavailable, disabled_by=None
+      * update.motion_sensor_laundry_room_firmware -> state=unavailable, disabled_by=None
 
 - motion_sensor_office [KNOWN] (device_id=f14aacda7f519e7934db0c9216b35d3a, online=yes)
     Manufacturer/Model: LUMI / lumi.sensor_motion.aq2
@@ -1642,13 +1470,13 @@ All Home Assistant devices (missing first):
     Domains: binary_sensor, button, sensor, update
     Entities:
       * sensor.lumi_lumi_sensor_motion_aq2_9c978308_power -> state=73.0, disabled_by=None
-      * sensor.motion_sensor_office_device_temperature -> state=84.2, disabled_by=None
+      * sensor.motion_sensor_office_device_temperature -> state=82.4, disabled_by=None
       * button.motion_sensor_office_identify -> state=unknown, disabled_by=None
       * sensor.motion_sensor_office_lqi -> state=None, disabled_by=integration
       * sensor.motion_sensor_office_rssi -> state=None, disabled_by=integration
       * binary_sensor.motion_sensor_office_ias_zone -> state=off, disabled_by=None
-      * binary_sensor.motion_sensor_office_occupancy -> state=on, disabled_by=None
-      * sensor.motion_sensor_office_illuminance -> state=38, disabled_by=None
+      * binary_sensor.motion_sensor_office_occupancy -> state=off, disabled_by=None
+      * sensor.motion_sensor_office_illuminance -> state=16, disabled_by=None
       * update.motion_sensor_office_firmware -> state=unknown, disabled_by=None
 
 - Mushroom [KNOWN] (device_id=a432492da111c536d073df316408b021, online=yes)
@@ -1676,16 +1504,16 @@ All Home Assistant devices (missing first):
       * sensor.third_reality_inc_3rsp02028bz_lqi_8 -> state=None, disabled_by=integration
       * switch.office_fan -> state=on, disabled_by=None
       * sensor.office_fan_ac_frequency -> state=60.0, disabled_by=None
-      * sensor.office_fan_current -> state=0.454, disabled_by=None
+      * sensor.office_fan_current -> state=0.052, disabled_by=None
       * update.office_fan_firmware -> state=on, disabled_by=None
       * button.office_fan_identify -> state=unknown, disabled_by=None
       * sensor.office_fan_instantaneous_demand -> state=0.0, disabled_by=None
-      * sensor.office_fan_power -> state=51.6, disabled_by=None
-      * sensor.office_fan_power_factor -> state=94, disabled_by=None
+      * sensor.office_fan_power -> state=0.3, disabled_by=None
+      * sensor.office_fan_power_factor -> state=4, disabled_by=None
       * button.office_fan_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.office_fan_start_up_behavior -> state=Off, disabled_by=None
-      * sensor.office_fan_summation_delivered -> state=60.5463166666667, disabled_by=None
-      * sensor.office_fan_voltage -> state=117.5, disabled_by=None
+      * sensor.office_fan_summation_delivered -> state=77.7629538888889, disabled_by=None
+      * sensor.office_fan_voltage -> state=122.0, disabled_by=None
       * fan.office_fan -> state=on, disabled_by=None
       * number.office_fan_turn_off_delay -> state=0, disabled_by=None
       * number.office_fan_turn_on_delay -> state=0, disabled_by=None
@@ -1704,13 +1532,13 @@ All Home Assistant devices (missing first):
     Entities:
       * sensor.office_temp_battery -> state=100.0, disabled_by=None
       * update.office_temp_firmware -> state=unknown, disabled_by=None
-      * sensor.office_temp_humidity -> state=41.89, disabled_by=None
+      * sensor.office_temp_humidity -> state=47.23, disabled_by=None
       * button.office_temp_identify -> state=unknown, disabled_by=None
       * sensor.office_temp_lqi -> state=None, disabled_by=integration
       * sensor.office_temp_rssi -> state=None, disabled_by=integration
-      * sensor.office_temp_temperature -> state=74.822, disabled_by=None
-      * number.office_temp_temperature_offset -> state=unknown, disabled_by=None
-      * number.office_temp_humidity_offset -> state=unknown, disabled_by=None
+      * sensor.office_temp_temperature -> state=73.616, disabled_by=None
+      * number.office_temp_temperature_offset -> state=0.0, disabled_by=None
+      * number.office_temp_humidity_offset -> state=0.0, disabled_by=None
 
 - Orbit BHyve [KNOWN] (device_id=ac4becf78d3c46b846b3dd609988a83f, online=yes)
     Manufacturer/Model: sebr / integration
@@ -1867,7 +1695,7 @@ All Home Assistant devices (missing first):
     Area ID: saildrone
     Domains: weather
     Entities:
-      * weather.saildrone_forecast_saildrone -> state=cloudy, disabled_by=None
+      * weather.saildrone_forecast_saildrone -> state=sunny, disabled_by=None
 
 - Soil sensor 0 [KNOWN] (device_id=48287103c12c0f01200533d837c7592b, online=yes)
     Manufacturer/Model: _TZE284_sgabhwa6 / TS0601
@@ -1878,8 +1706,8 @@ All Home Assistant devices (missing first):
       * sensor.tze284_sgabhwa6_ts0601_lqi -> state=None, disabled_by=integration
       * sensor.soil_sensor_0_battery -> state=100.0, disabled_by=None
       * update.soil_sensor_0_firmware -> state=unknown, disabled_by=None
-      * sensor.soil_sensor_0_soil_moisture -> state=28.0, disabled_by=None
-      * sensor.soil_sensor_0_temperature -> state=81.32, disabled_by=None
+      * sensor.soil_sensor_0_soil_moisture -> state=30.0, disabled_by=None
+      * sensor.soil_sensor_0_temperature -> state=64.4, disabled_by=None
 
 - splug_0 [KNOWN] (device_id=88a63afd10a3b8d8dd20ac1d3e8e997d, online=yes)
     Manufacturer/Model: Tuya / BNC-60/U151T (64071338e868e7907c68)
@@ -1938,12 +1766,12 @@ All Home Assistant devices (missing first):
     Area ID: Unknown Area
     Domains: binary_sensor, sensor
     Entities:
-      * sensor.sun_next_dawn -> state=2026-03-31T13:26:43+00:00, disabled_by=None
-      * sensor.sun_next_dusk -> state=2026-03-31T02:58:18+00:00, disabled_by=None
-      * sensor.sun_next_midnight -> state=2026-03-31T08:12:38+00:00, disabled_by=None
-      * sensor.sun_next_noon -> state=2026-03-31T20:12:53+00:00, disabled_by=None
-      * sensor.sun_next_rising -> state=2026-03-31T13:53:30+00:00, disabled_by=None
-      * sensor.sun_next_setting -> state=2026-03-31T02:31:29+00:00, disabled_by=None
+      * sensor.sun_next_dawn -> state=2026-04-29T12:44:49+00:00, disabled_by=None
+      * sensor.sun_next_dusk -> state=2026-04-29T03:26:42+00:00, disabled_by=None
+      * sensor.sun_next_midnight -> state=2026-04-29T08:05:55+00:00, disabled_by=None
+      * sensor.sun_next_noon -> state=2026-04-29T20:06:02+00:00, disabled_by=None
+      * sensor.sun_next_rising -> state=2026-04-29T13:13:21+00:00, disabled_by=None
+      * sensor.sun_next_setting -> state=2026-04-29T02:58:09+00:00, disabled_by=None
       * sensor.sun_solar_elevation -> state=None, disabled_by=integration
       * sensor.sun_solar_azimuth -> state=None, disabled_by=integration
       * sensor.sun_solar_rising -> state=None, disabled_by=integration
@@ -1977,11 +1805,11 @@ All Home Assistant devices (missing first):
     Area ID: home
     Domains: sensor
     Entities:
-      * sensor.saildrone_to_home -> state=28.4833333333333, disabled_by=None
-      * sensor.home_to_saildrone -> state=27.0, disabled_by=None
-      * sensor.from_anna -> state=25.7166666666667, disabled_by=None
-      * sensor.to_anna -> state=24.2833333333333, disabled_by=None
-      * sensor.to_anna_travel_time -> state=25.3666666666667, disabled_by=None
+      * sensor.saildrone_to_home -> state=25.3833333333333, disabled_by=None
+      * sensor.home_to_saildrone -> state=24.6333333333333, disabled_by=None
+      * sensor.from_anna -> state=0.0, disabled_by=None
+      * sensor.to_anna -> state=0.0, disabled_by=None
+      * sensor.to_anna_travel_time -> state=0.0, disabled_by=None
 
 - TV [KNOWN] (device_id=d4523df3428ff1dabfa514b1a10dd26e, online=no)
     Manufacturer/Model: TCL / Smart TV Pro
@@ -1995,7 +1823,7 @@ All Home Assistant devices (missing first):
     Area ID: twelve
     Domains: weather
     Entities:
-      * weather.twelve_forecast_twelve -> state=cloudy, disabled_by=None
+      * weather.twelve_forecast_twelve -> state=sunny, disabled_by=None
 
 - UI Lovelace Minimalist [KNOWN] (device_id=66fce5a4ac8da631e3a96e38bc38f2f5, online=yes)
     Manufacturer/Model: stokkie90 / integration
@@ -2021,16 +1849,16 @@ All Home Assistant devices (missing first):
       * sensor.third_reality_inc_3rsp02028bz_rssi_6 -> state=None, disabled_by=integration
       * sensor.third_reality_inc_3rsp02028bz_lqi_6 -> state=None, disabled_by=integration
       * sensor.washer_ac_frequency -> state=60.0, disabled_by=None
-      * sensor.washer_current -> state=0.015, disabled_by=None
+      * sensor.washer_current -> state=0.014, disabled_by=None
       * update.washer_firmware -> state=on, disabled_by=None
       * button.washer_identify -> state=unknown, disabled_by=None
       * sensor.washer_instantaneous_demand -> state=0.0, disabled_by=None
-      * sensor.washer_power -> state=0.6, disabled_by=None
-      * sensor.washer_power_factor -> state=32, disabled_by=None
+      * sensor.washer_power -> state=0.5, disabled_by=None
+      * sensor.washer_power_factor -> state=38, disabled_by=None
       * button.washer_reset_summation_delivered -> state=unknown, disabled_by=None
       * select.washer_start_up_behavior -> state=On, disabled_by=None
-      * sensor.washer_summation_delivered -> state=11.9573405555556, disabled_by=None
-      * sensor.washer_voltage -> state=122.8, disabled_by=None
+      * sensor.washer_summation_delivered -> state=13.8094372222222, disabled_by=None
+      * sensor.washer_voltage -> state=119.6, disabled_by=None
       * switch.washer -> state=on, disabled_by=None
       * number.washer_turn_off_delay -> state=0, disabled_by=None
       * number.washer_turn_on_delay -> state=0, disabled_by=None
@@ -2042,136 +1870,69 @@ All Home Assistant devices (missing first):
     Entities:
       * media_player.work_group -> state=off, disabled_by=None
 
-- Xaviers S25 [KNOWN] (device_id=c7d1f759d68da68739dff67010f4ddb2, online=yes)
+- Xaviers S25 [KNOWN] (device_id=f666df10a3fc782a61deff66d3a8f446, online=yes)
     Manufacturer/Model: samsung / SM-S938U1
     Area ID: Unknown Area
     Domains: binary_sensor, device_tracker, sensor
     Entities:
       * device_tracker.xaviers_s25 -> state=home, disabled_by=None
       * sensor.xaviers_s25_detected_activity -> state=still, disabled_by=None
-      * sensor.xaviers_s25_sleep_confidence -> state=3, disabled_by=None
-      * sensor.xaviers_s25_sleep_segment -> state=24120000.0, disabled_by=None
-      * binary_sensor.xaviers_s25_android_auto -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_os_version -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_security_patch -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_current_version -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_app_rx_gb -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_app_tx_gb -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_app_memory -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_app_inactive -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_app_standby_bucket -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_app_importance -> state=None, disabled_by=integration
+      * sensor.xaviers_s25_sleep_confidence -> state=6, disabled_by=None
+      * sensor.xaviers_s25_sleep_segment -> state=23400000.0, disabled_by=None
       * sensor.xaviers_s25_ringer_mode -> state=vibrate, disabled_by=None
       * sensor.xaviers_s25_audio_mode -> state=normal, disabled_by=None
       * binary_sensor.xaviers_s25_headphones -> state=off, disabled_by=None
-      * binary_sensor.xaviers_s25_mic_muted -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_speakerphone -> state=None, disabled_by=integration
       * binary_sensor.xaviers_s25_music_active -> state=on, disabled_by=None
       * sensor.xaviers_s25_volume_level_alarm -> state=9, disabled_by=None
-      * sensor.xaviers_s25_volume_level_call -> state=None, disabled_by=integration
       * sensor.xaviers_s25_volume_level_music -> state=4, disabled_by=None
       * sensor.xaviers_s25_volume_level_ringer -> state=0, disabled_by=None
       * sensor.xaviers_s25_volume_level_notification -> state=0, disabled_by=None
       * sensor.xaviers_s25_volume_level_system -> state=0, disabled_by=None
-      * sensor.xaviers_s25_volume_level_dtmf -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_volume_level_accessibility -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_battery_level -> state=67, disabled_by=None
+      * sensor.xaviers_s25_battery_level -> state=40, disabled_by=None
       * sensor.xaviers_s25_battery_state -> state=discharging, disabled_by=None
-      * binary_sensor.xaviers_s25_is_charging -> state=None, disabled_by=integration
+      * binary_sensor.xaviers_s25_is_charging -> state=off, disabled_by=None
       * sensor.xaviers_s25_charger_type -> state=none, disabled_by=None
-      * sensor.xaviers_s25_battery_health -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_battery_temperature -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_battery_power -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_remaining_charge_time -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_battery_cycle_count -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_bluetooth_connection -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_bluetooth_state -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_ble_transmitter -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_beacon_monitor -> state=None, disabled_by=integration
+      * sensor.xaviers_s25_remaining_charge_time -> state=0, disabled_by=None
+      * sensor.xaviers_s25_bluetooth_connection -> state=3, disabled_by=None
+      * binary_sensor.xaviers_s25_bluetooth_state -> state=on, disabled_by=None
+      * sensor.xaviers_s25_car_speed -> state=unavailable, disabled_by=None
+      * sensor.xaviers_s25_screen_brightness -> state=46, disabled_by=None
+      * sensor.xaviers_s25_screen_off_timeout -> state=30000, disabled_by=None
+      * sensor.xaviers_s25_screen_orientation -> state=portrait, disabled_by=None
+      * sensor.xaviers_s25_accent_color -> state=#475D92, disabled_by=None
+      * binary_sensor.xaviers_s25_work_profile -> state=unknown, disabled_by=None
+      * sensor.xaviers_s25_geocoded_location -> state=636 Broadmoor Blvd, San Leandro, CA 94577, USA, disabled_by=None
+      * sensor.xaviers_s25_active_calories_burned -> state=193.53, disabled_by=None
+      * sensor.xaviers_s25_daily_distance -> state=0.0, disabled_by=None
+      * sensor.xaviers_s25_daily_elevation_gained -> state=0.0, disabled_by=None
+      * sensor.xaviers_s25_daily_floors -> state=0, disabled_by=None
+      * sensor.xaviers_s25_heart_rate -> state=unknown, disabled_by=None
+      * sensor.xaviers_s25_daily_steps -> state=1958.0, disabled_by=None
+      * sensor.xaviers_s25_total_calories_burned -> state=1689.82, disabled_by=None
+      * sensor.xaviers_s25_last_used_app -> state=com.spotify.music, disabled_by=None
+      * sensor.xaviers_s25_light_sensor -> state=0, disabled_by=None
+      * sensor.xaviers_s25_wi_fi_connection -> state=solarium, disabled_by=None
+      * sensor.xaviers_s25_wi_fi_bssid -> state=a2:7f:54:11:90:45, disabled_by=None
+      * sensor.xaviers_s25_wi_fi_link_speed -> state=600, disabled_by=None
+      * binary_sensor.xaviers_s25_wi_fi_state -> state=on, disabled_by=None
+      * sensor.xaviers_s25_wi_fi_signal_strength -> state=-40, disabled_by=None
+      * sensor.xaviers_s25_network_type -> state=vpn, disabled_by=None
+      * binary_sensor.xaviers_s25_nfc_state -> state=on, disabled_by=None
+      * sensor.xaviers_s25_next_alarm -> state=2026-04-29T03:15:00+00:00, disabled_by=None
+      * sensor.xaviers_s25_last_notification -> state=unknown, disabled_by=None
+      * sensor.xaviers_s25_active_notification_count -> state=16, disabled_by=None
+      * sensor.xaviers_s25_media_session -> state=Playing, disabled_by=None
+      * binary_sensor.xaviers_s25_interactive -> state=off, disabled_by=None
+      * sensor.xaviers_s25_steps_sensor -> state=1958, disabled_by=None
+      * sensor.xaviers_s25_current_time_zone -> state=Pacific Daylight Time, disabled_by=None
+      * sensor.xaviers_s25_heart_rate_variability -> state=unknown, disabled_by=None
+      * sensor.xaviers_s25_sleep_duration -> state=353.0, disabled_by=None
+      * sensor.xaviers_s25_basal_body_temperature -> state=unknown, disabled_by=None
+      * sensor.xaviers_s25_daily_hydration -> state=0.0, disabled_by=None
       * sensor.xaviers_s25_car_battery -> state=unavailable, disabled_by=None
       * sensor.xaviers_s25_car_name -> state=unavailable, disabled_by=None
       * sensor.xaviers_s25_car_charging_status -> state=unavailable, disabled_by=None
       * sensor.xaviers_s25_car_ev_connector_type -> state=unavailable, disabled_by=None
-      * sensor.xaviers_s25_car_fuel -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_car_fuel_type -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_car_odometer -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_car_speed -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_car_range_remaining -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_screen_brightness -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_screen_off_timeout -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_screen_orientation -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_screen_rotation -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_do_not_disturb_sensor -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_accent_color -> state=#475D92, disabled_by=None
-      * binary_sensor.xaviers_s25_work_profile -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_geocoded_location -> state=634 Broadmoor Blvd, San Leandro, CA 94577, USA, disabled_by=None
-      * sensor.xaviers_s25_active_calories_burned -> state=56.64, disabled_by=None
-      * sensor.xaviers_s25_blood_glucose -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_diastolic_blood_pressure -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_daily_distance -> state=4180.11417322835, disabled_by=None
-      * sensor.xaviers_s25_daily_elevation_gained -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_daily_floors -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_heart_rate -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_daily_steps -> state=2220.0, disabled_by=None
-      * sensor.xaviers_s25_systolic_blood_pressure -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_total_calories_burned -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_vo2_max -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_weight -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_device_locked -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_device_secure -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_keyguard_locked -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_keyguard_secure -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_last_used_app -> state=com.teslacoilsw.launcher, disabled_by=None
-      * sensor.xaviers_s25_last_reboot -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_last_update_trigger -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_light_sensor -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_high_accuracy_mode -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_high_accuracy_update_interval -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_mobile_data -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_mobile_data_roaming -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_wi_fi_connection -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_wi_fi_bssid -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_wi_fi_ip_address -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_wi_fi_link_speed -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_wi_fi_state -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_wi_fi_frequency -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_wi_fi_signal_strength -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_public_ip_address -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_hotspot_state -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_network_type -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_ipv6_addresses -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_nfc_state -> state=on, disabled_by=None
-      * sensor.xaviers_s25_next_alarm -> state=2026-03-31T03:15:00+00:00, disabled_by=None
-      * sensor.xaviers_s25_last_notification -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_last_removed_notification -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_active_notification_count -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_media_session -> state=Playing, disabled_by=None
-      * sensor.xaviers_s25_phone_state -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_sim_1 -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_sim_2 -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_signal_strength_sim_1 -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_signal_strength_sim_2 -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_data_network_type_sim_1 -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_data_network_type_sim_2 -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_interactive -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_doze_mode -> state=None, disabled_by=integration
-      * binary_sensor.xaviers_s25_power_save -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_pressure_sensor -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_proximity_sensor -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_steps_sensor -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_internal_storage -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_external_storage -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_current_time_zone -> state=Pacific Daylight Time, disabled_by=None
-      * sensor.xaviers_s25_mobile_rx_gb -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_mobile_tx_gb -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_total_rx_gb -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_total_tx_gb -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_body_fat -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_heart_rate_variability -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_oxygen_saturation -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_respiratory_rate -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_resting_heart_rate -> state=None, disabled_by=integration
-      * sensor.xaviers_s25_sleep_duration -> state=360.0, disabled_by=None
 
 - ZenWiFi_Pro_XT12-8600 [KNOWN] (device_id=f21371303ec4d0bef2f4b6e399d86062, online=yes)
     Manufacturer/Model: ASUSTeK Computer Inc. / ZenWiFi_Pro_XT12
@@ -2186,8 +1947,8 @@ All Home Assistant devices (missing first):
       * sensor.zenwifi_pro_xt12_8600_external_ip -> state=76.191.180.163, disabled_by=None
       * sensor.zenwifi_pro_xt12_8600_uptime -> state=None, disabled_by=integration
       * sensor.zenwifi_pro_xt12_8600_wan_status -> state=None, disabled_by=integration
-      * sensor.zenwifi_pro_xt12_8600_kib_s_received -> state=22.6026452040875, disabled_by=None
-      * sensor.zenwifi_pro_xt12_8600_kib_s_sent -> state=35.4365612895187, disabled_by=None
+      * sensor.zenwifi_pro_xt12_8600_kib_s_received -> state=59.2610534160768, disabled_by=None
+      * sensor.zenwifi_pro_xt12_8600_kib_s_sent -> state=179.293124343846, disabled_by=None
       * sensor.zenwifi_pro_xt12_8600_packets_s_received -> state=None, disabled_by=integration
       * sensor.zenwifi_pro_xt12_8600_packets_s_sent -> state=None, disabled_by=integration
       * sensor.zenwifi_pro_xt12_8600_number_of_port_mapping_entries_ipv4 -> state=None, disabled_by=integration

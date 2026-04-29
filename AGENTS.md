@@ -17,15 +17,15 @@ Event flow. sensor/service signal → create_event (service) or Device.input_tri
 
 Startup & control services (@service is the pyscript service decorator per [PyScript HACS docs]):
 
-init: Load YAML (layout, rules), construct AreaTree, hydrate EventManager, instantiate TrackManager.
+**Init:** Load YAML (layout, rules), construct AreaTree, hydrate EventManager, instantiate `OccupancyEngine` + `AreaGraph`.
 
-reset: Log warning, clear globals, then re-run init; use for hard reloads.
+**Reset:** Log warning, clear globals, then re-run init; use for hard reloads.
 
-freeze_area(area_name, recursive=True): Mark an area (and optionally subtree) frozen so Device.set_state ignores future writes.
+**Freeze_area(area_name, recursive=True):** Mark an area (and optionally subtree) frozen so Device.set_state ignores future writes.
 
-unfreeze_area(area_name, recursive=True): Resume updates for a previously frozen area chain.
+**Unfreeze_area(area_name, recursive=True):** Resume updates for a previously frozen area chain.
 
-create_event(**kwargs): Accept service-sourced events (device name, optional tags/state/scope/state functions) and forward them to the event manager.
+**Create_event(**kwargs):** Accept service-sourced events (device name, optional tags/state/scope/state functions) and forward them to the event manager.
 
 3) Configuration Sources (illustrative snippets; align with current schema)
 
@@ -126,11 +126,15 @@ first exists only as legacy alias—do not use in new rules.
 
 Add functions guard entries for boolean veto/side-effect helpers (update_tracker, set_cached_last_set_state).
 
-Presence tuning.
+**Presence tuning.**
 
-Update connections.yml to reflect real walk paths; maintain directionality for path scoring.
+Update `connections.yml` to reflect real walk paths; maintain directionality for path scoring.
 
-Decide between baseline TrackManager (list-based, lower overhead) vs modules/advanced_tracker.py (particle filter, multi-person). The latter expects richer sensor cadence and optional phone hints—use when tracks overlap frequently.
+**OccupancyEngine** (`modules/occupancy_engine.py`) models per-room confidence (0.01–1.0) with exponential decay, event reinforcement, and neighbour diffusion.  Configure per-room profiles in `occupancy_config.yml`.
+
+**AreaGraph** (`modules/area_graph.py`) provides graph queries without networkx — used by both the OccupancyEngine and scope helpers.
+
+The legacy `TrackManager` / `GraphManager` (`modules/tracker.py`) and `advanced_tracker.py` are deprecated and will be removed after shadow-mode validation.
 
 Validate with tracker tests or logging overlays before deployment.
 
@@ -180,7 +184,13 @@ State Function – Helper returning state dict fragments merged via strategy.
 
 Merge Strategy – Choice passed to combine_states() that dictates precedence when combining multiple state fragments.
 
-TrackManager – Baseline presence tracker merging motion events into tracks based on graph paths.
+**OccupancyEngine** — Per-room anonymous occupancy tracker with confidence scores, decay, and neighbour diffusion.  Lives in `modules/occupancy_engine.py`.
+
+**AreaGraph** — Standalone dict-based room adjacency graph.  No networkx dependency.  Lives in `modules/area_graph.py`.
+
+**OccupancyConfig** — Per-room profile dataclass loaded from `occupancy_config.yml`.  Lives in `modules/occupancy_config.py`.
+
+**TrackManager** — Legacy tracker (deprecated).  Will be removed after shadow-mode validation of OccupancyEngine.
 
 GraphManager – Connection-graph utility powering presence path scoring and visualization.
 

@@ -78,6 +78,7 @@ def load_area_tree():
     mod.event_trigger = stub_decorator
     mod.pyscript_compile = stub_decorator
     mod.state_trigger = _state_trigger
+    mod.time_trigger = stub_decorator
     sys.modules['area_tree'] = mod
     exec(code, mod.__dict__)
     return mod

@@ -71,10 +71,18 @@ def _ensure_test_stubs():
         logger_mod.Logger = _Logger
         sys.modules["logger"] = logger_mod
 
+    # Don't stub 'modules' — we need the real package for area_graph etc.
+    # Only set stubs for submodules that are already stubbed at the bare level.
     if "modules" not in sys.modules:
-        sys.modules["modules"] = types.ModuleType("modules")
+        # Import the real modules package to make submodules importable
+        import importlib
+        real_modules = importlib.import_module("modules")
+        sys.modules["modules"] = real_modules
     if "modules.adaptive_learning" not in sys.modules:
-        sys.modules["modules.adaptive_learning"] = sys.modules["adaptive_learning"]
+        # Use the stub from the bare module
+        bare = sys.modules.get("adaptive_learning")
+        if bare:
+            sys.modules["modules.adaptive_learning"] = bare
     if "modules.logger" not in sys.modules:
         sys.modules["modules.logger"] = sys.modules["logger"]
 
@@ -193,9 +201,9 @@ def test_tracker_records_button_area():
     area_tree, _calls = build_module()
     area_tree.event_manager.create_event({"device_name": "service_input_button_single_bathroom"})
 
-    track_areas = [track.area_name for track in area_tree.tracker_manager.tracks]
-    assert track_areas
-    assert track_areas[-1] == "bathroom"
+    engine = area_tree.occupancy_engine
+    assert engine.room_occupancy_confidence("bathroom") > 0.01
+    assert engine.room_recent_activity("bathroom")
 
 
 def test_unknown_button_name_is_ignored_safely():

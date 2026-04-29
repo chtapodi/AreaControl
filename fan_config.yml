@@ -1,0 +1,17 @@
+# Fan / temperature control configuration
+# goal_temp: default target temperature in Fahrenheit (fans turn on above this)
+# hysteresis_up: degrees above goal to trigger fan ON
+# hysteresis_down: degrees below goal to trigger fan OFF (should be <= hysteresis_up)
+# per_area overrides: any of the above keys can be overridden per area name
+
+defaults:
+  goal_temp: 68
+  hysteresis_up: 2
+  hysteresis_down: 1
+
+# Per-area overrides (area name must match layout.yml)
+# per_area:
+#   bedroom:
+#     goal_temp: 66
+#   office:
+#     goal_temp: 70

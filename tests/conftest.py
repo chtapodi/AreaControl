@@ -126,6 +126,7 @@ def load_area_tree(use_real_drivers=None):
     mod.event_trigger = _stub_decorator
     mod.pyscript_compile = _stub_decorator
     mod.state_trigger = _state_trigger
+    mod.time_trigger = _stub_decorator
     # task_unique is used bare in area_tree.py (pyscript injects it as a global)
     def _task_unique_for_exec(name, kill_me=False):
         def decorator(func):

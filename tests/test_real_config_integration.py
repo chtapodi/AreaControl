@@ -37,25 +37,6 @@ EXPECTED_ROOM_LIGHTS = {
     },
 }
 
-
-class DummyTrackerManager:
-    class _Track:
-        def __init__(self, area_name):
-            self.area_name = area_name
-
-        def get_pretty_string(self):
-            return self.area_name
-
-    def __init__(self):
-        self.tracks = []
-
-    def add_event(self, area_name):
-        self.tracks.append(self._Track(area_name))
-
-    def get_pretty_string(self):
-        return str(self.tracks)
-
-
 def build_real_config_module():
     area_tree = load_area_tree_with_config(CONFIG_PATHS)
     calls = []
@@ -80,7 +61,17 @@ def build_real_config_module():
     area_tree.cover = types.SimpleNamespace(set_cover_position=lambda **kw: None)
     area_tree.state = types.SimpleNamespace(get=lambda *args, **kwargs: "off")
     area_tree.input_boolean = types.SimpleNamespace(motion_sensor_mode="on")
-    area_tree.tracker_manager = DummyTrackerManager()
+    area_tree.occupancy_engine = types.SimpleNamespace(
+        handle_motion=lambda *a: None,
+        handle_presence=lambda *a, **k: None,
+        room_occupancy_confidence=lambda a: 0.01,
+        room_recent_activity=lambda a, seconds=300: False,
+        adjacent_occupancy=lambda a: {},
+        likely_predecessor=lambda a: None,
+        neighbors=lambda a: set(),
+        debug_summary=lambda: "",
+        tick=lambda: None,
+    )
     area_tree.global_triggers = []
     area_tree.config_settings = dict(area_tree.DEFAULT_CONFIG)
     area_tree.config_settings.update(CONFIG_PATHS)

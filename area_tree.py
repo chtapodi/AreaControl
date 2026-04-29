@@ -28,7 +28,8 @@ import builtins
 from collections import defaultdict
 import copy
 import time
-
+import random
+import asyncio
 
 from pyscript.k_to_rgb import convert_K_to_RGB
 from homeassistant.const import EVENT_CALL_SERVICE
@@ -49,7 +50,9 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
             return (0, 0, 0)
 
     color_util = _ColorUtil()
-from tracker import TrackManager, Track, Event
+from modules.area_graph import AreaGraph
+from modules.occupancy_engine import OccupancyEngine
+from modules.occupancy_config import load_config as load_occupancy_config
 try:
     from adaptive_learning import get_learner
     from logger import Logger
@@ -83,7 +86,7 @@ STATE_VALUES = {
 area_tree = None
 event_manager = None
 global_triggers = None
-tracker_manager=None
+occupancy_engine=None
 config_settings = {}
 
 # Maps area_name -> asyncio.Task for pending delayed-off
@@ -378,12 +381,12 @@ def reset():
     global event_manager
     global global_triggers
     global verbose_mode
-    global tracker_manager
+    global occupancy_engine
     area_tree = None
     event_manager = None
     global_triggers = None
     verbose_mode = False
-    tracker_manager=None
+    occupancy_engine=None
     init()
 
 
@@ -392,13 +395,15 @@ def init():
     global area_tree
     global event_manager
     global global_triggers
-    global tracker_manager
+    global occupancy_engine
     global config_settings
     config_settings = load_config()
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
-    tracker_manager = TrackManager(connections_config=config_settings["connections"])
+    area_graph = AreaGraph(config_settings["connections"])
+    occ_config = load_occupancy_config()
+    occupancy_engine = OccupancyEngine(area_graph, occ_config)
     
     # NOTE: power_on_all_power_monitoring_devices() is available as a
     # manual @service call but is intentionally NOT run on every reload.
@@ -453,11 +458,11 @@ def get_event_manager():
         init()
     return event_manager
 
-def get_tracker_manager():
-    global tracker_manager
-    if tracker_manager is None:
+def get_occupancy_engine():
+    global occupancy_engine
+    if occupancy_engine is None:
         init()
-    return tracker_manager
+    return occupancy_engine
 
 
 def get_area_tree():
@@ -755,14 +760,6 @@ def combine_colors(color_one, color_two, strategy="add"):
 # These must have an interface that mathes the following and returns boolean
 
 
-def check_sleep(
-    event,
-    area_state,
-):
-    is_theo_alseep = state.get("binary_sensor.xavier_is_sleeping")
-    log.info(f"theo sleep {is_theo_alseep}")
-
-
 def motion_sensor_mode(*args, **kwargs):
     log.info(f"motion_sensor_mode {input_boolean.motion_sensor_mode}")
     return input_boolean.motion_sensor_mode == "on"
@@ -805,25 +802,44 @@ def schedule_motion_off(device, *args):
     area_name = area.name
     delay = _get_area_motion_off_delay(area)
 
-    log.info(f"schedule_motion_off: scheduling off for {area_name} in {delay}s")
+    log.info("schedule_motion_off: scheduling off", extra={
+        "area": area_name,
+        "delay_s": delay
+    })
 
     async def _delayed_off():
-        log.info(f"schedule_motion_off: [{area_name}] waiting {delay}s before turning off")
-        await task.sleep(delay)
-        log.info(f"schedule_motion_off: [{area_name}] delay elapsed — applying off")
+        log.info("schedule_motion_off: delay wait start", extra={
+                "area": area_name, "delay_s": delay
+            })
+        await asyncio.sleep(delay)
+        log.info("schedule_motion_off: delay elapsed", extra={
+                "area": area_name, "action": "check"
+            })
         # Re-check motion sensor mode at execution time
         if not motion_sensor_mode():
-            log.info(f"schedule_motion_off: [{area_name}] motion_sensor_mode is off, skipping")
+            log.info("schedule_motion_off: sensor mode off", extra={
+                    "area": area_name, "action": "skip_sensor_mode_off"
+                })
             return
         area_obj = get_area_tree().get_area(area_name)
         if area_obj is None:
             log.warning(f"schedule_motion_off: [{area_name}] area no longer in tree")
             return
-        area_obj.set_state({"status": 0}, device_type_filter=["light"])
+        area_obj.set_state({"status": 0}, device_type_filter=["light"],
+                           event_id="motion-off_" + area_name)
         pending_motion_off.pop(area_name, None)
-        log.info(f"schedule_motion_off: [{area_name}] off applied")
+        log.info("schedule_motion_off: off applied", extra={
+                "area": area_name, "action": "off_applied"
+            })
 
-    pending_motion_off[area_name] = _delayed_off()
+    try:
+        existing = pending_motion_off.get(area_name)
+        if existing is not None:
+            existing.cancel()
+        pending_motion_off[area_name] = asyncio.create_task(_delayed_off())
+    except RuntimeError:
+        # No running event loop (e.g., test environment) — store coroutine directly
+        pending_motion_off[area_name] = _delayed_off()
 
     # Return False: prevents the rule from applying state immediately.
     return False
@@ -842,46 +858,38 @@ def cancel_motion_off(device, *args):
     if existing is not None:
         try:
             existing.cancel()
-            log.info(f"cancel_motion_off: cancelled pending-off for {area_name}")
+            log.info("cancel_motion_off", extra={
+                    "area": area_name, "action": "cancelled"
+                })
         except Exception as exc:
             log.warning(f"cancel_motion_off: error cancelling task for {area_name}: {exc}")
     return True
 
 
 def check_adjacent_motion(device, *args):
-    """Guard: block motion-off if recent motion was detected in an adjacent area.
+    """Guard: block motion-off if a neighbouring room has had recent activity.
 
-    Uses the TrackManager's graph to find neighbouring areas and inspects
-    recent track events.  If any track has its head in a neighbouring area
-    within the configured adjacent_motion_window (default 5 minutes), the
-    off is suppressed (returns False).
+    Uses the OccupancyEngine to check whether any room directly connected
+    to the device's area has had motion or presence within the configured
+    window (default 5 minutes).  Returns False to suppress the motion-off
+    when an adjacent room is likely occupied.
     """
     ADJACENT_WINDOW = 300  # seconds — how recent "adjacent motion" must be
 
     area_name = device.get_area().name
-    tracker = get_tracker_manager()
+    engine = get_occupancy_engine()
 
-    try:
-        neighbors = tracker.graph_manager.get_neighbors(area_name)
-    except Exception as exc:
-        log.warning(f"check_adjacent_motion: could not get neighbors for {area_name}: {exc}")
-        return True  # allow off on error
-
+    neighbors = engine.neighbors(area_name)
     if not neighbors:
         return True  # no neighbours configured → allow off
 
-    for track in tracker.tracks:
-        head = track.get_head()
-        if head is None:
-            continue
-        if head.get_area() in neighbors:
-            age = head.get_time_since_last_trigger()
-            if age < ADJACENT_WINDOW:
-                log.info(
-                    f"check_adjacent_motion: blocking off for {area_name} — "
-                    f"recent motion in adjacent area {head.get_area()} ({age:.0f}s ago)"
-                )
-                return False
+    for neighbor in neighbors:
+        if engine.room_recent_activity(neighbor, ADJACENT_WINDOW):
+            log.info(
+                f"check_adjacent_motion: blocking off for {area_name} — "
+                f"recent motion in adjacent area {neighbor}"
+            )
+            return False
 
     return True
 
@@ -925,19 +933,108 @@ def get_area_local_scope(device, device_area, *args):
 
 ### State functions
 # Functions that return a state based on some value
+
+
+def _get_circadian_color_state(current_minutes, scope_rgb_color=None):
+    """Return the time-appropriate color state (color_temp or rgb_color).
+
+    Does NOT set brightness — caller adds that. Shared between
+    get_time_based_state (motion events) and circadian_periodic_update
+    (15-min color refresh).
+
+    Args:
+        current_minutes: minutes since midnight (local time)
+        scope_rgb_color: optional current rgb_color for blending after sunset
+
+    Returns:
+        dict with color_temp or rgb_color key (may be empty if no change needed)
+    """
+    import datetime as dt
+    import os as _os
+
+    def _get_sunset_minutes():
+        """Get today's sunset in local minutes since midnight."""
+        try:
+            from astral.sun import sun as astral_sun
+            from astral import LocationInfo, Observer
+            import yaml
+
+            # Read lat/lon from sun_config.yml
+            script_dir = _os.path.dirname(_os.path.abspath(__file__))
+            config_paths = [
+                _os.path.join(script_dir, "sun_config.yml"),
+                "/config/pyscript/sun_config.yml",
+            ]
+            lat, lon = 37.7653, -122.2416  # default SF Bay Area
+            for p in config_paths:
+                if _os.path.exists(p):
+                    with open(p) as f:
+                        cfg = yaml.safe_load(f) or {}
+                    loc_cfg = cfg.get("location", {})
+                    lat = loc_cfg.get("latitude", lat)
+                    lon = loc_cfg.get("longitude", lon)
+                    break
+
+            loc = LocationInfo("Home", "US", "America/Los_Angeles", lat, lon)
+            obs = Observer(loc.latitude, loc.longitude)
+            import pytz
+            local_tz = pytz.timezone("America/Los_Angeles")
+            sun_events = astral_sun(obs, date=dt.date.today(), tzinfo=local_tz)
+            sunset = sun_events.get("sunset")
+            if sunset:
+                return sunset.hour * 60 + sunset.minute
+        except Exception:
+            pass
+        # Fallback: ~19:56 (typical late-April sunset in SF)
+        return 19 * 60 + 56
+
+    sundown_minutes = _get_sunset_minutes()
+    state = {}
+
+    if current_minutes < 360:  # 00:00-06:00
+        state["rgb_color"] = [255, 0, 0]
+    elif current_minutes < 450:  # 06:00-07:30
+        state["rgb_color"] = [255, 190, 130]
+    elif current_minutes < 600:  # 07:30-10:00
+        state["color_temp"] = 350
+    elif current_minutes < 720:  # 10:00-12:00
+        state["color_temp"] = 400
+    elif current_minutes < 900:  # 12:00-15:00
+        state["color_temp"] = 370
+    elif current_minutes < sundown_minutes:  # 15:00-sunset
+        state["color_temp"] = 350
+    else:
+        # After sunset — warm RGB
+        hour = current_minutes // 60
+        goal_color = [255, 190, 130] if hour < 22 else [255, 140, 70]
+        if scope_rgb_color:
+            state["rgb_color"] = combine_colors(
+                scope_rgb_color, goal_color, strategy="average"
+            )
+        else:
+            state["rgb_color"] = goal_color
+
+    return state
+
+
 def get_time_based_state(device, scope, *args):
     now = time.localtime()
     hour = now.tm_hour
     minute = now.tm_min
+    current_minutes = hour * 60 + minute
 
     states = {}
     for area in scope:
         states[area.name] = area.get_state()
     scope_state = summarize_state(states)
+    scope_rgb = scope_state.get("rgb_color")
 
+    # Get color state from shared helper
+    state = _get_circadian_color_state(current_minutes, scope_rgb)
+
+    # Compute brightness
     max_brightness = 255
     overnight_brightness = 60
-    current_minutes = hour * 60 + minute
 
     def interpolate_over_quarters(start_minute, end_minute, start_value, end_value):
         total_minutes = end_minute - start_minute
@@ -958,34 +1055,8 @@ def get_time_based_state(device, scope, *args):
     else:  # 07:00-24:00
         brightness = max_brightness
 
-    state = {"status": 1, "brightness": brightness}
-
-    sundown_minutes = 19 * 60  # 19:00 placeholder
-
-    if current_minutes < 360:  # 00:00-06:00
-        state["rgb_color"] = [255, 0, 0]
-    elif current_minutes < 450:  # 06:00-07:30
-        state["rgb_color"] = [255, 190, 130]
-    elif current_minutes < 600:  # 07:30-10:00
-        state["color_temp"] = 350
-    elif current_minutes < 720:  # 10:00-12:00
-        state["color_temp"] = 400
-    elif current_minutes < 900:  # 12:00-15:00
-        state["color_temp"] = 370
-    elif current_minutes < sundown_minutes:  # 15:00-19:00
-        state["color_temp"] = 350
-    else:
-        goal_color = [255, 190, 130] if hour < 22 else [255, 140, 70]
-        if "rgb_color" in scope_state:
-            state["rgb_color"] = combine_colors(
-                scope_state["rgb_color"], goal_color, strategy="average"
-            )
-        else:
-            state["rgb_color"] = goal_color
-
-    if scope_state.get("status"):
-        state.pop("rgb_color", None)
-        state.pop("color_temp", None)
+    state["status"] = 1
+    state["brightness"] = brightness
 
     log.info(
         "Time based state: hour=%s minute=%s brightness=%s state=%s",
@@ -1000,22 +1071,22 @@ def get_last_set_state(device, scope, *args):
     return get_cached_last_set_state()
 
 def get_last_track_state(device, scope, *args):
-    tracker_manager=get_tracker_manager()
+    engine=get_occupancy_engine()
     area_tree=get_area_tree()
     device_area = device.get_area().name
 
-    log.info(f"get_last_track_state(): looking for {device_area} in {tracker_manager.get_pretty_string()}")
+    predecessor = engine.likely_predecessor(device_area)
+    if predecessor is not None:
+        log.info(
+            f"get_last_track_state(): {device_area} likely from {predecessor}"
+        )
+        last_track_state=summarize_state(area_tree.get_state(predecessor))
+        if "name" in last_track_state:
+            del last_track_state["name"]
+        log.info(f"get_last_track_state(): state from {predecessor}: {last_track_state}")
+        return last_track_state
 
-    for track in tracker_manager.tracks:
-        if track.get_area() == device_area:
-            previous_event=track.get_previous_event(1) # Get the event before the current one
-            if previous_event is not None:
-                previous_area=previous_event.get_area()
-                last_track_state=summarize_state(area_tree.get_state(previous_area))
-                if "name" in last_track_state:
-                    del last_track_state["name"] 
-                log.info(f"get_last_track_state(): Last track state is {last_track_state} from {previous_area}")
-                return last_track_state
+    log.info(f"get_last_track_state(): no predecessor found for {device_area}")
     return None
 
 
@@ -1210,9 +1281,12 @@ def merge_states(state_list, name=None):
     For combining *candidate* states from rules/functions use
     ``combine_states`` which supports first/last/average strategies.
     """
+    merged_state_list = []
     for state in state_list :
-        if "name" in state.keys(): del state["name"]
-    merged_state=merge_data(state_list)
+        state_copy = copy.deepcopy(state)
+        if "name" in state_copy.keys(): del state_copy["name"]
+        merged_state_list.append(state_copy)
+    merged_state = merge_data(merged_state_list) if merged_state_list else {}
     if "status" in merged_state and merged_state["status"]>0:
         merged_state["status"]=1 
     else:
@@ -1352,8 +1426,11 @@ class Area:
     def is_frozen(self):
         return self.frozen
 
-    def set_state(self, state, device_type_filter=None):
-        log.info(f"Area {self.name}: set_state called with state={state} filter={device_type_filter}")
+    def set_state(self, state, device_type_filter=None, event_id=""):
+        log.info("Area.set_state", extra={
+                "area": self.name, "state": state,
+                "filter": str(device_type_filter), "event_id": event_id
+            })
         if self.frozen:
             log.info(f"Area {self.name} is frozen; skipping state change {state}")
             return
@@ -1376,10 +1453,10 @@ class Area:
                     if not state:
                         log.info(f"Area {self.name}: Skipping {child.name} (empty state)")
                         continue
-                    child.set_state(copy.deepcopy(state))
+                    child.set_state(copy.deepcopy(state), event_id=event_id)
                 else:
                     # Sub-area: propagate the filter
-                    child.set_state(copy.deepcopy(state), device_type_filter=device_type_filter)
+                    child.set_state(copy.deepcopy(state), device_type_filter=device_type_filter, event_id=event_id)
             except Exception as exc:
                 log.error(f"Area {self.name}: Exception setting state on child {getattr(child, 'name', child)}: {exc}")
 
@@ -1459,17 +1536,15 @@ def load_device_defs(devices_path, discovered_path="./pyscript/discovered.yml"):
 
 ### Tracker interface
 def update_tracker(device, *args):
-    tracker_manager=get_tracker_manager()
+    engine=get_occupancy_engine()
 
-    tracker_manager.add_event(device.get_area().name)
+    engine.handle_motion(device.get_area().name)
     try:
         get_learner().record_presence(device.get_area().name)
     except Exception:
         pass
 
-    log.info(f"update_tracker: Current tracks")
-    for track in tracker_manager.tracks:
-        log.info(f"update_tracker: {track.get_pretty_string()}")
+    log.info(f"update_tracker: {device.get_area().name}")
 
     return True
 
@@ -1481,7 +1556,10 @@ class EventManager:
         self.area_tree = area_tree
 
     def create_event(self, event):
-        log.info(f"EventManager: New event: {event}")
+        # Generate an event_id for cause-effect tracing across the pipeline.
+        if "event_id" not in event:
+            event["event_id"] = f"{int(time.time() * 1000):x}_{random.randint(0, 65535):04x}"
+        log.info(f"EventManager: New event: {event}", extra={"event_id": event.get("event_id", "")})
 
         result = self.check_event(event)
 
@@ -1536,7 +1614,11 @@ class EventManager:
                     matching_rules.append(rule_name)
 
         event_tags = event.get("tags", [])
-        log.info(f"EventManager:check_event():  Event: {event} Matches:{matching_rules} Rules")
+        log.info("EventManager:check_event()", extra={
+            "event_id": event.get("event_id", ""),
+            "event": {k: v for k, v in event.items() if k != "event_id"},
+            "matches": list(matching_rules)
+        })
 
         results = []
         for rule_name in matching_rules:
@@ -1566,7 +1648,12 @@ class EventManager:
     def execute_rule(self, event_data, rule, rule_name=None):
         device_name = event_data["device_name"]
 
-        log.info(f"EventManager:execute_rule(): {event_data}")
+        log.info("EventManager:execute_rule()", extra={
+            "event_id": event_data.get("event_id", ""),
+            "rule": rule_name,
+            "device": device_name,
+            "event_data": {k: v for k, v in event_data.items() if k != "event_id"}
+        })
         device = self.get_area_tree().get_device(device_name)
 
 
@@ -1628,11 +1715,14 @@ class EventManager:
             for area in scope:
                 scope_names.append(area.name)
             
-            log.info(f"EventManager:execute_rule(): Event scope is {scope_names}")
+            log.info("EventManager:execute_rule(): scope resolved", extra={
+                "event_id": event_data.get("event_id", ""),
+                "scope": scope_names
+            })
 
             function_states = []
             # if there are state functions, run them
-            if "state_functions" in rule and rule["state_functions"] is not None:
+            if rule.get("state_functions"):
                 log.info(f"EventManager:execute_rule(): State functions: {rule['state_functions']}")
                 for function_pair in rule["state_functions"]:  # function_name:args
                     for function_name, args in function_pair.items():
@@ -1641,7 +1731,11 @@ class EventManager:
                         if function is not None:
                             function_state = function(device, scope, args)
                             # Adds the states to a list to be combined
-                            log.info(f"EventManager:execute_rule(): Function {function_name} provided: {function_state}")
+                            log.info("EventManager:execute_rule(): function state", extra={
+                                "event_id": event_data.get("event_id", ""),
+                                "function": function_name,
+                                "result": function_state
+                            })
                             function_states.append(function_state)
 
                 log.info(f"EventManager:execute_rule(): Function states: {rule['state_functions']} provided  {function_states}")
@@ -1663,7 +1757,11 @@ class EventManager:
                 state_list, strategy=strategy
             )
 
-            log.info(f"EventManager:execute_rule(): Event state is {final_state}")
+            log.info("EventManager:execute_rule(): merged state", extra={
+                "event_id": event_data.get("event_id", ""),
+                "final_state": final_state,
+                "strategy": strategy
+            })
 
 
 
@@ -1678,10 +1776,19 @@ class EventManager:
                         if function is not None:
                             args=self.expand_args(args, event_data, final_state)
                             if not function(device, *args) :
-                                log.info(f"Fuction '{function_name}' failed, not running rule.")
+                                log.info("EventManager:execute_rule(): function failed", extra={
+                                        "event_id": event_data.get("event_id", ""),
+                                        "function": function_name, "action": "block_rule"
+                                    })
                                 return False
-            log.info("EventManager:execute_rule(): Event passed all functions")
-            log.info(f"EventManager:execute_rule(): Applying {final_state} to {scope_names}")
+            log.info("EventManager:execute_rule(): all functions passed", extra={
+                    "event_id": event_data.get("event_id", "")
+                })
+            log.info("EventManager:execute_rule(): apply-state", extra={
+                "event_id": event_data.get("event_id", ""),
+                "state": final_state,
+                "scope": scope_names
+            })
             if device.target_outputs:
                 for target_device_name in device.target_outputs:
                     target_device = self.get_area_tree().get_device(target_device_name)
@@ -1697,10 +1804,12 @@ class EventManager:
                         if target_type not in device_type_filter:
                             continue
                     if final_state:
-                        target_device.set_state(copy.deepcopy(final_state))
+                        target_device.set_state(copy.deepcopy(final_state),
+                                                 event_id=event_data.get("event_id", ""))
             else:
                 for areas in scope:
-                    areas.set_state(final_state, device_type_filter=device_type_filter)
+                    areas.set_state(final_state, device_type_filter=device_type_filter,
+                                    event_id=event_data.get("event_id", ""))
 
             if rule_name is not None:
                 try:
@@ -2230,7 +2339,6 @@ class Device:
         else:
             state = copy.deepcopy(self.last_state)
         state["name"] = self.name
-        self.last_state = state
         log.info(f"Device:get_last_state(): Last state: {state}")
         return state
 
@@ -2269,8 +2377,10 @@ class Device:
 
         event_manager.create_event(event)
 
-    def set_state(self, state):
-        log.info(f"Setting state: {state} on {self.name}")
+    def set_state(self, state, event_id=""):
+        log.info("Device.set_state", extra={
+                "device": self.name, "state": state, "event_id": event_id
+            })
         if not self.locked:
             state = copy.deepcopy(state)
             if hasattr(self.driver, "set_state"):
@@ -2278,12 +2388,18 @@ class Device:
                 # via its apply_values logic which tracks color_type internally.
                 if get_verbose_mode():
                     log.info(f"Setting state: {state} on {self.name}")
-                log.info(f"Sending state to driver: {state}")
+                log.info("Device: driver set_state", extra={
+                        "device": self.name, "state": state, "event_id": event_id
+                    })
 
                 applied_state=self.driver.set_state(state)
-                log.info(f"Applied state: {applied_state}")
+                log.info("Device: applied state", extra={
+                        "device": self.name, "state": applied_state, "event_id": event_id
+                    })
                 self.add_to_cache(applied_state)
-                log.info(f"Updated cache: {self.cached_state}")
+                log.info("Device: cache updated", extra={
+                        "device": self.name, "cached": self.cached_state, "event_id": event_id
+                    })
         else :
             if get_verbose_mode():
                 log.info(f"Device {self.name} is locked, not setting state {state}")
@@ -2343,7 +2459,7 @@ class MotionSensorDriver:
         self.callback = callback
 
     def get_state(self):
-        state = self.last_state
+        state = copy.deepcopy(self.last_state)
         state["name"] = self.name
         return state
     def get_valid_state_keys(self):
@@ -2363,7 +2479,7 @@ class MotionSensorDriver:
 
     def setup_service_triggers(self, device_id):
         log.info(f"Generating trigger for: {device_id}")
-        trigger_types = ["_ias_zone", "_occupancy"]
+        trigger_types = ["_ias_zone", "_iaszone", "_occupancy"]
         values = ["on", "off"]
 
         triggers = []
@@ -2535,8 +2651,18 @@ class KaufLight:
     # Status (on || off)
     def set_status(self, status, edit=0):
         """Sets the status of the light (on or off)"""
-
-        self.apply_values(rgb_color=self.get_rgb())
+        if status:
+            # Turn on: re-apply cached color if available
+            if self.color_type == "rgb":
+                self.apply_values(rgb_color=self.get_rgb())
+            else:
+                temp = self.get_temperature()
+                if temp is not None:
+                    self.apply_values(color_temp=temp)
+                else:
+                    self.apply_values()
+        else:
+            self.apply_values(off=1)
 
     def get_status(self):
         """Gets status"""
@@ -2545,8 +2671,8 @@ class KaufLight:
             status = state.get(f"light.{self.name}")
 
             log.info(f"KaufLight<{self.name}>:get_status(): Getting status {status}")
-        except:
-            pass
+        except Exception:
+            log.warning(f"Unable to get status from {self.name}")
 
         if status is None or status == "unavailable":
             log.warning(f"KaufLight<{self.name}>:get_status(): Unable to get status- Returning unknown")
@@ -2587,8 +2713,8 @@ class KaufLight:
         color = None
         try:
             color = state.get(f"light.{self.name}.rgb_color")
-        except:
-            log.warning(f"Unable to get rgb_color from {self.name}")
+        except Exception:
+            log.warning(f"Unable to get rgb_color from {self.name}", exc_info=True)
 
         self.rgb_color = color
 
@@ -2597,14 +2723,14 @@ class KaufLight:
 
     # Brightness
     def set_brightness(self, brightness, apply=False):
-        self.apply_values(brightness=str(brightness))
+        self.apply_values(brightness=brightness)
 
     def get_brightness(self):
         brightness = 255
         try:
             brightness = state.get(f"light.{self.name}.brightness")
-        except:
-            log.warning(f"get_brightness(): Unable to get brightness from {self.name}")
+        except Exception:
+            log.warning(f"get_brightness(): Unable to get brightness from {self.name}", exc_info=True)
 
         if self.is_on():  # brightness reports as 0 when off
             self.brightness = brightness
@@ -2619,8 +2745,8 @@ class KaufLight:
         temperature = None
         try:
             temperature = state.get(f"light.{self.name}.color_temp")
-        except:
-            log.warning(f"Unable to get color_temp from {self.name}")
+        except Exception:
+            log.warning(f"Unable to get color_temp from {self.name}", exc_info=True)
 
         if temperature is None or temperature == "null":
             if self.temperature is not None:
@@ -3446,7 +3572,7 @@ def monitor_service_calls(**kwargs):
 def monitor_external_state_setting(**kwargs):
     if "domain" in kwargs:
         if kwargs["domain"] == "light":
-            data=kwargs["service_data"]
+            data=kwargs.get("service_data")
             device_names=[]
             if "entity_id" in data:
 
@@ -3497,6 +3623,40 @@ def monitor_external_state_setting(**kwargs):
                     log.info(f"DEVICE {device_name} NOT FOUND")
 
 
+@time_trigger("cron(*/15 * * * *)")
+def circadian_periodic_update():
+    """Periodically re-apply circadian COLOR to lit lights.
+
+    Only updates color_temp/rgb_color — does NOT change brightness.
+    This prevents fighting with manual dimming, TV mode, or toggle presets.
+    """
+    tree = get_area_tree()
+    if tree is None:
+        return
+    hour = time.localtime().tm_hour
+    minute = time.localtime().tm_min
+    current_minutes = hour * 60 + minute
+
+    log.info(f"circadian_periodic_update: hour={hour} minute={minute}")
+
+    for name, obj in tree.area_tree_lookup.items():
+        # Only process Device leaves (not Area composites)
+        if not hasattr(obj, 'driver'):
+            continue
+        if getattr(obj.driver, 'device_type', None) != 'light':
+            continue
+        if obj.locked:
+            continue
+        obj_state = obj.get_state()
+        if not obj_state.get("status"):
+            continue
+        scope_rgb = obj_state.get("rgb_color")
+        color_state = _get_circadian_color_state(current_minutes, scope_rgb)
+        if color_state:
+            log.info(f"circadian_periodic_update: applying color {color_state} to {name}")
+            obj.set_state(copy.deepcopy(color_state))
+
+
 ### Tests ###
 
 
@@ -3509,7 +3669,7 @@ def monitor_external_state_setting(**kwargs):
 def test_tracks() :
     log.info("STARTING TEST TRACKS")
     event_manager = get_event_manager()
-    tracker_manager=get_tracker_manager()
+    engine=get_occupancy_engine()
     event_manager.create_event({'device_name': 'motion_sensor_laundry_room', 'tags': ['on', 'motion_occupancy']})
     time.sleep(0.2)
     event_manager.create_event({'device_name': 'motion_sensor_office', 'tags': ['on', 'motion_occupancy']})
@@ -3529,6 +3689,6 @@ def test_tracks() :
 
     # event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
 
-    log.info(tracker_manager.get_pretty_string())
+    log.info(engine.debug_summary())
 
 #test_tracks()

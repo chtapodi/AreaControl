@@ -122,7 +122,7 @@ living_room_zones_on:
     status: 1
   state_functions:
     # - get_last_set_state: []
-    # - get_time_based_state: []
+    - get_time_based_state: []
   combination_strategy: "first_state"
   device_type_filter: ["light"]
 
@@ -139,7 +139,7 @@ living_room_presence_on:
     status: 1
   state_functions:
     # - get_last_set_state: []
-    # - get_time_based_state: []
+    - get_time_based_state: []
   combination_strategy: "first_state"
   device_type_filter: ["light"]
 

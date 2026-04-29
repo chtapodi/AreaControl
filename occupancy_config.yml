@@ -1,0 +1,71 @@
+# Occupancy engine per-room profiles.
+# Rooms not listed inherit from [defaults].
+# All durations in seconds, confidences 0.0–1.0.
+
+defaults:
+  reinforcement: 0.15          # confidence added per motion event
+  max_confidence: 1.0
+  decay_half_life_s: 120        # seconds to halve confidence
+  min_confidence: 0.01          # never fully extinguish
+  presence_boost: 0.3           # FP2 presence-on adds this
+  absence_penalty: 0.4          # FP2 presence-off multiplies by (1 - this)
+  neighbor_diffusion: 0.15      # fraction of conf that bleeds to neighbours
+  neighbor_max_confidence: 0.3  # diffused confidence cap
+  neighbor_decay_half_life_s: 30
+  recent_window_s: 300          # seconds for room_recent_activity()
+
+tick_interval_s: 15
+
+rooms:
+  # --- Living room --- slow decay (people sit still), uses FP2 presence
+  living_room_hallway:
+    decay_half_life_s: 180
+  living_room_door:
+    decay_half_life_s: 180
+  living_room_front:
+    decay_half_life_s: 180
+  living_room_middle:
+    decay_half_life_s: 180
+  living_room_back:
+    decay_half_life_s: 180
+  living_room_chair_0:
+    decay_half_life_s: 180
+  living_room_chair_1:
+    decay_half_life_s: 180
+  living_room_couch_0:
+    decay_half_life_s: 180
+  living_room_couch_1:
+    decay_half_life_s: 180
+  living_room_couch_2:
+    decay_half_life_s: 180
+
+  # --- Hallway --- fast decay (people pass through)
+  hallway:
+    decay_half_life_s: 30
+    neighbor_diffusion: 0.25    # highly connected — more diffusion
+  bathroom:
+    decay_half_life_s: 45       # short visits
+  dining_room_hallway:
+    decay_half_life_s: 30
+
+  # --- Bedroom --- motion is intentional, slow decay
+  bedroom:
+    reinforcement: 0.25
+    decay_half_life_s: 180
+
+  # --- Kitchen --- moderate decay
+  kitchen:
+    decay_half_life_s: 90
+
+  # --- Office --- standard settings, slightly slower decay
+  office:
+    decay_half_life_s: 180
+
+  # --- Laundry --- fast decay (in-and-out)
+  laundry_room:
+    decay_half_life_s: 30
+
+  # --- Outside --- very fast decay (transient)
+  outside:
+    decay_half_life_s: 15
+    min_confidence: 0.001       # effectively zero when nobody's there

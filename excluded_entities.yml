@@ -1,0 +1,44 @@
+# Entities to exclude from the Health Dashboard drift audit.
+# Add entity IDs (e.g. "light.some_group") that are intentionally
+# not modeled in layout.yml / devices.yml / discovered.yml.
+#
+# List format:
+#   - light.hue_square_lamp
+#   - light.all_lights
+#
+# Or dict format:
+#   excluded:
+#     - light.hue_square_lamp
+
+excluded:
+  # Browser Mod screen entities are UI surfaces, not house lights.
+  - light.browser_mod_0bb01dcf_0267f4b3_screen
+  - light.browser_mod_0c939d69_bd067a95_screen
+  - light.browser_mod_9db1c7b6_75736960_screen
+  - light.browser_mod_a18e66b5_364f7747_screen
+  - light.browser_mod_c3238b70_07c7c77c_screen
+  - light.browser_mod_cad64fd2_349956f4_screen
+  - light.browser_mod_e734b69f_6cdfff23_screen
+
+  # Aggregated group lights should not be modeled as primary outputs.
+  - light.ball_lights
+  - light.bathroom_lights
+  - light.bedroom_lights
+  - light.dining_room_lights
+  - light.hanging_lights
+  - light.kitchen_lights
+  - light.laundry_room_lights
+  - light.living_room_lights
+  - light.office_lights
+  - light.sconce_lights
+
+  # Variant child entities are implementation details of parent lights.
+  - light.kauf_bathroom_0_warm_rgb
+  - light.kauf_bathroom_1_warm_rgb
+  - light.kauf_bathroom_center_warm_rgb
+  - light.kauf_bedroom_1_cold_rgb
+  - light.kauf_bedroom_1_warm_rgb
+  - light.kauf_hanging_1_warm_rgb
+  - light.kauf_kitchen_ball_warm_rgb
+  - light.kauf_lamp_warm_rgb
+  - light.kauf_sconce_1_warm_rgb
