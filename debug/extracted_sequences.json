@@ -1,0 +1,394 @@
+[
+  {
+    "id": 0,
+    "areas_visited": [
+      "office",
+      "hallway",
+      "living_room_couch_0",
+      "living_room",
+      "living_room_hallway",
+      "living_room_dining_room_1"
+    ],
+    "duration_s": 148.8,
+    "events": [
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.0
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.355
+      },
+      {
+        "area": "living_room_couch_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 7.806
+      },
+      {
+        "area": "living_room",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 7.818
+      },
+      {
+        "area": "living_room_hallway",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 8.841
+      },
+      {
+        "area": "living_room_couch_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 27.139
+      },
+      {
+        "area": "living_room_dining_room_1",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 28.127
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 147.122
+      },
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 148.777
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "areas_visited": [
+      "hallway",
+      "office"
+    ],
+    "duration_s": 3.2,
+    "events": [
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.699
+      },
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 3.226
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "areas_visited": [
+      "office",
+      "living_room",
+      "living_room_dining_room_1",
+      "living_room_dining_room_0",
+      "hallway"
+    ],
+    "duration_s": 150.6,
+    "events": [
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.0
+      },
+      {
+        "area": "living_room",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 17.531
+      },
+      {
+        "area": "living_room_dining_room_1",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 18.487
+      },
+      {
+        "area": "living_room_dining_room_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 19.5
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_occupancy",
+        "dt_s": 28.511
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 28.625
+      },
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 80.608
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "areas_visited": [
+      "office",
+      "hallway",
+      "living_room",
+      "living_room_dining_room_0",
+      "living_room_dining_room_2"
+    ],
+    "duration_s": 70.4,
+    "events": [
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_occupancy",
+        "dt_s": 0.0
+      },
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.104
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_occupancy",
+        "dt_s": 0.402
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.504
+      },
+      {
+        "area": "living_room",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 33.982
+      },
+      {
+        "area": "living_room_dining_room_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 34.962
+      },
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 35.961
+      },
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 44.543
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "areas_visited": [
+      "office",
+      "living_room_dining_room_2",
+      "living_room_dining_room_0",
+      "hallway"
+    ],
+    "duration_s": 52.0,
+    "events": [
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.0
+      },
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 33.809
+      },
+      {
+        "area": "living_room_dining_room_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 37.317
+      },
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 39.316
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 51.998
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "areas_visited": [
+      "hallway",
+      "office"
+    ],
+    "duration_s": 3.4,
+    "events": [
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 0.0
+      },
+      {
+        "area": "office",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 3.436
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "areas_visited": [
+      "living_room_dining_room_1",
+      "living_room_couch_0",
+      "living_room_back",
+      "living_room_couch_1",
+      "living_room_chair_0",
+      "hallway",
+      "living_room_dining_room_2",
+      "living_room_dining_room_0"
+    ],
+    "duration_s": 141.5,
+    "events": [
+      {
+        "area": "living_room_dining_room_1",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 0.0
+      },
+      {
+        "area": "living_room_couch_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 1.452
+      },
+      {
+        "area": "living_room_back",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 1.458
+      },
+      {
+        "area": "living_room_couch_1",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 2.969
+      },
+      {
+        "area": "living_room_chair_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 4.961
+      },
+      {
+        "area": "living_room_chair_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 4.973
+      },
+      {
+        "area": "living_room_couch_1",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 36.086
+      },
+      {
+        "area": "living_room_couch_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 37.038
+      },
+      {
+        "area": "living_room_dining_room_1",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 38.053
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_occupancy",
+        "dt_s": 71.426
+      },
+      {
+        "area": "hallway",
+        "state": "on",
+        "tag": "motion_detected",
+        "dt_s": 71.525
+      },
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 85.541
+      },
+      {
+        "area": "living_room_dining_room_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 120.907
+      },
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 130.032
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "areas_visited": [
+      "living_room_dining_room_2",
+      "living_room_dining_room_0"
+    ],
+    "duration_s": 4.8,
+    "events": [
+      {
+        "area": "living_room_dining_room_2",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 0.986
+      },
+      {
+        "area": "living_room_dining_room_0",
+        "state": "on",
+        "tag": "presence",
+        "dt_s": 4.812
+      }
+    ]
+  }
+]
