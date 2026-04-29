@@ -50,8 +50,9 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
             return (0, 0, 0)
 
     color_util = _ColorUtil()
-# Occupancy tracking modules: imported lazily in init() to avoid
-# pyscript reload issues with 'modules' namespace packaging.
+# Occupancy tracking modules are imported lazily in init() to avoid
+# pyscript reload auto-fix corruption (pyscript's module namespacing
+# differs between initial load and reload).
 try:
     from adaptive_learning import get_learner
     from logger import Logger
@@ -405,40 +406,24 @@ def init():
     global occupancy_engine
     global tracker_manager
     global config_settings
-
-    # Lazy-import occupancy modules (avoids pyscript reload auto-fix issues)
-    try:
-        from modules.area_graph import AreaGraph
-    except (ImportError, ModuleNotFoundError):
-        from area_graph import AreaGraph
-    try:
-        from modules.occupancy_engine import OccupancyEngine
-    except (ImportError, ModuleNotFoundError):
-        from occupancy_engine import OccupancyEngine
-    try:
-        from modules.occupancy_config import load_config as _load_occ_config
-    except (ImportError, ModuleNotFoundError):
-        from occupancy_config import load_config as _load_occ_config
-
     config_settings = load_config()
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
     area_graph = AreaGraph(config_settings["connections"])
-    occ_config = _load_occ_config()
+    occ_config = load_occupancy_config()
     occupancy_engine = OccupancyEngine(area_graph, occ_config)
-
+    
     # Shadow mode: also create legacy TrackManager for comparison
     if SHADOW_MODE:
         try:
-            from tracker import TrackManager as _TM
-            tracker_manager = _TM(connections_config=config_settings["connections"])
+            from tracker import TrackManager as _TrackManager
+            tracker_manager = _TrackManager(connections_config=config_settings["connections"])
             log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
-        except (ImportError, TypeError, ModuleNotFoundError):
-            tracker_manager = None
-            log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
-    else:
-        tracker_manager = None
+        except (ImportError, TypeError):
+            log.warning("Shadow mode: TrackManager unavailable (test stub?) — OccupancyEngine only")
+    # Note: in test environments TrackManager is stubbed; shadow comparison
+    # gracefully degrades via try/except in update_tracker()
     
     # NOTE: power_on_all_power_monitoring_devices() is available as a
     # manual @service call but is intentionally NOT run on every reload.
