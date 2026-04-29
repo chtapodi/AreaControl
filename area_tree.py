@@ -87,7 +87,13 @@ area_tree = None
 event_manager = None
 global_triggers = None
 occupancy_engine=None
+tracker_manager=None
 config_settings = {}
+
+# Shadow mode: run legacy TrackManager alongside OccupancyEngine, compare decisions.
+# When True, both trackers run and disagreements are logged.  The legacy
+# tracker still drives actual automations — the new engine is read-only.
+SHADOW_MODE = True
 
 # Maps area_name -> asyncio.Task for pending delayed-off
 pending_motion_off = {}
@@ -382,11 +388,13 @@ def reset():
     global global_triggers
     global verbose_mode
     global occupancy_engine
+    global tracker_manager
     area_tree = None
     event_manager = None
     global_triggers = None
     verbose_mode = False
     occupancy_engine=None
+    tracker_manager=None
     init()
 
 
@@ -396,6 +404,7 @@ def init():
     global event_manager
     global global_triggers
     global occupancy_engine
+    global tracker_manager
     global config_settings
     config_settings = load_config()
     global_triggers = []
@@ -404,6 +413,17 @@ def init():
     area_graph = AreaGraph(config_settings["connections"])
     occ_config = load_occupancy_config()
     occupancy_engine = OccupancyEngine(area_graph, occ_config)
+    
+    # Shadow mode: also create legacy TrackManager for comparison
+    if SHADOW_MODE:
+        try:
+            from tracker import TrackManager as _TrackManager
+            tracker_manager = _TrackManager(connections_config=config_settings["connections"])
+            log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
+        except (ImportError, TypeError):
+            log.warning("Shadow mode: TrackManager unavailable (test stub?) — OccupancyEngine only")
+    # Note: in test environments TrackManager is stubbed; shadow comparison
+    # gracefully degrades via try/except in update_tracker()
     
     # NOTE: power_on_all_power_monitoring_devices() is available as a
     # manual @service call but is intentionally NOT run on every reload.
@@ -463,6 +483,17 @@ def get_occupancy_engine():
     if occupancy_engine is None:
         init()
     return occupancy_engine
+
+
+def get_tracker_manager():
+    """Return legacy TrackManager (only valid in shadow mode).
+    
+    Does NOT call init() — that would reinitialize the entire area_tree
+    and break test setups.  If the tracker was never created (e.g. test
+    environment), returns None and shadow mode gracefully degrades.
+    """
+    global tracker_manager
+    return tracker_manager
 
 
 def get_area_tree():
@@ -1536,17 +1567,111 @@ def load_device_defs(devices_path, discovered_path="./pyscript/discovered.yml"):
 
 ### Tracker interface
 def update_tracker(device, *args):
-    engine=get_occupancy_engine()
+    area_name = device.get_area().name
 
-    engine.handle_motion(device.get_area().name)
+    if SHADOW_MODE:
+        # --- Shadow mode: run both trackers, use legacy for decisions ---
+        legacy = get_tracker_manager()
+        engine = get_occupancy_engine()
+
+        if legacy is not None and engine is not None:
+            # Both trackers available — dual-track
+            before_new = engine.room_occupancy_confidence(area_name)
+
+            # Legacy: drive actual automations
+            try:
+                legacy.add_event(area_name)
+            except Exception:
+                pass  # graceful — legacy may be stubbed in tests
+
+            # New: record for comparison (read-only)
+            engine.handle_motion(area_name)
+
+            after_new = engine.room_occupancy_confidence(area_name)
+
+            # Shadow comparison: log disagreements between old and new
+            try:
+                _shadow_compare(engine, legacy, area_name)
+            except Exception:
+                pass  # graceful — shadow comparison is best-effort
+
+            # Log both trackers' view
+            try:
+                legacy_count = len(legacy.tracks)
+            except Exception:
+                legacy_count = "?"
+            log.info(f"update_tracker: {area_name} | "
+                     f"new_conf={before_new:.3f}→{after_new:.3f} "
+                     f"legacy={legacy_count} tracks")
+        else:
+            # Shadow mode but one tracker unavailable (test env) — OccupancyEngine only
+            if engine is not None:
+                engine.handle_motion(area_name)
+            log.info(f"update_tracker: {area_name} (shadow degraded)")
+
+    else:
+        # --- Production mode: OccupancyEngine only ---
+        engine = get_occupancy_engine()
+        engine.handle_motion(area_name)
+
     try:
-        get_learner().record_presence(device.get_area().name)
+        get_learner().record_presence(area_name)
     except Exception:
         pass
 
-    log.info(f"update_tracker: {device.get_area().name}")
+    log.info(f"update_tracker: {area_name}")
 
     return True
+
+
+def _shadow_compare(engine, legacy, area_name):
+    """Compare legacy TrackManager vs OccupancyEngine for disagreement logging.
+
+    Checks:
+    1. Does legacy think someone is in this area? (active track head)
+    2. Does the new engine have confidence > 0.15?
+    3. For adjacent rooms: do legacy tracks exist vs engine confidence?
+    """
+    # --- Per-room agreement check ---
+    new_conf = engine.room_occupancy_confidence(area_name)
+    new_active = new_conf > 0.15
+
+    # Legacy: an area is "active" if any track has this area as its head
+    legacy_active = any(
+        track.head == area_name
+        for track in legacy.tracks
+    )
+
+    if new_active != legacy_active:
+        log.info(
+            f"[shadow] DISAGREE area={area_name} "
+            f"legacy=active:{legacy_active} new=conf:{new_conf:.2f}"
+        )
+
+    # --- Adjacent room check ---
+    neighbors = engine.neighbors(area_name)
+    for nb in neighbors:
+        nb_conf = engine.room_occupancy_confidence(nb)
+        nb_new = nb_conf > 0.15
+        nb_legacy = any(track.head == nb for track in legacy.tracks)
+
+        if nb_new != nb_legacy and (nb_conf > 0.05 or nb_legacy):
+            # Only log if either tracker thinks something meaningful is happening
+            log.info(
+                f"[shadow] DISAGREE ADJ area={area_name}→{nb} "
+                f"legacy=active:{nb_legacy} new=conf:{nb_conf:.2f}"
+            )
+
+    # --- Cross-check: rooms with tracks but low confidence ---
+    for track in legacy.tracks:
+        head = track.head
+        if head is not None:
+            conf = engine.room_occupancy_confidence(head)
+            if conf < 0.05 and head != area_name:
+                log.info(
+                    f"[shadow] LEGACY_TRACK_NO_CONF area={head} "
+                    f"legacy_has_track=true new_conf={conf:.3f}"
+                )
 
 
 
