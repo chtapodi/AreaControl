@@ -424,12 +424,24 @@ def init():
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
+
+    # EvalFunc proxy quirk on pyscript reload: config_settings values become
+    # EvalFunc wrappers inside @service functions. str() on them raises TypeError.
+    # Read raw YAML directly to get the connections path as a plain string.
+    # Note: __file__ and Path are not available in pyscript exec context.
+    import yaml as _yaml
+    _raw_cfg_path = "./pyscript/config.yml"
+    with builtins.open(_raw_cfg_path, "r") as _f:
+        _raw_cfg = _yaml.safe_load(_f) or {}
+    conn_path = _raw_cfg.get("connections", "./pyscript/connections.yml")
+    conn_path = str(conn_path)
+
     try:
-        area_graph = AreaGraph(str(config_settings["connections"]))
+        area_graph = AreaGraph(conn_path)
     except TypeError:
         # pyscript @service reload proxy quirk — import class directly
         import modules.area_graph as _ag
-        area_graph = _ag.AreaGraph(str(config_settings["connections"]))
+        area_graph = _ag.AreaGraph(conn_path)
     occ_config = _load_occ_config()
     try:
         occupancy_engine = OccupancyEngine(area_graph, occ_config)
@@ -445,7 +457,7 @@ def init():
         except ImportError:
             from tracker import TrackManager as _TM
         try:
-            tracker_manager = _TM(connections_config=str(config_settings["connections"]))
+            tracker_manager = _TM(connections_config=conn_path)
             log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
         except Exception:
             tracker_manager = None
