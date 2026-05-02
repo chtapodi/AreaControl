@@ -403,7 +403,7 @@ def _occ_init(config_settings):
     from occupancy_config import load_config as _occ_cfg_load
     import yaml
 
-    with open("./pyscript/config.yml", "r") as f:
+    with builtins.open("./pyscript/config.yml", "r") as f:
         raw = yaml.safe_load(f) or {}
     conn = raw.get("connections", "./pyscript/connections.yml")
     area_graph = AreaGraph(conn)
