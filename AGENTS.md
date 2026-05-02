@@ -17,7 +17,7 @@ Event flow. sensor/service signal → create_event (service) or Device.input_tri
 
 Startup & control services (@service is the pyscript service decorator per [PyScript HACS docs]):
 
-**Init:** Load YAML (layout, rules), construct AreaTree, hydrate EventManager, instantiate `OccupancyEngine` + `AreaGraph`.
+**Init:** Load YAML (layout, rules), construct AreaTree, hydrate EventManager, instantiate `OccupancyEngine` + `AreaGraph`. Currently in **SHADOW_MODE=True**: legacy TrackManager drives actual decisions, OccEngine runs read-only comparison. Goal: validate OccEngine, then set SHADOW_MODE=False to promote it as sole tracker. Last restored: 2026-05-01 (unstaged erroneous revert — BUG-NONEITER was YAML bug, not OccEngine bug).
 
 **Reset:** Log warning, clear globals, then re-run init; use for hard reloads.
 

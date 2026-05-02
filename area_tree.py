@@ -398,9 +398,9 @@ def reset():
 
 def _occ_init(config_settings):
     """Regular helper — avoids EvalFunc wrapping of imports inside @service."""
-    from modules.area_graph import AreaGraph
-    from modules.occupancy_engine import OccupancyEngine
-    from modules.occupancy_config import load_config as _occ_cfg_load
+    from area_graph import AreaGraph
+    from occupancy_engine import OccupancyEngine
+    from occupancy_config import load_config as _occ_cfg_load
     import yaml
 
     with open("./pyscript/config.yml", "r") as f:
@@ -415,7 +415,7 @@ def _occ_init(config_settings):
 def _shadow_init(conn_path):
     """Shadow mode helper — regular function, no EvalFunc wrapping."""
     try:
-        from modules.tracker import TrackManager
+        from tracker import TrackManager
         from log import log as _shadow_log
         tm = TrackManager(connections_config=conn_path)
         _shadow_log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")

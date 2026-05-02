@@ -49,9 +49,11 @@ class AreaGraph:
     """
 
     def __init__(self, source: str | list[dict[str, str]]) -> None:
-        if isinstance(source, str):
+        # Duck-type: try file path first (handles pyscript EvalFunc wrappers).
+        # load_connections() uses os.path.exists() which resolves EvalFunc objects.
+        try:
             connection_pairs = load_connections(source)
-        else:
+        except (OSError, TypeError, AttributeError):
             connection_pairs = source
 
         self._adj: dict[str, set[str]] = {}
