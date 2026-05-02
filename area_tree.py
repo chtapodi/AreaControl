@@ -398,31 +398,31 @@ def reset():
 
 def _occ_init(config_settings):
     """Regular helper — avoids EvalFunc wrapping of imports inside @service."""
-    from area_graph import AreaGraph
-    from occupancy_engine import OccupancyEngine
-    from occupancy_config import load_config as _occ_cfg_load
+    import area_graph as _ag
+    import occupancy_engine as _oe
+    import occupancy_config as _ocfg
     import yaml
 
     with builtins.open("./pyscript/config.yml", "r") as f:
         raw = yaml.safe_load(f) or {}
     conn = raw.get("connections", "./pyscript/connections.yml")
-    area_graph = AreaGraph(conn)
-    occ_config = _occ_cfg_load()
-    occ_engine = OccupancyEngine(area_graph, occ_config)
-    return area_graph, occ_engine, occ_config
+    ag = _ag.AreaGraph(conn)
+    occ_config = _ocfg.load_config()
+    occ_engine = _oe.OccupancyEngine(ag, occ_config)
+    return ag, occ_engine, occ_config
 
 
 def _shadow_init(conn_path):
     """Shadow mode helper — regular function, no EvalFunc wrapping."""
     try:
-        from tracker import TrackManager
-        from log import log as _shadow_log
-        tm = TrackManager(connections_config=conn_path)
-        _shadow_log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
+        import tracker as _trk
+        import log as _logmod
+        tm = _trk.TrackManager(connections_config=conn_path)
+        _logmod.log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
         return tm
     except Exception:
-        from log import log as _shadow_log
-        _shadow_log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
+        import log as _logmod
+        _logmod.log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
         return None
 
 
