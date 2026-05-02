@@ -424,17 +424,30 @@ def init():
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
-    area_graph = AreaGraph(config_settings["connections"])
+    try:
+        area_graph = AreaGraph(str(config_settings["connections"]))
+    except TypeError:
+        # pyscript @service reload proxy quirk — import class directly
+        import modules.area_graph as _ag
+        area_graph = _ag.AreaGraph(str(config_settings["connections"]))
     occ_config = _load_occ_config()
-    occupancy_engine = OccupancyEngine(area_graph, occ_config)
+    try:
+        occupancy_engine = OccupancyEngine(area_graph, occ_config)
+    except TypeError:
+        # pyscript @service reload proxy quirk — import class directly
+        import modules.occupancy_engine as _oe
+        occupancy_engine = _oe.OccupancyEngine(area_graph, occ_config)
 
     # Shadow mode: also create legacy TrackManager for comparison
     if SHADOW_MODE:
         try:
+            from modules.tracker import TrackManager as _TM
+        except ImportError:
             from tracker import TrackManager as _TM
-            tracker_manager = _TM(connections_config=config_settings["connections"])
+        try:
+            tracker_manager = _TM(connections_config=str(config_settings["connections"]))
             log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
-        except (ImportError, TypeError, ModuleNotFoundError):
+        except Exception:
             tracker_manager = None
             log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
     else:
@@ -2644,58 +2657,58 @@ class MotionSensorDriver:
                 )
 
 
+@service
+def service_driver_trigger(**kwargs):
+    """Standalone pyscript service for HA scripts to trigger service input buttons.
+
+    Moved to module level so @service registers as pyscript.service_driver_trigger.
+    Previously nested inside ServiceDriver.create_trigger() where the @service
+    decorator did not properly register the service with Home Assistant.
+    """
+    log.info(f"Triggering Service: with value: {kwargs}")
+    new_event = {}
+
+    # Always set device_name and tags regardless of whether a state payload is present.
+    # Previously these were only set inside the `if "state"` block, which caused a
+    # KeyError in EventManager.check_event() for tag-only calls like turn_on/turn_off.
+    new_event["device_name"] = kwargs.get("name", "service_input_button_all_lights")
+
+    if "tags" in kwargs:
+        new_event["tags"] = kwargs["tags"]
+
+    if "state" in kwargs:
+        state = kwargs["state"]
+        if "hs_color" in state:
+            hs_color = state["hs_color"]
+            rgb = hs_to_rgb(hs_color[0], hs_color[1])
+            rgb = [rgb[0], rgb[1], rgb[2]]
+            state["rgb_color"] = rgb
+
+            del state["hs_color"]
+
+        if "temp" in state:
+            state["color_temp"] = state["temp"]
+            del state["temp"]
+
+        log.info(f"state: {state}")
+        new_event["state"] = state
+
+    log.info(f"ServiceDriver: emitting event {new_event}")
+    get_event_manager().create_event(new_event)
+
+
 class ServiceDriver:
     def __init__(self, input_type, device_id):
         self.name = device_id
         log.info(f"Creating Service Input: {self.name}")
 
         self.last_state = None
-        self.trigger = self.create_trigger()
-
-    def add_callback(self, callback):
-        pass
-
-    @service
-    def create_trigger(self, **kwargs):
-        @service
-        def service_driver_trigger(**kwargs):
-            log.info(f"Triggering Service: with value: {kwargs}")
-            new_event = {}
-
-            # Always set device_name and tags regardless of whether a state payload is present.
-            # Previously these were only set inside the `if "state"` block, which caused a
-            # KeyError in EventManager.check_event() for tag-only calls like turn_on/turn_off.
-            if "name" in kwargs:
-                new_event["device_name"] = kwargs["name"]
-            else:
-                new_event["device_name"] = self.name
-
-            if "tags" in kwargs:
-                new_event["tags"] = kwargs["tags"]
-
-            if "state" in kwargs:
-                state = kwargs["state"]
-                if "hs_color" in state:
-                    hs_color = state["hs_color"]
-                    rgb = hs_to_rgb(hs_color[0], hs_color[1])
-                    rgb = [rgb[0], rgb[1], rgb[2]]
-                    state["rgb_color"] = rgb
-
-                    del state["hs_color"]
-
-                if "temp" in state:
-                    state["color_temp"] = state["temp"]
-                    del state["temp"]
-
-                log.info(f"state: {state}")
-                new_event["state"] = state
-
-            log.info(f"ServiceDriver: emitting event {new_event}")
-            get_event_manager().create_event(new_event)
+        self.trigger = service_driver_trigger
 
         get_global_triggers().append(["Service", service_driver_trigger])
 
-        return service_driver_trigger  # return the function created?
+    def add_callback(self, callback):
+        pass
 
     def get_state(self):
         return {"name": self.name}
