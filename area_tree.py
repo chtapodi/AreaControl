@@ -407,11 +407,12 @@ def init():
     global config_settings
 
     # Lazy-import occupancy modules (avoids pyscript reload auto-fix issues).
-    # USE builtins.__import__ because imports inside @service wrap classes as
+    # USE __import__ via __builtins__ because imports inside @service wrap names as
     # EvalFunc proxies, making them uncallable as constructors.
-    AreaGraph = builtins.__import__("modules.area_graph", fromlist=["AreaGraph"]).AreaGraph
-    OccupancyEngine = builtins.__import__("modules.occupancy_engine", fromlist=["OccupancyEngine"]).OccupancyEngine
-    _load_occ_config = builtins.__import__("modules.occupancy_config", fromlist=["load_config"]).load_config
+    _imp = __builtins__.__import__
+    AreaGraph = _imp("modules.area_graph", fromlist=["AreaGraph"]).AreaGraph
+    OccupancyEngine = _imp("modules.occupancy_engine", fromlist=["OccupancyEngine"]).OccupancyEngine
+    _load_occ_config = _imp("modules.occupancy_config", fromlist=["load_config"]).load_config
 
     config_settings = load_config()
     global_triggers = []
@@ -435,7 +436,7 @@ def init():
 
     # Shadow mode: also create legacy TrackManager for comparison
     if SHADOW_MODE:
-        _TM = builtins.__import__("modules.tracker", fromlist=["TrackManager"]).TrackManager
+        _TM = _imp("modules.tracker", fromlist=["TrackManager"]).TrackManager
         try:
             tracker_manager = _TM(connections_config=conn_path)
             log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
