@@ -396,6 +396,35 @@ def reset():
     tracker_manager=None
     init()
 
+def _occ_init(config_settings):
+    """Regular helper — avoids EvalFunc wrapping of imports inside @service."""
+    from modules.area_graph import AreaGraph
+    from modules.occupancy_engine import OccupancyEngine
+    from modules.occupancy_config import load_config as _occ_cfg_load
+    import yaml
+
+    with open("./pyscript/config.yml", "r") as f:
+        raw = yaml.safe_load(f) or {}
+    conn = raw.get("connections", "./pyscript/connections.yml")
+    area_graph = AreaGraph(conn)
+    occ_config = _occ_cfg_load()
+    occ_engine = OccupancyEngine(area_graph, occ_config)
+    return area_graph, occ_engine, occ_config
+
+
+def _shadow_init(conn_path):
+    """Shadow mode helper — regular function, no EvalFunc wrapping."""
+    try:
+        from modules.tracker import TrackManager
+        from log import log as _shadow_log
+        tm = TrackManager(connections_config=conn_path)
+        _shadow_log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
+        return tm
+    except Exception:
+        from log import log as _shadow_log
+        _shadow_log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
+        return None
+
 
 @service
 def init():
@@ -406,43 +435,17 @@ def init():
     global tracker_manager
     global config_settings
 
-    # Lazy-import occupancy modules (avoids pyscript reload auto-fix issues).
-    # USE __import__ via __builtins__ because imports inside @service wrap names as
-    # EvalFunc proxies, making them uncallable as constructors.
-    _imp = __builtins__.__import__
-    AreaGraph = _imp("modules.area_graph", fromlist=["AreaGraph"]).AreaGraph
-    OccupancyEngine = _imp("modules.occupancy_engine", fromlist=["OccupancyEngine"]).OccupancyEngine
-    _load_occ_config = _imp("modules.occupancy_config", fromlist=["load_config"]).load_config
-
     config_settings = load_config()
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
 
-    # EvalFunc proxy quirk on pyscript reload: config_settings values become
-    # EvalFunc wrappers inside @service functions. str() on them raises TypeError.
-    # Read raw YAML directly to get the connections path as a plain string.
-    # Note: __file__ and Path are not available in pyscript exec context.
-    import yaml as _yaml
-    _raw_cfg_path = "./pyscript/config.yml"
-    with builtins.open(_raw_cfg_path, "r") as _f:
-        _raw_cfg = _yaml.safe_load(_f) or {}
-    conn_path = _raw_cfg.get("connections", "./pyscript/connections.yml")
-    conn_path = str(conn_path)
-
-    area_graph = AreaGraph(conn_path)
-    occ_config = _load_occ_config()
-    occupancy_engine = OccupancyEngine(area_graph, occ_config)
+    area_graph, occupancy_engine, occ_config = _occ_init(config_settings)
+    conn_path = "./pyscript/connections.yml"  # for shadow mode below
 
     # Shadow mode: also create legacy TrackManager for comparison
     if SHADOW_MODE:
-        _TM = _imp("modules.tracker", fromlist=["TrackManager"]).TrackManager
-        try:
-            tracker_manager = _TM(connections_config=conn_path)
-            log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
-        except Exception:
-            tracker_manager = None
-            log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
+        tracker_manager = _shadow_init(conn_path)
     else:
         tracker_manager = None
     
