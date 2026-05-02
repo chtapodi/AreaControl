@@ -406,19 +406,12 @@ def init():
     global tracker_manager
     global config_settings
 
-    # Lazy-import occupancy modules (avoids pyscript reload auto-fix issues)
-    try:
-        from modules.area_graph import AreaGraph
-    except (ImportError, ModuleNotFoundError):
-        from area_graph import AreaGraph
-    try:
-        from modules.occupancy_engine import OccupancyEngine
-    except (ImportError, ModuleNotFoundError):
-        from occupancy_engine import OccupancyEngine
-    try:
-        from modules.occupancy_config import load_config as _load_occ_config
-    except (ImportError, ModuleNotFoundError):
-        from occupancy_config import load_config as _load_occ_config
+    # Lazy-import occupancy modules (avoids pyscript reload auto-fix issues).
+    # USE builtins.__import__ because imports inside @service wrap classes as
+    # EvalFunc proxies, making them uncallable as constructors.
+    AreaGraph = builtins.__import__("modules.area_graph", fromlist=["AreaGraph"]).AreaGraph
+    OccupancyEngine = builtins.__import__("modules.occupancy_engine", fromlist=["OccupancyEngine"]).OccupancyEngine
+    _load_occ_config = builtins.__import__("modules.occupancy_config", fromlist=["load_config"]).load_config
 
     config_settings = load_config()
     global_triggers = []
@@ -436,26 +429,13 @@ def init():
     conn_path = _raw_cfg.get("connections", "./pyscript/connections.yml")
     conn_path = str(conn_path)
 
-    try:
-        area_graph = AreaGraph(conn_path)
-    except TypeError:
-        # pyscript @service reload proxy quirk — import class directly
-        import modules.area_graph as _ag
-        area_graph = _ag.AreaGraph(conn_path)
+    area_graph = AreaGraph(conn_path)
     occ_config = _load_occ_config()
-    try:
-        occupancy_engine = OccupancyEngine(area_graph, occ_config)
-    except TypeError:
-        # pyscript @service reload proxy quirk — import class directly
-        import modules.occupancy_engine as _oe
-        occupancy_engine = _oe.OccupancyEngine(area_graph, occ_config)
+    occupancy_engine = OccupancyEngine(area_graph, occ_config)
 
     # Shadow mode: also create legacy TrackManager for comparison
     if SHADOW_MODE:
-        try:
-            from modules.tracker import TrackManager as _TM
-        except ImportError:
-            from tracker import TrackManager as _TM
+        _TM = builtins.__import__("modules.tracker", fromlist=["TrackManager"]).TrackManager
         try:
             tracker_manager = _TM(connections_config=conn_path)
             log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
