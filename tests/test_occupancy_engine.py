@@ -249,10 +249,11 @@ class TestOccupancyEngineMotionReinforcement:
         conf = engine.room_occupancy_confidence("kitchen")
         assert conf == 1.0
 
-    def test_motion_in_unknown_room_adds_room(self, engine):
+    def test_motion_in_unknown_room_is_ignored(self, engine):
         engine.handle_motion("garage")
-        assert "garage" in engine._rooms
-        assert engine.room_occupancy_confidence("garage") > 0.01
+        assert "garage" not in engine._rooms
+        # Unknown areas return the default min_confidence, not a boosted value
+        assert engine.room_occupancy_confidence("garage") == 0.01
 
 
 class TestOccupancyEngineDecay:

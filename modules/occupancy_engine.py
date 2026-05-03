@@ -111,6 +111,8 @@ class OccupancyEngine:
         """A motion sensor fired in *area*.  Reinforces occupancy."""
         self.tick()
         state = self._ensure_room(area)
+        if state is None:
+            return
         profile = self._profile(area)
         old = state.confidence
         state.confidence = min(old + profile.reinforcement, profile.max_confidence)
@@ -135,6 +137,8 @@ class OccupancyEngine:
         """
         self.tick()
         state = self._ensure_room(area)
+        if state is None:
+            return
         profile = self._profile(area)
         old = state.confidence
         if present:
@@ -240,8 +244,16 @@ class OccupancyEngine:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _ensure_room(self, area: str) -> _RoomState:
+    def _ensure_room(self, area: str) -> _RoomState | None:
         if area not in self._rooms:
+            # Only create rooms for known areas — unknown/misspelled area
+            # strings would cause unbounded _rooms dict growth over time.
+            if area not in self._graph.areas:
+                log.warning(
+                    "[occupancy] _ensure_room: unknown area=%s — skipping",
+                    area,
+                )
+                return None
             self._rooms[area] = _RoomState(
                 confidence=self._config.defaults.min_confidence,
                 last_event_time=0.0,  # zero = never had an event
@@ -297,6 +309,8 @@ class OccupancyEngine:
 
         for area, boost in deltas.items():
             state = self._ensure_room(area)
+            if state is None:
+                continue
             profile = self._profile(area)
             old = state.confidence
             state.confidence = min(old + boost, profile.max_confidence)

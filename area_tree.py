@@ -94,8 +94,52 @@ config_settings = {}
 # tracker still drives actual automations — the new engine is read-only.
 SHADOW_MODE = True
 
+# --- Module-level occupancy construction ---
+# pyscript 1.6.4 wraps ALL imports — even inside exec() — in EvalFunc proxies.
+# The only escape hatch: shell out to python3 (not pyscript) via subprocess.
+# The child python3 imports area_graph/occupancy_config/occupancy_engine directly,
+# constructs them, and returns a pickled dict that we unpickle here.
+try:
+    import subprocess, pickle, base64, sys
+    _result = subprocess.run(
+        [
+            sys.executable, "-c",
+            "import sys, pickle, base64\n"
+            "sys.path.insert(0, '/config/pyscript/modules')\n"
+            "from area_graph import AreaGraph\n"
+            "from occupancy_config import load_config\n"
+            "from occupancy_engine import OccupancyEngine\n"
+            "_ag = AreaGraph('./pyscript/connections.yml')\n"
+            "_cfg = load_config()\n"
+            "_eng = OccupancyEngine(_ag, _cfg)\n"
+            "print(base64.b64encode(pickle.dumps(_eng)).decode())\n",
+        ],
+        capture_output=True, text=True, cwd="/config",
+        timeout=30,
+    )
+    if _result.returncode == 0:
+        occupancy_engine = pickle.loads(base64.b64decode(_result.stdout.strip()))
+        log.info("Occupancy engine constructed at module level via subprocess")
+    else:
+        raise RuntimeError(f"subprocess failed (rc={_result.returncode}):\nSTDOUT={_result.stdout[:500]}\nSTDERR={_result.stderr[:1000]}")
+except Exception as e:
+    log.error(f"Module-level occupancy construction failed: {e}")
+    occupancy_engine = None
+
 # Maps area_name -> asyncio.Task for pending delayed-off
 pending_motion_off = {}
+
+# --- Shadow mode: legacy TrackManager ---
+if SHADOW_MODE:
+    try:
+        import tracker as _tr
+        tracker_manager = _tr.TrackManager(connections_config="./pyscript/connections.yml")
+        log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
+    except Exception as e:
+        tracker_manager = None
+        log.warning(f"Shadow mode: TrackManager unavailable — {e}")
+else:
+    tracker_manager = None
 
 # Default delay (seconds) when no per-area value is configured
 DEFAULT_MOTION_OFF_DELAY = 900
@@ -388,6 +432,17 @@ def reset():
     global verbose_mode
     global occupancy_engine
     global tracker_manager
+    global pending_motion_off
+
+    # Cancel all pending motion-off tasks to prevent stale asyncio tasks
+    # from accumulating on repeated reset/reload cycles.
+    for area_name, task in list(pending_motion_off.items()):
+        try:
+            task.cancel()
+        except Exception:
+            pass
+    pending_motion_off = {}
+
     area_tree = None
     event_manager = None
     global_triggers = None
@@ -396,58 +451,19 @@ def reset():
     tracker_manager=None
     init()
 
-def _occ_init(config_settings):
-    """Regular helper — avoids EvalFunc wrapping of imports inside @service."""
-    import area_graph as _ag
-    import occupancy_engine as _oe
-    import occupancy_config as _ocfg
-    import yaml
-
-    with builtins.open("./pyscript/config.yml", "r") as f:
-        raw = yaml.safe_load(f) or {}
-    conn = raw.get("connections", "./pyscript/connections.yml")
-    ag = _ag.AreaGraph(conn)
-    occ_config = _ocfg.load_config()
-    occ_engine = _oe.OccupancyEngine(ag, occ_config)
-    return ag, occ_engine, occ_config
-
-
-def _shadow_init(conn_path):
-    """Shadow mode helper — regular function, no EvalFunc wrapping."""
-    try:
-        import tracker as _trk
-        import log as _logmod
-        tm = _trk.TrackManager(connections_config=conn_path)
-        _logmod.log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
-        return tm
-    except Exception:
-        import log as _logmod
-        _logmod.log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
-        return None
-
-
 @service
 def init():
     global area_tree
     global event_manager
     global global_triggers
-    global occupancy_engine
-    global tracker_manager
     global config_settings
 
     config_settings = load_config()
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
-
-    area_graph, occupancy_engine, occ_config = _occ_init(config_settings)
-    conn_path = "./pyscript/connections.yml"  # for shadow mode below
-
-    # Shadow mode: also create legacy TrackManager for comparison
-    if SHADOW_MODE:
-        tracker_manager = _shadow_init(conn_path)
-    else:
-        tracker_manager = None
+    # Occupancy engine and tracker are pre-constructed at module level
+    # (see lines above).  No re-construction needed here.
     
     # NOTE: power_on_all_power_monitoring_devices() is available as a
     # manual @service call but is intentionally NOT run on every reload.
@@ -502,10 +518,16 @@ def get_event_manager():
         init()
     return event_manager
 
+_init_running = False
+
 def get_occupancy_engine():
-    global occupancy_engine
-    if occupancy_engine is None:
-        init()
+    global occupancy_engine, _init_running
+    if occupancy_engine is None and not _init_running:
+        _init_running = True
+        try:
+            init()
+        finally:
+            _init_running = False
     return occupancy_engine
 
 

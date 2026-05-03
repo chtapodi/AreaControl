@@ -352,12 +352,14 @@ class TrackManager:
 
 
     def cleanup_tracks(self):
+        # Remove tracks that have not been updated in too long.
+        # Use list comprehension instead of remove-while-iterating to avoid
+        # skipping entries (which would cause stale tracks to accumulate).
+        cutoff = time.time() - self.oldest_track
+        self.tracks = [t for t in self.tracks if t.last_event_time > cutoff]
+
+        # Trim tracks that have too many events
         for track in self.tracks:
-            # remove tracks that have not been updated in too long
-            if time.time() - track.last_event_time > self.oldest_track:
-                self.tracks.remove(track)
-            
-            # trim tracks that have too many events
             if len(track.get_track_list()) > self.max_track_length:
                 track._trim()
 
