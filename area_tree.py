@@ -85,61 +85,13 @@ STATE_VALUES = {
 area_tree = None
 event_manager = None
 global_triggers = None
-occupancy_engine=None
-tracker_manager=None
 config_settings = {}
 
-# Shadow mode: run legacy TrackManager alongside OccupancyEngine, compare decisions.
-# When True, both trackers run and disagreements are logged.  The legacy
-# tracker still drives actual automations — the new engine is read-only.
-SHADOW_MODE = True
-
-# --- Module-level occupancy construction ---
-# pyscript 1.6.4 wraps ALL imports — even inside exec() — in EvalFunc proxies.
-# The only escape hatch: shell out to python3 (not pyscript) via subprocess.
-# The child python3 imports area_graph/occupancy_config/occupancy_engine directly,
-# constructs them, and returns a pickled dict that we unpickle here.
-try:
-    import subprocess, pickle, base64, sys
-    _result = subprocess.run(
-        [
-            sys.executable, "-c",
-            "import sys, pickle, base64\n"
-            "sys.path.insert(0, '/config/pyscript/modules')\n"
-            "from area_graph import AreaGraph\n"
-            "from occupancy_config import load_config\n"
-            "from occupancy_engine import OccupancyEngine\n"
-            "_ag = AreaGraph('./pyscript/connections.yml')\n"
-            "_cfg = load_config()\n"
-            "_eng = OccupancyEngine(_ag, _cfg)\n"
-            "print(base64.b64encode(pickle.dumps(_eng)).decode())\n",
-        ],
-        capture_output=True, text=True, cwd="/config",
-        timeout=30,
-    )
-    if _result.returncode == 0:
-        occupancy_engine = pickle.loads(base64.b64decode(_result.stdout.strip()))
-        log.info("Occupancy engine constructed at module level via subprocess")
-    else:
-        raise RuntimeError(f"subprocess failed (rc={_result.returncode}):\nSTDOUT={_result.stdout[:500]}\nSTDERR={_result.stderr[:1000]}")
-except Exception as e:
-    log.error(f"Module-level occupancy construction failed: {e}")
-    occupancy_engine = None
-
-# Maps area_name -> asyncio.Task for pending delayed-off
-pending_motion_off = {}
-
-# --- Shadow mode: legacy TrackManager ---
-if SHADOW_MODE:
-    try:
-        import tracker as _tr
-        tracker_manager = _tr.TrackManager(connections_config="./pyscript/connections.yml")
-        log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
-    except Exception as e:
-        tracker_manager = None
-        log.warning(f"Shadow mode: TrackManager unavailable — {e}")
-else:
-    tracker_manager = None
+# Occupancy engine disabled — motion sensors and buttons are the critical path.
+# The subprocess construction was unreliable and caused persistent boot errors.
+# All call sites have None guards that degrade gracefully.
+occupancy_engine = None
+tracker_manager = None
 
 # Default delay (seconds) when no per-area value is configured
 DEFAULT_MOTION_OFF_DELAY = 900
@@ -462,8 +414,8 @@ def init():
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
-    # Occupancy engine and tracker are pre-constructed at module level
-    # (see lines above).  No re-construction needed here.
+    # Occupancy engine and tracker_manager are permanently disabled
+    # (set to None at module level).  Motion sensors and buttons are the critical path.
     
     # NOTE: power_on_all_power_monitoring_devices() is available as a
     # manual @service call but is intentionally NOT run on every reload.
@@ -521,25 +473,13 @@ def get_event_manager():
 _init_running = False
 
 def get_occupancy_engine():
-    global occupancy_engine, _init_running
-    if occupancy_engine is None and not _init_running:
-        _init_running = True
-        try:
-            init()
-        finally:
-            _init_running = False
-    return occupancy_engine
+    """Return OccupancyEngine (disabled — always returns None).
 
-
-def get_tracker_manager():
-    """Return legacy TrackManager (only valid in shadow mode).
-    
-    Does NOT call init() — that would reinitialize the entire area_tree
-    and break test setups.  If the tracker was never created (e.g. test
-    environment), returns None and shadow mode gracefully degrades.
+    The occupancy engine subprocess construction was unreliable and caused
+    persistent boot errors.  Motion sensors and buttons work independently
+    through the rule system and do not require occupancy tracking.
     """
-    global tracker_manager
-    return tracker_manager
+    return None
 
 
 def get_area_tree():
@@ -956,6 +896,9 @@ def check_adjacent_motion(device, *args):
     area_name = device.get_area().name
     engine = get_occupancy_engine()
 
+    if engine is None:
+        return True  # engine unavailable → allow motion-off
+
     neighbors = engine.neighbors(area_name)
     if not neighbors:
         return True  # no neighbours configured → allow off
@@ -1149,6 +1092,8 @@ def get_last_set_state(device, scope, *args):
 
 def get_last_track_state(device, scope, *args):
     engine=get_occupancy_engine()
+    if engine is None:
+        return None  # engine unavailable
     area_tree=get_area_tree()
     device_area = device.get_area().name
 
@@ -1538,7 +1483,7 @@ class Area:
                 log.error(f"Area {self.name}: Exception setting state on child {getattr(child, 'name', child)}: {exc}")
 
     def get_state(self):
-        log.info(f"Area:get_state(): Getting state for {self.get_pretty_string()}")
+        # log.info(f"Area:get_state(): Getting state for {self.get_pretty_string()}")
         child_states = []
 
         for child in self.get_children():
@@ -1613,52 +1558,13 @@ def load_device_defs(devices_path, discovered_path="./pyscript/discovered.yml"):
 
 ### Tracker interface
 def update_tracker(device, *args):
+    """Record presence event for adaptive learning.
+
+    Occupancy engine removed — this function now only logs the event
+    and records it for the adaptive learner.  Motion sensor automation
+    (lights on/off) runs independently through motion_sensor_mode rules.
+    """
     area_name = device.get_area().name
-
-    if SHADOW_MODE:
-        # --- Shadow mode: run both trackers, use legacy for decisions ---
-        legacy = get_tracker_manager()
-        engine = get_occupancy_engine()
-
-        if legacy is not None and engine is not None:
-            # Both trackers available — dual-track
-            before_new = engine.room_occupancy_confidence(area_name)
-
-            # Legacy: drive actual automations
-            try:
-                legacy.add_event(area_name)
-            except Exception:
-                pass  # graceful — legacy may be stubbed in tests
-
-            # New: record for comparison (read-only)
-            engine.handle_motion(area_name)
-
-            after_new = engine.room_occupancy_confidence(area_name)
-
-            # Shadow comparison: log disagreements between old and new
-            try:
-                _shadow_compare(engine, legacy, area_name)
-            except Exception:
-                pass  # graceful — shadow comparison is best-effort
-
-            # Log both trackers' view
-            try:
-                legacy_count = len(legacy.tracks)
-            except Exception:
-                legacy_count = "?"
-            log.info(f"update_tracker: {area_name} | "
-                     f"new_conf={before_new:.3f}→{after_new:.3f} "
-                     f"legacy={legacy_count} tracks")
-        else:
-            # Shadow mode but one tracker unavailable (test env) — OccupancyEngine only
-            if engine is not None:
-                engine.handle_motion(area_name)
-            log.info(f"update_tracker: {area_name} (shadow degraded)")
-
-    else:
-        # --- Production mode: OccupancyEngine only ---
-        engine = get_occupancy_engine()
-        engine.handle_motion(area_name)
 
     try:
         get_learner().record_presence(area_name)
@@ -1668,57 +1574,6 @@ def update_tracker(device, *args):
     log.info(f"update_tracker: {area_name}")
 
     return True
-
-
-def _shadow_compare(engine, legacy, area_name):
-    """Compare legacy TrackManager vs OccupancyEngine for disagreement logging.
-
-    Checks:
-    1. Does legacy think someone is in this area? (active track head)
-    2. Does the new engine have confidence > 0.15?
-    3. For adjacent rooms: do legacy tracks exist vs engine confidence?
-    """
-    # --- Per-room agreement check ---
-    new_conf = engine.room_occupancy_confidence(area_name)
-    new_active = new_conf > 0.15
-
-    # Legacy: an area is "active" if any track has this area as its head
-    legacy_active = any(
-        track.head == area_name
-        for track in legacy.tracks
-    )
-
-    if new_active != legacy_active:
-        log.info(
-            f"[shadow] DISAGREE area={area_name} "
-            f"legacy=active:{legacy_active} new=conf:{new_conf:.2f}"
-        )
-
-    # --- Adjacent room check ---
-    neighbors = engine.neighbors(area_name)
-    for nb in neighbors:
-        nb_conf = engine.room_occupancy_confidence(nb)
-        nb_new = nb_conf > 0.15
-        nb_legacy = any(track.head == nb for track in legacy.tracks)
-
-        if nb_new != nb_legacy and (nb_conf > 0.05 or nb_legacy):
-            # Only log if either tracker thinks something meaningful is happening
-            log.info(
-                f"[shadow] DISAGREE ADJ area={area_name}→{nb} "
-                f"legacy=active:{nb_legacy} new=conf:{nb_conf:.2f}"
-            )
-
-    # --- Cross-check: rooms with tracks but low confidence ---
-    for track in legacy.tracks:
-        head = track.head
-        if head is not None:
-            conf = engine.room_occupancy_confidence(head)
-            if conf < 0.05 and head != area_name:
-                log.info(
-                    f"[shadow] LEGACY_TRACK_NO_CONF area={head} "
-                    f"legacy_has_track=true new_conf={conf:.3f}"
-                )
-
 
 
 class EventManager:
@@ -2460,10 +2315,11 @@ class AreaTree:
                         f"Area '{area_name}': 'inputs' has unsupported type {type(inputs)}. "
                         f"Expected list or dict. Value={inputs!r}"
                     )
-        for k,v in area_tree.items():
-            log.info(f"AreaTree contains: {k}: {v}")
-            log.info(f"AreaTree contains pretty {k}: {v.get_pretty_string()}")
-        log.info(area_tree)
+        # DEV DEBUG (disabled): area tree dump
+        # for k,v in area_tree.items():
+        #     log.info(f"AreaTree contains: {k}: {v}")
+        #     log.info(f"AreaTree contains pretty {k}: {v.get_pretty_string()}")
+        # log.info(area_tree)
         return area_tree
 
     def get_pretty_string(self):
@@ -2596,7 +2452,7 @@ class Device:
         return self.name
 
     def get_pretty_string(self, indent=1, is_direct_child=False, show_state=False):
-        log.info(f"DEBUG: Getting pretty string of {self.name}")
+        # log.info(f"DEBUG: Getting pretty string of {self.name}")
         string_rep = (
             " " * indent + f"{('(Direct) ' if is_direct_child else '') + self.name}:\n"
         )
@@ -2604,9 +2460,6 @@ class Device:
         if show_state:
             string_rep += " " * (indent + 2) + f"State: {self.get_state}\n"
 
-        if string_rep is None:
-            string_rep = "FUCK"
-        log.info(f"DEBUG: Getting pretty string of {self.name} -> {string_rep}")
         return string_rep
 
 
@@ -3860,6 +3713,7 @@ def test_tracks() :
 
     # event_manager.create_event({'device_name': 'motion_sensor_living_room_back', 'tags': ['on', 'motion_occupancy']})
 
-    log.info(engine.debug_summary())
+    if engine is not None:
+        log.info(engine.debug_summary())
 
 #test_tracks()

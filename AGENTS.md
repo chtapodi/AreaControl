@@ -17,7 +17,7 @@ Event flow. sensor/service signal → create_event (service) or Device.input_tri
 
 Startup & control services (@service is the pyscript service decorator per [PyScript HACS docs]):
 
-**Init:** Load YAML (layout, rules), construct AreaTree, hydrate EventManager, instantiate `OccupancyEngine` + `AreaGraph`. Currently in **SHADOW_MODE=True**: legacy TrackManager drives actual decisions, OccEngine runs read-only comparison. Goal: validate OccEngine, then set SHADOW_MODE=False to promote it as sole tracker. Last restored: 2026-05-01 (unstaged erroneous revert — BUG-NONEITER was YAML bug, not OccEngine bug).
+**Init:** Load YAML (layout, rules), construct AreaTree, hydrate EventManager. (OccupancyEngine was permanently removed 2026-05-03 — subprocess pickle construction was unreliable. Motion sensors + buttons are the critical path; all call sites have None guards that degrade gracefully.)
 
 **Reset:** Log warning, clear globals, then re-run init; use for hard reloads.
 
@@ -126,17 +126,11 @@ first exists only as legacy alias—do not use in new rules.
 
 Add functions guard entries for boolean veto/side-effect helpers (update_tracker, set_cached_last_set_state).
 
-**Presence tuning.**
+**Presence tuning (OccupancyEngine removed 2026-05-03).**
 
-Update `connections.yml` to reflect real walk paths; maintain directionality for path scoring.
+Update `connections.yml` to reflect real walk paths; maintain directionality for path scoring. The `OccupancyEngine` (`modules/occupancy_engine.py`) was permanently removed — subprocess pickle construction was unreliable. `get_occupancy_engine()` now returns `None` unconditionally; all call sites have `None` guards that degrade gracefully. `check_adjacent_motion()` returns `True` when engine is `None` (allows motion-off through). `update_tracker()` delegates to adaptive learner only.
 
-**OccupancyEngine** (`modules/occupancy_engine.py`) models per-room confidence (0.01–1.0) with exponential decay, event reinforcement, and neighbour diffusion.  Configure per-room profiles in `occupancy_config.yml`.
-
-**AreaGraph** (`modules/area_graph.py`) provides graph queries without networkx — used by both the OccupancyEngine and scope helpers.
-
-The legacy `TrackManager` / `GraphManager` (`modules/tracker.py`) and `advanced_tracker.py` are deprecated and will be removed after shadow-mode validation.
-
-Validate with tracker tests or logging overlays before deployment.
+Motion sensors and buttons are the critical path. Validate with tracker tests or logging overlays before deployment.
 
 6) Debugging & Observability
 
@@ -184,15 +178,15 @@ State Function – Helper returning state dict fragments merged via strategy.
 
 Merge Strategy – Choice passed to combine_states() that dictates precedence when combining multiple state fragments.
 
-**OccupancyEngine** — Per-room anonymous occupancy tracker with confidence scores, decay, and neighbour diffusion.  Lives in `modules/occupancy_engine.py`.
+~~**OccupancyEngine** — (Removed 2026-05-03.) Per-room anonymous occupancy tracker. Subprocess pickle construction was unreliable. `get_occupancy_engine()` now returns `None`. Source lives in `modules/occupancy_engine.py` for reference only.~~
 
-**AreaGraph** — Standalone dict-based room adjacency graph.  No networkx dependency.  Lives in `modules/area_graph.py`.
+~~**AreaGraph** — Standalone dict-based room adjacency graph. No networkx dependency. Was used by OccupancyEngine; now only referenced in tests. Source lives in `modules/area_graph.py`.~~
 
-**OccupancyConfig** — Per-room profile dataclass loaded from `occupancy_config.yml`.  Lives in `modules/occupancy_config.py`.
+~~**OccupancyConfig** — Per-room profile dataclass loaded from `occupancy_config.yml`. Removed alongside OccupancyEngine. Source lives in `modules/occupancy_config.py` for reference only.~~
 
-**TrackManager** — Legacy tracker (deprecated).  Will be removed after shadow-mode validation of OccupancyEngine.
+~~**TrackManager** — Legacy tracker. (Removed 2026-05-03 alongside OccupancyEngine shadow-mode validation.)~~
 
-GraphManager – Connection-graph utility powering presence path scoring and visualization.
+GraphManager – Connection-graph utility powering presence path scoring and visualization. (Inactive — no longer wired into production path.)
 
 SunTracker – Solar model computing which blinds should move and by how much.
 
