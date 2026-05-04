@@ -50,9 +50,8 @@ except Exception:  # pragma: no cover - fallback for tests without Home Assistan
             return (0, 0, 0)
 
     color_util = _ColorUtil()
-# Occupancy tracking modules are imported lazily in init() to avoid
-# pyscript reload auto-fix corruption (pyscript's module namespacing
-# differs between initial load and reload).
+# Occupancy tracking modules: imported lazily in init() to avoid
+# pyscript reload issues with 'modules' namespace packaging.
 try:
     from adaptive_learning import get_learner
     from logger import Logger
@@ -397,7 +396,6 @@ def reset():
     tracker_manager=None
     init()
 
-
 @service
 def init():
     global area_tree
@@ -406,24 +404,53 @@ def init():
     global occupancy_engine
     global tracker_manager
     global config_settings
+
+    # Lazy-import occupancy modules (avoids pyscript reload auto-fix issues)
+    try:
+        from modules.area_graph import AreaGraph
+    except (ImportError, ModuleNotFoundError):
+        from area_graph import AreaGraph
+    try:
+        from modules.occupancy_engine import OccupancyEngine
+    except (ImportError, ModuleNotFoundError):
+        from occupancy_engine import OccupancyEngine
+    try:
+        from modules.occupancy_config import load_config as _load_occ_config
+    except (ImportError, ModuleNotFoundError):
+        from occupancy_config import load_config as _load_occ_config
+
     config_settings = load_config()
     global_triggers = []
     area_tree = AreaTree(config_settings["layout"], devices_file=config_settings["devices"])
     event_manager = EventManager(config_settings["rules"], area_tree)
-    area_graph = AreaGraph(config_settings["connections"])
-    occ_config = load_occupancy_config()
-    occupancy_engine = OccupancyEngine(area_graph, occ_config)
-    
+    try:
+        area_graph = AreaGraph(str(config_settings["connections"]))
+    except TypeError:
+        # pyscript @service reload proxy quirk — import class directly
+        import modules.area_graph as _ag
+        area_graph = _ag.AreaGraph(str(config_settings["connections"]))
+    occ_config = _load_occ_config()
+    try:
+        occupancy_engine = OccupancyEngine(area_graph, occ_config)
+    except TypeError:
+        # pyscript @service reload proxy quirk — import class directly
+        import modules.occupancy_engine as _oe
+        occupancy_engine = _oe.OccupancyEngine(area_graph, occ_config)
+
     # Shadow mode: also create legacy TrackManager for comparison
     if SHADOW_MODE:
         try:
-            from tracker import TrackManager as _TrackManager
-            tracker_manager = _TrackManager(connections_config=config_settings["connections"])
+            from modules.tracker import TrackManager as _TM
+        except ImportError:
+            from tracker import TrackManager as _TM
+        try:
+            tracker_manager = _TM(connections_config=str(config_settings["connections"]))
             log.info("Shadow mode ENABLED: legacy TrackManager running alongside OccupancyEngine")
-        except (ImportError, TypeError):
-            log.warning("Shadow mode: TrackManager unavailable (test stub?) — OccupancyEngine only")
-    # Note: in test environments TrackManager is stubbed; shadow comparison
-    # gracefully degrades via try/except in update_tracker()
+        except Exception:
+            tracker_manager = None
+            log.warning("Shadow mode: TrackManager unavailable — OccupancyEngine only")
+    else:
+        tracker_manager = None
     
     # NOTE: power_on_all_power_monitoring_devices() is available as a
     # manual @service call but is intentionally NOT run on every reload.
@@ -2629,58 +2656,58 @@ class MotionSensorDriver:
                 )
 
 
+@service
+def service_driver_trigger(**kwargs):
+    """Standalone pyscript service for HA scripts to trigger service input buttons.
+
+    Moved to module level so @service registers as pyscript.service_driver_trigger.
+    Previously nested inside ServiceDriver.create_trigger() where the @service
+    decorator did not properly register the service with Home Assistant.
+    """
+    log.info(f"Triggering Service: with value: {kwargs}")
+    new_event = {}
+
+    # Always set device_name and tags regardless of whether a state payload is present.
+    # Previously these were only set inside the `if "state"` block, which caused a
+    # KeyError in EventManager.check_event() for tag-only calls like turn_on/turn_off.
+    new_event["device_name"] = kwargs.get("name", "service_input_button_all_lights")
+
+    if "tags" in kwargs:
+        new_event["tags"] = kwargs["tags"]
+
+    if "state" in kwargs:
+        state = kwargs["state"]
+        if "hs_color" in state:
+            hs_color = state["hs_color"]
+            rgb = hs_to_rgb(hs_color[0], hs_color[1])
+            rgb = [rgb[0], rgb[1], rgb[2]]
+            state["rgb_color"] = rgb
+
+            del state["hs_color"]
+
+        if "temp" in state:
+            state["color_temp"] = state["temp"]
+            del state["temp"]
+
+        log.info(f"state: {state}")
+        new_event["state"] = state
+
+    log.info(f"ServiceDriver: emitting event {new_event}")
+    get_event_manager().create_event(new_event)
+
+
 class ServiceDriver:
     def __init__(self, input_type, device_id):
         self.name = device_id
         log.info(f"Creating Service Input: {self.name}")
 
         self.last_state = None
-        self.trigger = self.create_trigger()
-
-    def add_callback(self, callback):
-        pass
-
-    @service
-    def create_trigger(self, **kwargs):
-        @service
-        def service_driver_trigger(**kwargs):
-            log.info(f"Triggering Service: with value: {kwargs}")
-            new_event = {}
-
-            # Always set device_name and tags regardless of whether a state payload is present.
-            # Previously these were only set inside the `if "state"` block, which caused a
-            # KeyError in EventManager.check_event() for tag-only calls like turn_on/turn_off.
-            if "name" in kwargs:
-                new_event["device_name"] = kwargs["name"]
-            else:
-                new_event["device_name"] = self.name
-
-            if "tags" in kwargs:
-                new_event["tags"] = kwargs["tags"]
-
-            if "state" in kwargs:
-                state = kwargs["state"]
-                if "hs_color" in state:
-                    hs_color = state["hs_color"]
-                    rgb = hs_to_rgb(hs_color[0], hs_color[1])
-                    rgb = [rgb[0], rgb[1], rgb[2]]
-                    state["rgb_color"] = rgb
-
-                    del state["hs_color"]
-
-                if "temp" in state:
-                    state["color_temp"] = state["temp"]
-                    del state["temp"]
-
-                log.info(f"state: {state}")
-                new_event["state"] = state
-
-            log.info(f"ServiceDriver: emitting event {new_event}")
-            get_event_manager().create_event(new_event)
+        self.trigger = service_driver_trigger
 
         get_global_triggers().append(["Service", service_driver_trigger])
 
-        return service_driver_trigger  # return the function created?
+    def add_callback(self, callback):
+        pass
 
     def get_state(self):
         return {"name": self.name}

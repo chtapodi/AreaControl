@@ -92,6 +92,7 @@ config_settings = {}
 # All call sites have None guards that degrade gracefully.
 occupancy_engine = None
 tracker_manager = None
+pending_motion_off = {}
 
 # Default delay (seconds) when no per-area value is configured
 DEFAULT_MOTION_OFF_DELAY = 900
