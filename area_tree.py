@@ -94,8 +94,30 @@ occupancy_engine = None
 tracker_manager = None
 pending_motion_off = {}
 
+# Tracks last motion-on timestamp per area (time.time() epoch seconds).
+# Used by the IAS re-check to avoid turning lights off when the
+# Zigbee PIR sensor reports OFF but the room is still occupied.
+_last_motion_on = {}
+
+# Generation counter per area.  Incremented on every timer reset (motion ON).
+# _delayed_off captures its generation at creation time and self-terminates
+# if the counter has advanced — replaces asyncio.Task.cancel() which fails
+# silently in pyscript's EvalFunc environment.
+_timer_generation = {}
+
 # Default delay (seconds) when no per-area value is configured
 DEFAULT_MOTION_OFF_DELAY = 900
+
+# How long (seconds) after the last motion-on event before we allow lights-off.
+# Guards against slow Zigbee PIR sensors that report OFF while occupied.
+RECENT_MOTION_WINDOW = 120
+
+# Per-area motion-off delay overrides (seconds).  Falls back to DEFAULT_MOTION_OFF_DELAY.
+MOTION_OFF_DELAY_OVERRIDES = {
+    "office": 900,
+    "hallway": 900,
+    "bathroom": 900,
+}
 
 verbose_mode = False
 
@@ -386,6 +408,8 @@ def reset():
     global occupancy_engine
     global tracker_manager
     global pending_motion_off
+    global _last_motion_on
+    global _timer_generation
 
     # Cancel all pending motion-off tasks to prevent stale asyncio tasks
     # from accumulating on repeated reset/reload cycles.
@@ -395,6 +419,8 @@ def reset():
         except Exception:
             pass
     pending_motion_off = {}
+    _last_motion_on = {}
+    _timer_generation = {}
 
     area_tree = None
     event_manager = None
@@ -470,8 +496,6 @@ def get_event_manager():
     if event_manager is None:
         init()
     return event_manager
-
-_init_running = False
 
 def get_occupancy_engine():
     """Return OccupancyEngine (disabled — always returns None).
@@ -790,10 +814,93 @@ def set_motion_sensor_mode(state):
 
 def _get_area_motion_off_delay(area):
     """Return the motion-off delay (seconds) for *area*, falling back to the default."""
+    area_name = area.name if hasattr(area, 'name') else str(area)
+    # Module-level overrides take precedence over layout.yml per-area config
+    if area_name in MOTION_OFF_DELAY_OVERRIDES:
+        return MOTION_OFF_DELAY_OVERRIDES[area_name]
     delay = getattr(area, "motion_off_delay", None)
     if delay is not None:
         return delay
     return DEFAULT_MOTION_OFF_DELAY
+
+
+async def _delayed_motion_off(area_name, delay):
+    """Module-level async function for motion-off timer.
+
+    Must be at module level (not nested inside schedule_motion_off) because
+    pyscript 1.6.4's EvalFunc does NOT properly handle nested ``async def``
+    inside regular ``def`` — ``asyncio.create_task(nested_async())`` returns
+    ``None`` instead of a coroutine, causing ``TypeError: a coroutine was
+    expected, got None``.
+
+    All parameters are passed explicitly; no closure captures.
+    """
+    log.info("schedule_motion_off: delay wait start", extra={
+            "area": area_name, "delay_s": delay
+        })
+    gen = _timer_generation.get(area_name, 0)
+    await asyncio.sleep(delay)
+    # Stale generation check: if a newer timer was scheduled (by a more
+    # recent motion ON event), this task's generation is old — self-terminate.
+    if _timer_generation.get(area_name, 0) != gen:
+        log.info("schedule_motion_off: stale generation", extra={
+            "area": area_name, "action": "skip_stale",
+            "my_gen": gen, "current_gen": _timer_generation.get(area_name, 0)
+        })
+        return
+    log.info("schedule_motion_off: delay elapsed", extra={
+            "area": area_name, "action": "check"
+        })
+    # Re-check motion sensor mode at execution time
+    if not motion_sensor_mode():
+        log.info("schedule_motion_off: sensor mode off", extra={
+                "area": area_name, "action": "skip_sensor_mode_off"
+            })
+        return
+    # Re-check IAS zone -- if motion is currently detected, skip the off.
+    # Guards against the cancel_motion_off gap where a pending timer
+    # fires despite new motion having been detected.
+    # Uses globals() for dynamic entity-id lookup (pyscript domain proxies
+    # are accessible from module-level functions but the name is dynamic).
+    try:
+        ias_entity_id = f"binary_sensor.motion_sensor_{area_name}_ias_zone"
+        ias_state = globals().get(ias_entity_id)
+        if ias_state is not None and ias_state == "on":
+            log.info("schedule_motion_off: ias zone still on", extra={
+                "area": area_name, "action": "skip_ias_still_on"
+            })
+            pending_motion_off.pop(area_name, None)
+            return
+    except Exception as exc:
+        log.warning(f"schedule_motion_off: ias zone check error for {area_name}: {exc}")
+
+    # Second check: recent motion timestamp.  Zigbee PIR sensors are slow
+    # and often report OFF while the room is occupied (user sitting still).
+    # If motion was detected in this area within RECENT_MOTION_WINDOW (120s),
+    # skip the off even if the IAS zone currently says OFF.
+    try:
+        last_on = _last_motion_on.get(area_name, 0)
+        age = time.time() - last_on
+        if age < RECENT_MOTION_WINDOW:
+            log.info("schedule_motion_off: recent motion detected", extra={
+                "area": area_name, "action": "skip_recent_motion",
+                "age_s": round(age, 1)
+            })
+            pending_motion_off.pop(area_name, None)
+            return
+    except Exception as exc:
+        log.warning(f"schedule_motion_off: recent motion check error for {area_name}: {exc}")
+
+    area_obj = get_area_tree().get_area(area_name)
+    if area_obj is None:
+        log.warning(f"schedule_motion_off: [{area_name}] area no longer in tree")
+        return
+    area_obj.set_state({"status": 0}, device_type_filter=["light"],
+                       event_id="motion-off_" + area_name)
+    pending_motion_off.pop(area_name, None)
+    log.info("schedule_motion_off: off applied", extra={
+            "area": area_name, "action": "off_applied"
+        })
 
 
 def schedule_motion_off(device, *args):
@@ -803,16 +910,15 @@ def schedule_motion_off(device, *args):
     returning False (which would block the rule entirely) it:
       1. Resolves the delay for the triggering area.
       2. Schedules a new async task that sleeps for *delay* seconds and then
-         applies ``{status: 0}`` to the area's lights.  ``kill_me=True``
-         ensures any previously running task with the same name is killed and
-         the countdown is reset — this matters because the IAS-zone and
-         occupancy sensors both fire off within milliseconds of each other, so
-         whichever arrives second should always win and restart the timer.
+         applies ``{status: 0}`` to the area's lights.  Previous timers for
+         the same area are NOT cancelled (asyncio.Task.cancel() is unreliable
+         in pyscript) — instead, a generation counter in ``_delayed_motion_off``
+         makes old tasks self-terminate when a newer one exists.
       3. Returns False so the rule itself does NOT apply state immediately —
          the delayed task does it instead.
 
-    The task handle is stored in ``pending_motion_off`` so that
-    ``cancel_motion_off`` can cancel it directly when new motion is detected.
+    The task handle is stored in ``pending_motion_off`` for cleanup.
+    See ``cancel_motion_off`` for the timer-reset path (motion ON events).
     """
     global pending_motion_off
 
@@ -825,62 +931,40 @@ def schedule_motion_off(device, *args):
         "delay_s": delay
     })
 
-    async def _delayed_off():
-        log.info("schedule_motion_off: delay wait start", extra={
-                "area": area_name, "delay_s": delay
-            })
-        await asyncio.sleep(delay)
-        log.info("schedule_motion_off: delay elapsed", extra={
-                "area": area_name, "action": "check"
-            })
-        # Re-check motion sensor mode at execution time
-        if not motion_sensor_mode():
-            log.info("schedule_motion_off: sensor mode off", extra={
-                    "area": area_name, "action": "skip_sensor_mode_off"
-                })
-            return
-        area_obj = get_area_tree().get_area(area_name)
-        if area_obj is None:
-            log.warning(f"schedule_motion_off: [{area_name}] area no longer in tree")
-            return
-        area_obj.set_state({"status": 0}, device_type_filter=["light"],
-                           event_id="motion-off_" + area_name)
-        pending_motion_off.pop(area_name, None)
-        log.info("schedule_motion_off: off applied", extra={
-                "area": area_name, "action": "off_applied"
-            })
-
+    # Create the timer task.  No need to cancel the previous one — the
+    # generation counter in _delayed_motion_off handles stale-task self-termination.
     try:
-        existing = pending_motion_off.get(area_name)
-        if existing is not None:
-            existing.cancel()
-        pending_motion_off[area_name] = asyncio.create_task(_delayed_off())
+        pending_motion_off[area_name] = asyncio.create_task(
+            _delayed_motion_off(area_name, delay)
+        )
     except RuntimeError:
         # No running event loop (e.g., test environment) — store coroutine directly
-        pending_motion_off[area_name] = _delayed_off()
+        pending_motion_off[area_name] = _delayed_motion_off(area_name, delay)
 
     # Return False: prevents the rule from applying state immediately.
     return False
 
 
 def cancel_motion_off(device, *args):
-    """Cancel any pending delayed-off for the device's area.
+    """Reset the motion-off countdown when new motion is detected.
 
-    Called as a ``functions`` entry on motion_on rules so that a new motion
-    event cancels a previously scheduled off.
+    Every motion ON event restarts the timer.  PIR OFF is ignored — lights
+    turn off only when no motion has been detected for the full delay window.
+
+    Uses a generation counter so orphaned asyncio tasks self-terminate
+    instead of relying on Task.cancel() which fails silently in pyscript.
     """
-    global pending_motion_off
+    global _timer_generation
 
-    area_name = device.get_area().name
-    existing = pending_motion_off.pop(area_name, None)
-    if existing is not None:
-        try:
-            existing.cancel()
-            log.info("cancel_motion_off", extra={
-                    "area": area_name, "action": "cancelled"
-                })
-        except Exception as exc:
-            log.warning(f"cancel_motion_off: error cancelling task for {area_name}: {exc}")
+    area = device.get_area()
+    area_name = area.name
+    gen = _timer_generation.get(area_name, 0) + 1
+    _timer_generation[area_name] = gen
+
+    # schedule_motion_off handles the actual timer creation.  Its return
+    # value (False) is ignored here — this function runs in motion_on_tracker
+    # where the rule applies empty state {} regardless.
+    schedule_motion_off(device, *args)
     return True
 
 
@@ -1572,6 +1656,8 @@ def update_tracker(device, *args):
     except Exception:
         pass
 
+    global _last_motion_on
+    _last_motion_on[area_name] = time.time()
     log.info(f"update_tracker: {area_name}")
 
     return True

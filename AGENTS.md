@@ -128,9 +128,11 @@ Add functions guard entries for boolean veto/side-effect helpers (update_tracker
 
 **Presence tuning (OccupancyEngine removed 2026-05-03).**
 
-Update `connections.yml` to reflect real walk paths; maintain directionality for path scoring. The `OccupancyEngine` (`modules/occupancy_engine.py`) was permanently removed — subprocess pickle construction was unreliable. `get_occupancy_engine()` now returns `None` unconditionally; all call sites have `None` guards that degrade gracefully. `check_adjacent_motion()` returns `True` when engine is `None` (allows motion-off through). `update_tracker()` delegates to adaptive learner only.
+The `OccupancyEngine` (`modules/occupancy_engine.py`) was permanently removed — subprocess pickle construction was unreliable. `get_occupancy_engine()` now returns `None` unconditionally; all call sites have `None` guards that degrade gracefully. `check_adjacent_motion()` returns `True` when engine is `None` (allows motion-off through). `update_tracker()` delegates to adaptive learner only.
 
-Motion sensors and buttons are the critical path. Validate with tracker tests or logging overlays before deployment.
+`connections.yml` is inert — it was only consumed by the OccupancyEngine for path scoring. It may be removed in a future cleanup pass.
+
+Motion sensors and buttons are the critical path. Motion-off logic now uses a generation counter (see `_delayed_motion_off` in `area_tree.py`) with four-layer guards: stale generation check, IAS zone re-check, recent-motion window, and sensor-mode kill switch.
 
 6) Debugging & Observability
 
