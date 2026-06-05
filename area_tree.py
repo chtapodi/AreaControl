@@ -123,6 +123,9 @@ verbose_mode = False
 
 last_set_state={}
 
+# Servicedriver recursion guard
+_servicedriver_syncing = False
+
 # Default heights for smart blinds (in the same units used when setting height).
 # These values allow converting between physical height and percentage closed.
 BLIND_HEIGHTS = {
@@ -796,6 +799,65 @@ def combine_colors(color_one, color_two, strategy="add"):
         log.info(f"combined: {color_one} + {color_two} = {color}")
 
     return color
+
+
+def get_area_aggregate_state(area_name=None):
+    """Walk an area subtree and compute the aggregate state of all lights.
+
+    Averages rgb_color across all ON lights. Returns
+    {status: 1, rgb_color: [R,G,B]} if any light is on, or
+    {status: 0} if every light is off.
+    """
+    tree = get_area_tree()
+    if tree is None:
+        return {"status": 0}
+
+    if area_name is None:
+        root = tree.get_root()
+    else:
+        root = tree.get_area(area_name)
+
+    if root is None:
+        log.warning(f"get_area_aggregate_state: area {area_name} not found")
+        return {"status": 0}
+
+    # Collect all Device objects in the subtree
+    def _walk_devices(area):
+        devices = []
+        for child in area.get_children():
+            if isinstance(child, Area):
+                devices.extend(_walk_devices(child))
+            elif isinstance(child, Device):
+                devices.append(child)
+        return devices
+
+    all_devices = _walk_devices(root)
+
+    on_colors = []
+    any_on = False
+    for d in all_devices:
+        if not hasattr(d, "driver") or not hasattr(d.driver, "device_type"):
+            continue
+        if d.driver.device_type != "light":
+            continue
+        state = d.get_state()
+        if state.get("status", 0) == 1:
+            any_on = True
+            rgb = state.get("rgb_color")
+            if rgb is not None and len(rgb) == 3:
+                on_colors.append(rgb)
+
+    if not any_on:
+        return {"status": 0}
+
+    if not on_colors:
+        return {"status": 1}
+
+    n = len(on_colors)
+    avg_r = int(sum(c[0] for c in on_colors) / n)
+    avg_g = int(sum(c[1] for c in on_colors) / n)
+    avg_b = int(sum(c[2] for c in on_colors) / n)
+    return {"status": 1, "rgb_color": [avg_r, avg_g, avg_b]}
 
 
 ## RULES ##
@@ -3678,6 +3740,87 @@ if init_config.get("run_tests_on_start", DEFAULT_RUN_TESTS_ON_START):
 def monitor_service_calls(**kwargs):
     log.info(f"got EVENT_CALL_SERVICE with kwargs={kwargs}")
 
+def _servicedriver_fanout(sd_names, srv_state):
+    """Fan out state to all lights in the area_tree scope of each ServiceDriver.
+
+    Args:
+        sd_names: List of ServiceDriver entity names (e.g. ["servicedriver_3"]).
+        srv_state: State dict extracted from service_data.
+    """
+    tree = get_area_tree()
+    if tree is None:
+        return
+
+    is_off = (srv_state == {"status": False})
+
+    for sd_name in sd_names:
+        # Determine target scope: "servicedriver" -> root, "bedroom_driver" -> bedroom
+        if sd_name.rstrip("0123456789_") == "servicedriver":
+            target_area = tree.get_root()
+        else:
+            area_name = sd_name.replace("_driver", "")
+            target_area = tree.get_area(area_name)
+            if target_area is None:
+                log.warning(
+                    f"_servicedriver_fanout: area '{area_name}' not found for '{sd_name}'"
+                )
+                continue
+
+        # Collect all Device leaves in the target subtree
+        def _walk_devices(area):
+            out = []
+            for child in area.get_children():
+                if isinstance(child, Area):
+                    out.extend(_walk_devices(child))
+                elif isinstance(child, Device):
+                    out.append(child)
+            return out
+
+        all_devices = _walk_devices(target_area)
+
+        # Fan out to every physical light (skip ServiceInput, plugs, etc.)
+        fan_count = 0
+        for obj in all_devices:
+            if not hasattr(obj, "driver") or not hasattr(obj.driver, "filter_state"):
+                continue
+            merged = copy.deepcopy(srv_state)
+            if not is_off:
+                merged["status"] = True
+            log.info(f"_servicedriver_fanout: fanning out {merged} to {obj.name}")
+            obj.set_state(merged)
+            fan_count += 1
+
+        log.info(f"_servicedriver_fanout: fanned out to {fan_count} devices for {sd_name}")
+
+        # Compute aggregate state and publish to MQTT
+        base_name = sd_name.rstrip("0123456789_")
+        mqtt_topic = f"homeassistant/{base_name}/state"
+
+        if sd_name.rstrip("0123456789_") == "servicedriver":
+            agg = get_area_aggregate_state(None)
+        else:
+            agg = get_area_aggregate_state(sd_name.replace("_driver", ""))
+
+        mqtt_state = "ON" if agg.get("status") else "OFF"
+        payload_dict = {"state": mqtt_state}
+        rgb = agg.get("rgb_color")
+        if rgb is not None:
+            payload_dict["rgb_color"] = rgb
+            payload_dict["brightness"] = max(rgb)
+
+        payload = stdjson.dumps(payload_dict)
+        cmd = (
+            "docker exec mosquitto mosquitto_pub"
+            " -t '" + mqtt_topic + "'"
+            " -m '" + payload + "'"
+        )
+        log.info(f"_servicedriver_fanout: MQTT publish to {mqtt_topic} <- {payload}")
+        loop = asyncio.get_running_loop()
+        loop.run_in_executor(None, os.system, cmd)
+
+
+
+
 # This monitors other methods of settings lights colors and informs the area tree
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_external_state_setting(**kwargs):
@@ -3716,12 +3859,25 @@ def monitor_external_state_setting(**kwargs):
 
             event_manager=get_event_manager()
 
+            # ServiceDriver fan-out
+            sd_names = [n for n in device_names if n.startswith("servicedriver")]
+            if sd_names:
+                global _servicedriver_syncing
+                if _servicedriver_syncing:
+                    log.info("monitor_external_state_setting: recursion guard, skipping")
+                    return
+                _servicedriver_syncing = True
+                try:
+                    _servicedriver_fanout(sd_names, state)
+                finally:
+                    _servicedriver_syncing = False
+
+            # Individual device cache update
             devices=[]
             for device_name in device_names:
+                if device_name.startswith("servicedriver"):
+                    continue
                 log.info(f"ATTEMPTING TO SET DEVICE {device_name} TO {state}")
-                # get_device looks up by internal name; fix_entity_name above
-                # converts the HA entity_id to that form, but mismatches are
-                # possible if devices.yml names diverge from HA entity ids.
                 device=event_manager.area_tree.get_device(device_name)
                 if device is not None:
                     devices.append(device)
