@@ -854,9 +854,9 @@ def get_area_aggregate_state(area_name=None):
         return {"status": 1}
 
     n = len(on_colors)
-    avg_r = int(sum(c[0] for c in on_colors) / n)
-    avg_g = int(sum(c[1] for c in on_colors) / n)
-    avg_b = int(sum(c[2] for c in on_colors) / n)
+    avg_r = int(sum([c[0] for c in on_colors]) / n)
+    avg_g = int(sum([c[1] for c in on_colors]) / n)
+    avg_b = int(sum([c[2] for c in on_colors]) / n)
     return {"status": 1, "rgb_color": [avg_r, avg_g, avg_b]}
 
 
@@ -3796,21 +3796,22 @@ def _servicedriver_fanout(sd_names, srv_state):
         base_name = sd_name.rstrip("0123456789_")
         mqtt_topic = f"homeassistant/{base_name}/state"
 
-        if sd_name.rstrip("0123456789_") == "servicedriver":
-            agg = get_area_aggregate_state(None)
+        if is_off:
+            payload = '{"state":"OFF"}'
         else:
-            agg = get_area_aggregate_state(sd_name.replace("_driver", ""))
+            if sd_name.rstrip("0123456789_") == "servicedriver":
+                agg = get_area_aggregate_state(None)
+            else:
+                agg = get_area_aggregate_state(sd_name.replace("_driver", ""))
 
-        mqtt_state = "ON" if agg.get("status") else "OFF"
-        payload_dict = {"state": mqtt_state}
-        rgb = agg.get("rgb_color")
-        if rgb is not None:
-            payload_dict["rgb_color"] = rgb
-            payload_dict["brightness"] = max(rgb)
-
-        payload = stdjson.dumps(payload_dict)
+            mqtt_state = "ON" if agg.get("status") else "OFF"
+            rgb = agg.get("rgb_color")
+            if rgb is not None:
+                payload = '{"state":"' + mqtt_state + '","rgb_color":[' + str(rgb[0]) + ',' + str(rgb[1]) + ',' + str(rgb[2]) + '],"brightness":' + str(max(rgb)) + '}'
+            else:
+                payload = '{"state":"' + mqtt_state + '"}'
         cmd = (
-            "docker exec mosquitto mosquitto_pub"
+            "mosquitto_pub -h 192.168.50.84 -r"
             " -t '" + mqtt_topic + "'"
             " -m '" + payload + "'"
         )
