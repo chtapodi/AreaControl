@@ -1,0 +1,389 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+browser_mod:
+  prefix: "browser_"
+
+api:
+
+logger:
+  default: info
+  logs:
+    custom_components.pyscript: info
+    homeassistant.components.esphome.manager: warning
+
+homeassistant:
+  customize: {}
+  allowlist_external_dirs:
+    - "/tmp"
+    - /config/www
+    - /config/www/data
+
+
+recorder:
+  auto_purge: false
+  include:
+    domains:
+      - sensor
+      - switch
+      - media_player
+  exclude:
+    entities:
+      - sensor.last_boot
+
+pyscript:
+  allow_all_imports: true
+  hass_is_global: true
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+frontend:
+  themes: !include themes.yaml
+
+lovelace:
+  resources:
+    - url: /browser_mod.js
+      type: module
+    - url: /local/community/lovelace-layout-card/layout-card.js
+      type: module
+
+mqtt:
+  light:
+    - name: "ServiceDriver"
+      unique_id: "servicedriver_mqtt_v2"
+      state_topic: "homeassistant/servicedriver/state"
+      command_topic: "homeassistant/servicedriver/command"
+      schema: json
+      brightness: true
+      supported_color_modes: ["rgb", "color_temp"]
+      optimistic: true
+  sensor:
+    - name: "Mushroom Chamber Humidity"
+      unique_id: "mushroom_chamber_humidity"
+      state_topic: "homeassistant/mushroom_chamber/humidity"
+    - name: "Mushroom Chamber Temperature"
+      unique_id: "mushroom_chamber_temperature"
+      state_topic: "homeassistant/mushroom_chamber/temperature"
+    - name: "Mushroom Chamber Relay"
+      unique_id: "mushroom_chamber_relay"
+      state_topic: "homeassistant/mushroom_chamber/relay/state"
+
+sensor:
+  # Sleep tracking
+  - platform: history_stats
+    name: Xavier sleep
+    entity_id: binary_sensor.xavier_is_sleeping
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=9, minute=0, second=0) }}"
+    duration:
+      hours: 12
+
+  - platform: history_stats
+    name: Anna sleep
+    entity_id: binary_sensor.anna_is_sleeping
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=9, minute=0, second=0) }}"
+    duration:
+      hours: 12
+
+  # Watering statistics
+  - platform: history_stats
+    name: tomato_weekly_water
+    entity_id: switch.tomato_bed_zone
+    state: "on"
+    type: time
+    start: "{{ as_timestamp(now().replace(hour=0, minute=0, second=0, microsecond=0)) - now().weekday() * 86400 }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: tomato_monthly_water
+    entity_id: switch.tomato_bed_zone
+    state: "on"
+    type: time
+    start: "{{ now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: herb_weekly_water
+    entity_id: switch.herb_beds_zone
+    state: "on"
+    type: time
+    start: "{{ as_timestamp(now().replace(hour=0, minute=0, second=0, microsecond=0)) - now().weekday() * 86400 }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: herb_monthly_water
+    entity_id: switch.herb_beds_zone
+    state: "on"
+    type: time
+    start: "{{ now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: tree_kale_weekly_water
+    entity_id: switch.tree_kale_bed_zone
+    state: "on"
+    type: time
+    start: "{{ as_timestamp(now().replace(hour=0, minute=0, second=0, microsecond=0)) - now().weekday() * 86400 }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: tree_kale_monthly_water
+    entity_id: switch.tree_kale_bed_zone
+    state: "on"
+    type: time
+    start: "{{ now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: allium_weekly_water
+    entity_id: switch.allium_bed_zone
+    state: "on"
+    type: time
+    start: "{{ as_timestamp(now().replace(hour=0, minute=0, second=0, microsecond=0)) - now().weekday() * 86400 }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: allium_monthly_water
+    entity_id: switch.allium_bed_zone
+    state: "on"
+    type: time
+    start: "{{ now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) }}"
+    end: "{{ now() }}"
+
+template:
+  - sensor:
+      - name: minverva_percent
+        state: >
+          {% if not is_state('sensor.minerva_battery_sensor', 'unavailable') %}
+            {{ states('sensor.minerva_battery_sensor') }}
+          {% endif %}
+      - name: "UPS Power Draw"
+        unique_id: ups_power_watts
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {{ (states('sensor.cyberpower_load') | float(0) / 100 * 1000) | round(0) }}
+        availability: >
+          {{ states('sensor.cyberpower_load') not in ['unavailable', 'unknown', 'none'] }}
+  - trigger:
+      - platform: state
+        entity_id:
+          - weather.home_forecast_home
+    action:
+      - service: weather.get_forecasts
+        data:
+          type: hourly
+        target:
+          entity_id: weather.home_forecast_home
+        response_variable: hourly
+    sensor:
+      - name: Weather Channel Forecast Hourly
+        unique_id: home_hourly_forecast
+        state: "{{ now() }}"
+        attributes:
+          forecast: "{{ hourly['weather.home_forecast_home'].forecast }}"
+  - trigger:
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        minutes: "/15"
+      - platform: state
+        entity_id: weather.home_forecast_home
+    action:
+      - service: weather.get_forecasts
+        target:
+          entity_id: weather.home_forecast_home
+        data:
+          type: hourly
+        response_variable: wf
+    sensor:
+      - name: Home Hourly Forecast 2
+        unique_id: home_hourly_forecast2
+        # Put *something* in the state so the sensor isn't "unknown"
+        # We'll use now() if we have data, otherwise "unavailable"
+        state: >-
+          {% set f = (wf | default({}, true)).get('weather.home_forecast_home', {}).get('forecast', []) %}
+          {{ iif(f|length > 0, now(), 'unavailable') }}
+        attributes:
+          # Safely expose the forecast list (empty list if the call/var isn't ready yet)
+          forecast: >-
+            {{ (wf | default({}, true)).get('weather.home_forecast_home', {}).get('forecast', []) }}
+  # - trigger:
+  #     - platform: state
+  #       entity_id:
+  #         - weather.home_forecast_home   
+  #     - platform: time_pattern
+  #       minutes: "/15"                # refresh every 15 minutes
+  #     - platform: homeassistant
+  #       event: start
+  #   action:
+  #     - service: weather.get_forecasts
+  #       data:
+  #         type: hourly
+  #       target:
+  #         entity_id: weather.home_forecast_home
+  #       response_variable: hourly
+  #   sensor:
+  #     - name: Home Hourly Forecast
+  #       unique_id: weather_channel_forecast_hourly
+  #       state: "{{ now() }}"
+  #       attributes:
+  #         forecast: "{{ hourly['weather.home_forecast_home'].forecast }}"
+  - sensor:
+      - name: health_unavailable_count
+        unique_id: health_unavailable_count
+        icon: mdi:lan-disconnect
+        unit_of_measurement: "devices"
+        state: >
+          {% set domains = ['light','switch','sensor','binary_sensor','cover','climate','fan','media_player','vacuum','lock','camera','device_tracker'] %}
+          {% set noise = ['backup','stt','tts','wake_word','conversation','sun_next','sun_solar','version','hacs','browser_mod','config_entry','browser_battery'] %}
+          {% set ns = namespace(count=0) %}
+          {% for domain in domains %}
+            {% for s in states[domain] %}
+              {% if s.state in ['unavailable','unknown'] %}
+                {% set skip = namespace(val=false) %}
+                {% if s.entity_id.startswith('browser_mod_') %}{% set skip.val = true %}{% endif %}
+                {% for n in noise %}{% if n in s.entity_id %}{% set skip.val = true %}{% endif %}{% endfor %}
+                {% if not skip.val %}{% set ns.count = ns.count + 1 %}{% endif %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          {{ ns.count }}
+
+      - name: health_low_battery_count
+        unique_id: health_low_battery_count
+        icon: mdi:battery-alert
+        unit_of_measurement: "devices"
+        state: >
+          {% set ns = namespace(count=0) %}
+          {% for s in states.sensor %}
+            {% if s.attributes.get('device_class') == 'battery' %}
+              {% if (s.state | float(-1) >= 0 and s.state | float(-1) < 20) or s.state == 'unavailable' %}
+                {% set ns.count = ns.count + 1 %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.count }}
+
+      - name: health_pending_updates_count
+        unique_id: health_pending_updates_count
+        icon: mdi:update
+        unit_of_measurement: "updates"
+        state: >
+          {% set ns = namespace(count=0) %}
+          {% for s in states.update %}
+            {% if s.state == 'on' %}{% set ns.count = ns.count + 1 %}{% endif %}
+          {% endfor %}
+          {{ ns.count }}
+
+      - name: health_disconnected_list
+        unique_id: health_disconnected_list
+        icon: mdi:devices
+        state: >
+          {% set domains = ['light','switch','sensor','binary_sensor','cover','climate','fan','media_player','vacuum','lock','camera','device_tracker'] %}
+          {% set noise = ['backup','stt','tts','wake_word','conversation','sun_next','sun_solar','version','hacs','browser_mod','config_entry','browser_battery'] %}
+          {% set ns = namespace(items=[]) %}
+          {% for domain in domains %}
+            {% for s in states[domain] %}
+              {% if s.state in ['unavailable','unknown'] %}
+                {% set skip = namespace(val=false) %}
+                {% if s.entity_id.startswith('browser_mod_') %}{% set skip.val = true %}{% endif %}
+                {% for n in noise %}{% if n in s.entity_id %}{% set skip.val = true %}{% endif %}{% endfor %}
+                {% if not skip.val %}
+                  {% set hrs = ((now() - s.last_changed).total_seconds() / 3600) | round(1) %}
+                  {% set ns.items = ns.items + [{'name': s.name, 'domain': domain, 'entity_id': s.entity_id, 'hours': hrs}] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          {{ ns.items | sort(attribute='hours', reverse=true) | list | length }}
+        attributes:
+          devices: >
+            {% set domains = ['light','switch','sensor','binary_sensor','cover','climate','fan','media_player','vacuum','lock','camera','device_tracker'] %}
+            {% set noise = ['backup','stt','tts','wake_word','conversation','sun_next','sun_solar','version','hacs','browser_mod','config_entry','browser_battery'] %}
+            {% set ns = namespace(items=[]) %}
+            {% for domain in domains %}
+              {% for s in states[domain] %}
+                {% if s.state in ['unavailable','unknown'] %}
+                  {% set skip = namespace(val=false) %}
+                  {% if s.entity_id.startswith('browser_mod_') %}{% set skip.val = true %}{% endif %}
+                  {% for n in noise %}{% if n in s.entity_id %}{% set skip.val = true %}{% endif %}{% endfor %}
+                  {% if not skip.val %}
+                    {% set hrs = ((now() - s.last_changed).total_seconds() / 3600) | round(1) %}
+                    {% set ns.items = ns.items + [{'name': s.name, 'domain': domain, 'entity_id': s.entity_id, 'hours': hrs}] %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            {{ ns.items | sort(attribute='hours', reverse=true) | list }}
+          count: >
+            {% set domains = ['light','switch','sensor','binary_sensor','cover','climate','fan','media_player','vacuum','lock','camera','device_tracker'] %}
+            {% set noise = ['backup','stt','tts','wake_word','conversation','sun_next','sun_solar','version','hacs','browser_mod','config_entry','browser_battery'] %}
+            {% set ns = namespace(count=0) %}
+            {% for domain in domains %}
+              {% for s in states[domain] %}
+                {% if s.state in ['unavailable','unknown'] %}
+                  {% set skip = namespace(val=false) %}
+                  {% if s.entity_id.startswith('browser_mod_') %}{% set skip.val = true %}{% endif %}
+                  {% for n in noise %}{% if n in s.entity_id %}{% set skip.val = true %}{% endif %}{% endfor %}
+                  {% if not skip.val %}{% set ns.count = ns.count + 1 %}{% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+            {{ ns.count }}
+
+      - name: health_low_battery_list
+        unique_id: health_low_battery_list
+        icon: mdi:battery-low
+        state: >
+          {% set ns = namespace(count=0) %}
+          {% for s in states.sensor %}
+            {% if s.attributes.get('device_class') == 'battery' %}
+              {% if (s.state | float(-1) >= 0 and s.state | float(-1) < 20) or s.state == 'unavailable' %}
+                {% set ns.count = ns.count + 1 %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.count }}
+        attributes:
+          devices: >
+            {% set ns = namespace(items=[]) %}
+            {% for s in states.sensor %}
+              {% if s.attributes.get('device_class') == 'battery' %}
+                {% if (s.state | float(-1) >= 0 and s.state | float(-1) < 20) %}
+                  {% set ns.items = ns.items + [{'name': s.name, 'entity_id': s.entity_id, 'pct': s.state | float}] %}
+                {% elif s.state == 'unavailable' %}
+                  {% set ns.items = ns.items + [{'name': s.name, 'entity_id': s.entity_id, 'pct': 'unavailable'}] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.items | sort(attribute='pct') | list }}
+          count: >
+            {% set ns = namespace(count=0) %}
+            {% for s in states.sensor %}
+              {% if s.attributes.get('device_class') == 'battery' %}
+                {% if s.state | float(-1) >= 0 and s.state | float(-1) < 20 %}
+                  {% set ns.count = ns.count + 1 %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.count }}
+
+shell_command:
+  write_last_message: >
+    bash -c 'printf "%s" "{{ message }}" > /config/www/data/last_message.txt'
+
+  # Obsidian sync commands
+  sync_ha_status: "python3 /config/pyscript/sync_ha_status.py"
+  sync_ha_status_periodic: "python3 /config/pyscript/sync_ha_status.py --source periodic"

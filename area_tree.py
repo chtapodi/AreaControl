@@ -3154,6 +3154,10 @@ class KaufLight:
 
                 
             try:
+                # HA 2026.6+ uses color_temp_kelvin, not color_temp (mired)
+                if "color_temp" in new_args:
+                    new_args["color_temp_kelvin"] = round(1000000 / new_args["color_temp"])
+                    del new_args["color_temp"]
                 log.info(f"KaufLight<{self.name}>:apply_values(): {self.name} {new_args}")
                 light.turn_on(entity_id=f"light.{self.name}", **new_args)
                 self.last_state = new_args
@@ -4007,6 +4011,9 @@ def monitor_external_state_setting(**kwargs):
                 state["brightness"]=round(data["brightness_pct"] * 2.55)
             if "color_temp" in data:
                 state["color_temp"]=data["color_temp"]
+            elif "color_temp_kelvin" in data:
+                # Convert Kelvin to mired (HA's internal color_temp unit)
+                state["color_temp"]=round(1000000 / data["color_temp_kelvin"])
             if "rgb_color" in data:
                 state["rgb_color"]=data["rgb_color"]
             if "hs_color" in data:
