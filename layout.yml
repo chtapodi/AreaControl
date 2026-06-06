@@ -1,278 +1,47 @@
+# ServiceDriver + 10 Kauf + 5 Hue + 3 motion + 3 switches (HOLD PEN — rooms TBD)
 everything:
   sub_areas:
-    - home
-    - outside
+    - main_lights
   inputs:
     service:
       - service_input_button_all_lights
-home:
-  sub_areas:
-    - front
-    - back
-front:
-  sub_areas:
-    - front_room
-    - kitchen
-front_room:
-  direct_sub_areas:
-    - living_room
-    - dining_room
-  inputs:
-    presence:
-      - "presence_sensor_living_room_front_room"
-
-living_room:
-  direct_sub_areas:
-    - living_room_chairs
-    - living_room_front
-    - living_room_middle
-    - living_room_back
-  inputs:
-    presence:
-      - "presence_sensor_living_room"
-    temperature:
-      - living_room_temp_temperature
-    service:
-      - service_input_button_single_living_room
-
-  outputs:
-    - living_room_blind_cover
-    - living_room_speaker
-    - living_room_blind_battery
-    - kauf_bulb_default_fade
-    - kauf_bulb_default_fade_13
-    - kauf_bulb_default_fade_2
-    - kauf_bulb_default_fade_24
-    - kauf_bulb_effect_18
-    - living_room_corner_lamp
-    - living_room_lamp
-    - living_room_fan
-    - living_room_tv
-    - newtv_remote
-    - roborock_s8_mop_attached
-  power_outputs:
-    - living_room_fan
-
-living_room_chairs:
-  direct_sub_areas:
-    - living_room_chair_0
-    - living_room_chair_1
-living_room_chair_0:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_chair_0"
-  outputs: []
-
-living_room_chair_1:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_chair_0"
-  outputs: []
-
-living_room_front:
-  direct_sub_areas:
-    - living_room_hallway
-living_room_hallway:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_hallway"
-  outputs: []
-
-living_room_middle:
-  direct_sub_areas:
-    - living_room_couch
-  inputs:
-    presence:
-      - "presence_sensor_living_room_middle"
-    service:
-      - service_input_button_single_living_room_middle
-
-living_room_couch:
-  sub_areas:
-    - living_room_couch_0
-    - living_room_couch_1
-    - living_room_couch_2
-
-  outputs: []
-
-living_room_couch_0:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_couch_0"
-living_room_couch_1:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_couch_1"
-living_room_couch_2:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_couch_2"
-living_room_back:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_back"
-  outputs: []
-
-dining_room:
-  direct_sub_areas:
-    - dining_room_hallway
-    - dining_room_0
-    - dining_room_1
-    - dining_room_2
-    - dining_room_3
-  outputs:
-    - dining_room_speaker
-    - kauf_bulb_default_fade_8
-    - kauf_bulb_default_fade_9
-    - kauf_bulb_effect_17
-    - kauf_hanging_0
-    - kauf_hanging_1
-    - kauf_hanging_2
-
-
-dining_room_0:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_dining_room_0"
-
-dining_room_1:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_dining_room_1"
-
-dining_room_2:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_dining_room_2"
-
-dining_room_3:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_dining_room_3"
-
-dining_room_hallway:
-  inputs:
-    presence:
-      - "presence_sensor_living_room_dining_room_hallway"
-
-kitchen:
-  motion_off_delay: 900
-  inputs:
+      - service_input_switch_aqara_1
+      - service_input_switch_aqara_2
+      - service_input_switch_aqara_3
     motion:
-      - motion_sensor_kitchen
-    temperature:
-      - kitchen_temp_temperature
-    service:
-      - service_input_button_single_kitchen
-      - service_input_button_double_kitchen
-      - name: service_input_button_single_kitchen_corner
-        target_outputs:
-          - kauf_kitchen_corner
-  outputs:
-    - kitchen_speaker
-    - hue_kitchen_ball
-    - kauf_kitchen_corner
-    - kauf_hanging_5
-  power_outputs:
-    - coffee_tea
+      - lumi_lumi_sensor_motion_aq2
+      - lumi_lumi_sensor_motion_aq2_2
+      - lumi_lumi_sensor_motion_aq2_3
 
-back:
-  sub_areas:
-    - laundry_room
-    - office
-    - hallway
-    - bathroom
-    - bedroom
-
-laundry_room:
-  motion_off_delay: 900
-  inputs:
-    motion:
-      - motion_sensor_laundry_room
-    temperature:
-      - laundry_room_temp_temperature
-    service:
-      - service_input_button_single_laundry_room
-  outputs:
-    - kauf_laundry_room_0
-    - kauf_bulb_default_fade_25
-    - kauf_bulb_default_fade_4
-  power_outputs:
-    - dryer
-    - washer
-
-office:
-  motion_off_delay: 900
-  inputs:
-    motion:
-      - "motion_sensor_office"
-    temperature:
-      - office_temp_temperature
-    service:
-      - service_input_button_single_office
-  outputs:
-    - office_fan
-    - hue_0_firmware
-    - hue_office_light
-  power_outputs:
-    - bambu_x1c
-    - freezer
-
-hallway:
-  motion_off_delay: 120
-  sub_areas:
-    - hallway_nook
-  inputs:
-    motion:
-      - "motion_sensor_hallway"
-  outputs:
-    - kauf_hallway
-
-hallway_nook:
+main_lights:
   inputs:
     service:
-      - service_input_button_single_hallway_nook
-  outputs: []
-
-bathroom:
-  motion_off_delay: 300
-  inputs:
-    motion:
-      - "motion_sensor_bathroom"
-    service:
-      - service_input_button_single_bathroom
-      - service_input_button_double_bathroom
+      - service_input_bulb_302e42
+      - service_input_bulb_b63531
+      - service_input_bulb_df32ea
+      - service_input_bulb_303208
+      - service_input_bulb_df3025
+      - service_input_bulb_df335a
+      - service_input_bulb_b70561
+      - service_input_bulb_df2fa5
+      - service_input_bulb_df3118
+      - service_input_bulb_df35af
   outputs:
-    - bathroom_speaker
-    - hue_bathroom_center
-    - kauf_bathroom_0
-    - kauf_bathroom_1
-
-bedroom:
-  inputs:
-    temperature:
-      - bedroom_temp_temperature
-    service:
-      - service_input_button_single_bedroom
-      - service_input_button_double_bedroom
-      - name: service_input_button_single_bedroom_lamp
-        target_outputs:
-          - bedroom_lamp
-  outputs:
-    - bedroom_blind_battery
-    - bedroom
-    - bedroom_lamp
-    - core_600s
-    - kauf_bulb_effect_15
-    - kauf_bulb_effect_16
-  power_outputs:
-    - bedroom_fan
-    - splug_0_switch_1
-    - splug_1_switch_1
-
-outside:
-  sub_areas:
-    - yard
-    - saildrone
-    - twelve
-    - other
+    # Kauf ESPHome
+    - kauf_bulb_302e42_kauf_bulb
+    - kauf_bulb_b63531_kauf_bulb
+    - kauf_bulb_df32ea_kauf_bulb
+    - kauf_bulb_303208_kauf_bulb
+    - kauf_bulb_df3025_kauf_bulb
+    - kauf_bulb_df335a_kauf_bulb
+    - kauf_bulb_b70561_kauf_bulb
+    - kauf_bulb_df2fa5_kauf_bulb
+    - kauf_bulb_df3118_kauf_bulb
+    - kauf_bulb_df35af_kauf_bulb
+    - kauf_bulb_b706f2_kauf_bulb
+    # Hue Zigbee
+    - signify_netherlands_b_v_lca005
+    - signify_netherlands_b_v_lca005_2
+    - signify_netherlands_b_v_lca005_3
+    - signify_netherlands_b_v_lca007
+    - signify_netherlands_b_v_lca007_2

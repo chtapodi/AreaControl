@@ -2066,6 +2066,115 @@ class AreaTree:
 
         self.root_name = self._find_root_area_name()
 
+        # Auto-discover and register any lights/sensors not in the area tree
+        self._auto_discover_devices()
+
+    def _auto_discover_devices(self):
+        """Scan HA for unregistered lights/sensors and add them to a 'discovered' area."""
+        try:
+            all_states = hass.states.async_all()
+        except Exception as e:
+            log.warning("AreaTree: auto_discover failed to query HA states: " + str(e))
+            return
+
+        # Collect unregistered light and binary_sensor entities
+        unregistered_lights = []
+        unregistered_sensors = []
+
+        for state in all_states:
+            eid = state.entity_id
+            parts = eid.split(".", 1)
+            domain = parts[0] if len(parts) > 1 else ""
+            if domain not in ("light", "binary_sensor"):
+                continue
+            # Skip entities already in the area tree
+            # Area tree stores devices by output name (e.g. "kauf_bulb_302e42_kauf_bulb")
+            # but HA entity IDs include the domain (e.g. "light.kauf_bulb_302e42_kauf_bulb")
+            object_id = parts[1] if len(parts) > 1 else eid
+            if eid in self.area_tree_lookup or object_id in self.area_tree_lookup:
+                continue
+            # Skip system/virtual entities
+            eid_lower = eid.lower()
+            skip = False
+            for pat in ["browser_mod", "servicedriver", "remote_ui",
+                        "sun.", "zone.", "person.", "update.",
+                        "sensor.health", "backup_", "analytics",
+                        "cloud.", "shopping_list", "radio_browser",
+                        "google_translate", "go2rtc", "cast.",
+                        "zenwifi", "wan_status"]:
+                if pat in eid_lower:
+                    skip = True
+                    break
+            if skip:
+                continue
+
+            if domain == "light":
+                unregistered_lights.append(eid)
+            elif domain == "binary_sensor":
+                unregistered_sensors.append(eid)
+
+        if not unregistered_lights and not unregistered_sensors:
+            return
+
+        # Ensure "discovered" area exists
+        if "discovered" not in self.area_tree_lookup:
+            discovered_area = Area("discovered")
+            self.area_tree_lookup["discovered"] = discovered_area
+            # Attach to "everything" if it exists
+            everything = self.area_tree_lookup.get("everything")
+            if everything is not None and isinstance(everything, Area):
+                discovered_area.add_parent(everything)
+                everything.add_child(discovered_area, direct=False)
+            log.info("AreaTree: Created 'discovered' area for auto-registered devices")
+
+        discovered_area = self.area_tree_lookup["discovered"]
+
+        # Register lights
+        for eid in unregistered_lights:
+            try:
+                # Strip domain prefix — drivers prepend it themselves
+                object_id = eid.split(".", 1)[1] if "." in eid else eid
+                eid_lower = eid.lower()
+                if "kauf" in eid_lower:
+                    driver = KaufLight(object_id)
+                elif "signify" in eid_lower or "hue" in eid_lower or "lca00" in eid_lower:
+                    driver = HueLight(object_id)
+                else:
+                    driver = KaufLight(object_id)  # default for unknown lights
+
+                device = Device(driver)
+                device.set_area(discovered_area)
+                discovered_area.add_device(device)
+                self.area_tree_lookup[object_id] = device  # Store by driver name (matching layout convention)
+                log.info("AreaTree: Auto-registered light " + eid + " in 'discovered'")
+            except Exception as e:
+                log.warning("AreaTree: Failed to register light " + eid + ": " + str(e))
+
+        # Register binary_sensors as inputs
+        for eid in unregistered_sensors:
+            try:
+                driver = MotionSensorDriver("motion", eid)
+                driver.add_callback(
+                    lambda tags, dev_name=eid: self._auto_input_trigger(dev_name, tags)
+                )
+                device = Device(driver)
+                device.set_area(discovered_area)
+                discovered_area.add_device(device)
+                self.area_tree_lookup[eid] = device
+                log.info("AreaTree: Auto-registered sensor " + eid + " in 'discovered'")
+            except Exception as e:
+                log.warning("AreaTree: Failed to register sensor " + eid + ": " + str(e))
+
+        total = len(unregistered_lights) + len(unregistered_sensors)
+        log.info("AreaTree: Auto-discovered " + str(total) + " device(s) in 'discovered' area")
+
+    def _auto_input_trigger(self, device_name, tags):
+        """Handle input triggers from auto-discovered sensors."""
+        global event_manager
+        if event_manager is not None:
+            event = {"device_name": device_name, "tags": tags}
+            event_manager.create_event(event)
+
     def get_state(self, area=None):
         if area is None:
             area = self.root_name
@@ -2093,6 +2202,13 @@ class AreaTree:
 
     def get_area_tree_lookup(self):
         return self.area_tree_lookup
+
+    def refresh_discovered_devices(self):
+        """Re-scan HA for unregistered lights/sensors and add them to the 'discovered' area.
+        
+        Call this periodically (or after adding new devices to HA) to auto-register them.
+        """
+        self._auto_discover_devices()
 
     def is_area(self, area_name):
         log.info(f"Checking if {area_name} is an area")
@@ -2996,6 +3112,9 @@ class KaufLight:
             new_args["rgb_color"] = self.calibrate_color(new_args["rgb_color"])
             self.color_type = "rgb"
 
+        elif "hs_color" in new_args.keys():
+            self.color_type = "hs"
+
         elif "color_temp" in new_args.keys():
             self.color_temp = new_args["color_temp"]
             # log.info(f"KaufLight<{self.name}>:apply_values(): Caching {self.name} color_temp to {self.color_temp }")
@@ -3072,6 +3191,31 @@ class HueLight:
         return self._delegate.filter_state(state)
 
     def set_state(self, state):
+        # Hue bulbs only accept xy_color / color_temp_kelvin, not rgb_color.
+        # Convert rgb_color -> hs_color so HA handles the per-bulb conversion.
+        if "rgb_color" in state:
+            rgb = state["rgb_color"]
+            r_norm = rgb[0] / 255.0
+            g_norm = rgb[1] / 255.0
+            b_norm = rgb[2] / 255.0
+            cmax = max(r_norm, g_norm, b_norm)
+            cmin = min(r_norm, g_norm, b_norm)
+            delta = cmax - cmin
+
+            if delta == 0:
+                h = 0.0
+            elif cmax == r_norm:
+                h = 60.0 * (((g_norm - b_norm) / delta) % 6.0)
+            elif cmax == g_norm:
+                h = 60.0 * (((b_norm - r_norm) / delta) + 2.0)
+            else:
+                h = 60.0 * (((r_norm - g_norm) / delta) + 4.0)
+
+            s = 0.0 if cmax == 0.0 else (delta / cmax) * 100.0
+            state = dict(state)
+            state["hs_color"] = [h, s]
+            del state["rgb_color"]
+
         return self._delegate.set_state(state)
 
     def get_state(self):
@@ -3787,8 +3931,11 @@ def _servicedriver_fanout(sd_names, srv_state):
             if not is_off:
                 merged["status"] = True
             log.info(f"_servicedriver_fanout: fanning out {merged} to {obj.name}")
-            obj.set_state(merged)
-            fan_count += 1
+            try:
+                obj.set_state(merged)
+                fan_count += 1
+            except Exception as e:
+                log.warning(f"_servicedriver_fanout: failed to set {obj.name}: {e}")
 
         log.info(f"_servicedriver_fanout: fanned out to {fan_count} devices for {sd_name}")
 
@@ -3825,6 +3972,13 @@ def _servicedriver_fanout(sd_names, srv_state):
 # This monitors other methods of settings lights colors and informs the area tree
 @event_trigger(EVENT_CALL_SERVICE)
 def monitor_external_state_setting(**kwargs):
+    # Skip callbacks from our own fan-out to avoid event-loopback races.
+    # The fan-out sends light.turn_on which fires new events; processing them
+    # with empty state causes spurious turn-offs.
+    global _servicedriver_syncing
+    if _servicedriver_syncing:
+        return
+
     if "domain" in kwargs:
         if kwargs["domain"] == "light":
             data=kwargs.get("service_data")
@@ -3848,6 +4002,9 @@ def monitor_external_state_setting(**kwargs):
             state={}
             if "brightness" in data:
                 state["brightness"]=data["brightness"]
+            elif "brightness_pct" in data:
+                # Hermes sends brightness_pct (0-100); convert to HA scale (0-255)
+                state["brightness"]=round(data["brightness_pct"] * 2.55)
             if "color_temp" in data:
                 state["color_temp"]=data["color_temp"]
             if "rgb_color" in data:
@@ -3863,10 +4020,6 @@ def monitor_external_state_setting(**kwargs):
             # ServiceDriver fan-out
             sd_names = [n for n in device_names if n.startswith("servicedriver")]
             if sd_names:
-                global _servicedriver_syncing
-                if _servicedriver_syncing:
-                    log.info("monitor_external_state_setting: recursion guard, skipping")
-                    return
                 _servicedriver_syncing = True
                 try:
                     _servicedriver_fanout(sd_names, state)

@@ -1,175 +1,225 @@
-# Manual device configurations
-# These take precedence over discovered.yml
+# Clean device registry — 10 ESPHome Kauf bulbs + 5 Hue + 3 motion + 3 switches
+# Device names match the HA entity object_id (without domain prefix)
 
-# Living room Hue lamp (ZHA entity - was incorrectly mapped to identify button)
-living_room_corner_lamp:
+kauf_bulb_302e42_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_b63531_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_df32ea_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_303208_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_df3025_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_df335a_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_b70561_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_df2fa5_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_df3118_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+kauf_bulb_df35af_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+# b706f2 — reconnected 2026-06-06 (was dead in April audit)
+kauf_bulb_b706f2_kauf_bulb:
+  type: light
+  filters:
+    - light
+    - kauf
+
+# Service inputs for per-bulb control
+service_input_bulb_302e42:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_302e42_kauf_bulb
+
+service_input_bulb_b63531:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_b63531_kauf_bulb
+
+service_input_bulb_df32ea:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_df32ea_kauf_bulb
+
+service_input_bulb_303208:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_303208_kauf_bulb
+
+service_input_bulb_df3025:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_df3025_kauf_bulb
+
+service_input_bulb_df335a:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_df335a_kauf_bulb
+
+service_input_bulb_b70561:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_b70561_kauf_bulb
+
+service_input_bulb_df2fa5:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_df2fa5_kauf_bulb
+
+service_input_bulb_df3118:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_df3118_kauf_bulb
+
+service_input_bulb_df35af:
+  type: service_input
+  target_outputs:
+    - kauf_bulb_df35af_kauf_bulb
+
+# --- NEW: Hue bulbs (Zigbee) ---
+signify_netherlands_b_v_lca005:
   type: light
   filters:
     - light
     - hue
 
-# Dining room hanging Kauf bulbs (ESPHome)
-kauf_hanging_0:
+signify_netherlands_b_v_lca005_2:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
-kauf_hanging_1:
+signify_netherlands_b_v_lca005_3:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
-kauf_hanging_2:
+signify_netherlands_b_v_lca007:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
-# Blinds - these are the actual HA entity names
-living_room_blind_battery:
-  type: blind
-  filters:
-    - blind
-  height: 100
-
-living_room_blind_cover:
-  type: blind
-  filters:
-    - blind
-  height: 100
-
-bedroom_blind_battery:
-  type: blind
-  filters:
-    - blind
-  height: 100
-
-# Speakers (from media_player)
-living_room_speaker:
-  type: speaker
-  filters:
-    - speaker
-
-dining_room_speaker:
-  type: speaker
-  filters:
-    - speaker
-
-kitchen_speaker:
-  type: speaker
-  filters:
-    - speaker
-
-bathroom_speaker:
-  type: speaker
-  filters:
-    - speaker
-
-bedroom:
-  type: speaker
-  filters:
-    - speaker
-
-office_fan:
-  type: plug
-  filters:
-    - plug
-
-# Power monitoring plugs (passive - not controlled by motion)
-# always_on: true means the device will be automatically turned back on if turned off
-dryer:
-  type: plug
-  filters:
-    - plug
-  always_on: true
-
-washer:
-  type: plug
-  filters:
-    - plug
-  always_on: true
-
-freezer:
-  type: plug
-  filters:
-    - plug
-  always_on: true
-
-bambu_x1c:
-  type: plug
-  filters:
-    - plug
-  always_on: true
-
-coffee_tea:
-  type: plug
-  filters:
-    - plug
-  always_on: true
-
-plug_3_2:
-  type: plug
-  filters:
-    - plug
-
-living_room_fan:
-  type: plug
-  filters:
-    - plug
-
-bedroom_fan:
-  type: plug
-  filters:
-    - plug
-
-splug_0_switch_1:
-  type: plug
-  filters:
-    - plug
-
-splug_1_switch_1:
-  type: plug
-  filters:
-    - plug
-
-# Laundry room lights (manually mapped - autodiscovery used wrong entity name)
-kauf_laundry_room_0:
+signify_netherlands_b_v_lca007_2:
   type: light
   filters:
     - light
-    - kauf
+    - hue
 
-# Hallway light (manually mapped - autodiscovery used wrong entity name)
-kauf_hallway:
-  type: light
+# --- NEW: Aqara motion sensors (Zigbee) ---
+lumi_lumi_sensor_motion_aq2:
+  type: motion_sensor
   filters:
-    - light
-    - kauf
+    - motion
 
-# Kitchen lights (manually mapped - autodiscovery used wrong entity names)
-kauf_kitchen_corner:
-  type: light
+lumi_lumi_sensor_motion_aq2_2:
+  type: motion_sensor
   filters:
-    - light
-    - kauf
+    - motion
 
-kauf_hanging_5:
-  type: light
+lumi_lumi_sensor_motion_aq2_3:
+  type: motion_sensor
   filters:
-    - light
-    - kauf
+    - motion
 
-# Bathroom lights (manually mapped - autodiscovery used wrong entity names)
-kauf_bathroom_0:
-  type: light
-  filters:
-    - light
-    - kauf
+# --- NEW: Aqara mini switches (Zigbee) ---
+service_input_switch_aqara_1:
+  type: service_input
+  target_outputs:
+    - signify_netherlands_b_v_lca005
+    - signify_netherlands_b_v_lca005_2
+    - signify_netherlands_b_v_lca005_3
+    - signify_netherlands_b_v_lca007
+    - signify_netherlands_b_v_lca007_2
+    - kauf_bulb_302e42_kauf_bulb
+    - kauf_bulb_b63531_kauf_bulb
+    - kauf_bulb_df32ea_kauf_bulb
+    - kauf_bulb_303208_kauf_bulb
+    - kauf_bulb_df3025_kauf_bulb
+    - kauf_bulb_df335a_kauf_bulb
+    - kauf_bulb_b70561_kauf_bulb
+    - kauf_bulb_df2fa5_kauf_bulb
+    - kauf_bulb_df3118_kauf_bulb
+    - kauf_bulb_df35af_kauf_bulb
 
-kauf_bathroom_1:
-  type: light
-  filters:
-    - light
-    - kauf
+service_input_switch_aqara_2:
+  type: service_input
+  target_outputs:
+    - signify_netherlands_b_v_lca005
+    - signify_netherlands_b_v_lca005_2
+    - signify_netherlands_b_v_lca005_3
+    - signify_netherlands_b_v_lca007
+    - signify_netherlands_b_v_lca007_2
+    - kauf_bulb_302e42_kauf_bulb
+    - kauf_bulb_b63531_kauf_bulb
+    - kauf_bulb_df32ea_kauf_bulb
+    - kauf_bulb_303208_kauf_bulb
+    - kauf_bulb_df3025_kauf_bulb
+    - kauf_bulb_df335a_kauf_bulb
+    - kauf_bulb_b70561_kauf_bulb
+    - kauf_bulb_df2fa5_kauf_bulb
+    - kauf_bulb_df3118_kauf_bulb
+    - kauf_bulb_df35af_kauf_bulb
+
+service_input_switch_aqara_3:
+  type: service_input
+  target_outputs:
+    - signify_netherlands_b_v_lca005
+    - signify_netherlands_b_v_lca005_2
+    - signify_netherlands_b_v_lca005_3
+    - signify_netherlands_b_v_lca007
+    - signify_netherlands_b_v_lca007_2
+    - kauf_bulb_302e42_kauf_bulb
+    - kauf_bulb_b63531_kauf_bulb
+    - kauf_bulb_df32ea_kauf_bulb
+    - kauf_bulb_303208_kauf_bulb
+    - kauf_bulb_df3025_kauf_bulb
+    - kauf_bulb_df335a_kauf_bulb
+    - kauf_bulb_b70561_kauf_bulb
+    - kauf_bulb_df2fa5_kauf_bulb
+    - kauf_bulb_df3118_kauf_bulb
+    - kauf_bulb_df35af_kauf_bulb
