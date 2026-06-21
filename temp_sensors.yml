@@ -1,0 +1,103 @@
+# temp_sensors.yml — Temperature sensor registry for fan controller
+# Maps HA sensor entity IDs to rooms with offset correction for weighted averaging.
+#
+# Fields:
+#   entity_id: Full HA entity ID (sensor.xxx)
+#   room: Room name matching layout.yml area name
+#   label: Human-readable sensor label
+#   weight: 0.0-1.0 — higher = more trusted in weighted average
+#   offset: °F to subtract from raw reading (Aqara sensors read high)
+#   type: sensor type (climate, motion, button) — for debugging
+
+sensors:
+  # --- Office (gold standard: dedicated climate sensor) ---
+  - entity_id: sensor.third_reality_inc_3rths0224z_temperature
+    room: office
+    label: office_climate
+    weight: 1.0
+    offset: 0
+    type: climate
+
+  - entity_id: sensor.lumi_lumi_sensor_motion_aq2_device_temperature
+    room: office
+    label: office_motion
+    weight: 0.5
+    offset: 8
+    type: motion
+
+  - entity_id: sensor.lumi_lumi_sensor_swit_5
+    room: office
+    label: office_button
+    weight: 0.3
+    offset: 5
+    type: button
+
+  # --- Bathroom ---
+  - entity_id: sensor.lumi_lumi_sensor_motion_aq2_device_temperature_2
+    room: bathroom
+    label: bathroom_motion
+    weight: 0.5
+    offset: 8
+    type: motion
+
+  # --- Laundry ---
+  - entity_id: sensor.lumi_lumi_sensor_motion_aq2_device_temperature_3
+    room: laundry
+    label: laundry_motion
+    weight: 0.5
+    offset: 8
+    type: motion
+
+  - entity_id: sensor.lumi_lumi_sensor_swit
+    room: laundry
+    label: laundry_button
+    weight: 0.3
+    offset: 5
+    type: button
+
+  # --- Kitchen ---
+  - entity_id: sensor.lumi_lumi_sensor_motion_aq2_device_temperature_4
+    room: kitchen
+    label: kitchen_motion
+    weight: 0.5
+    offset: 8
+    type: motion
+
+  - entity_id: sensor.lumi_lumi_sensor_swit_4
+    room: kitchen
+    label: kitchen_button
+    weight: 0.3
+    offset: 5
+    type: button
+    # NOTE: Currently unavailable in HA — will be skipped gracefully
+
+  # --- Hallway ---
+  - entity_id: sensor.lumi_lumi_sensor_motion_aq2_device_temperature_5
+    room: hallway
+    label: hallway_motion
+    weight: 0.5
+    offset: 8
+    type: motion
+
+  # --- Living Room ---
+  - entity_id: sensor.lumi_lumi_sensor_swit_2
+    room: living_room
+    label: living_room_button
+    weight: 0.3
+    offset: 5
+    type: button
+
+  # --- Bedroom ---
+  - entity_id: sensor.lumi_lumi_sensor_swit_3
+    room: bedroom
+    label: bedroom_annas_button
+    weight: 0.3
+    offset: 5
+    type: button
+
+  - entity_id: sensor.bedroom_theos_button
+    room: bedroom
+    label: bedroom_xaviers_button
+    weight: 0.3
+    offset: 5
+    type: button
